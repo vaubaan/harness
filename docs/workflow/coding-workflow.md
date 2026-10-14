@@ -60,7 +60,7 @@ to install. See
 |---|---|
 | Trigger | Push of a `v<X.Y.Z>` tag created on the validated release commit of `main`; the workflow listens to `v*` tags and validates their semver form. |
 | Build | `npm ci`, then `npm run ci`; package version derived from the tag with `npm version --no-git-tag-version --allow-same-version`, then `npm publish --access public`. |
-| Post-publication check | `npm view` must find the exact tag version and `dist-tags.latest` must equal it; six attempts five seconds apart, then the job fails if a value is missing or differs. |
+| Post-publication check | `npm view` must find the exact tag version and `dist-tags.latest` must equal it; up to 40 attempts 15 seconds apart (10 minutes), since npm can take a few minutes to make a new version visible, then the job fails if a value is missing or differs. |
 | Provenance | Attached automatically by npm when publishing through OIDC from a public repository; it links the package to the workflow and the commit. |
 | Versioning | Semver. Breaking changes = major bump. |
 | Rollback | Pin the last stable version in consumers, then publish a new fixed patch. Never move a published tag. |

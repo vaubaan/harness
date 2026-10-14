@@ -53,14 +53,16 @@ jobs:
 
       - name: Verify published version and latest tag
         run: |
-          for attempt in 1 2 3 4 5 6; do
+          # npm can take a few minutes to make a new version visible
+          # (registry review), so poll for up to 10 minutes.
+          for attempt in $(seq 1 40); do
             PUBLISHED_VERSION=$(npm view "@vaubaan/harness@${VERSION}" version) || PUBLISHED_VERSION=""
             LATEST_VERSION=$(npm view @vaubaan/harness dist-tags.latest) || LATEST_VERSION=""
             if [[ "$PUBLISHED_VERSION" == "$VERSION" && "$LATEST_VERSION" == "$VERSION" ]]; then
               echo "Verified @vaubaan/harness@${VERSION} with latest=${LATEST_VERSION}"
               exit 0
             fi
-            sleep 5
+            sleep 15
           done
           echo "::error::Published version or latest tag did not match ${VERSION}"
           exit 1
