@@ -1,0 +1,88 @@
+---
+tracks:
+  - .github/workflows/*
+  - vercel.json
+  - package.json
+last_reviewed: <DATE>
+---
+
+# Coding workflow
+
+This document describes *how we work* on this project: the CI
+pipeline, the environments, the PR (or direct-push) process, the
+branch model, the commit conventions, and the release
+process.
+
+## 1. CI pipeline
+
+| Trigger                      | Jobs triggered                           | Typical duration |
+|------------------------------|------------------------------------------|------------------|
+| push to `<MAIN_BRANCH>`      | <JOBS_ON_MAIN_PUSH>                      | <DURATION>       |
+| pull_request                 | <JOBS_ON_PR>                             | <DURATION>       |
+| tag `v*`                     | <JOBS_ON_TAG>                            | <DURATION>       |
+| schedule                     | <JOBS_ON_SCHEDULE>                       | <DURATION>       |
+
+**Jobs required to merge a PR:** <REQUIRED_JOBS>.
+
+**How to force a re-run:** <RERUN_INSTRUCTIONS>.
+
+## 2. Environments
+
+| Env            | URL                          | Source branch      | Data                     | Access            |
+|----------------|------------------------------|--------------------|--------------------------|-------------------|
+| `prod`         | <PROD_URL>                   | <PROD_BRANCH>      | <PROD_DATA>              | <PROD_ACCESS>     |
+| `staging`      | <STAGING_URL>                | <STAGING_BRANCH>   | <STAGING_DATA>           | <STAGING_ACCESS>  |
+| `preview`      | <PREVIEW_URL_PATTERN>        | feature branches   | <PREVIEW_DATA>           | <PREVIEW_ACCESS>  |
+| `local`        | <LOCAL_URL>                  | n/a                | <LOCAL_DATA>             | dev               |
+
+Each environment has its own set of variables — see
+<ENV_VARS_REFERENCE>.
+
+## 3. Process: PR or direct-push
+
+<PR_OR_DIRECT_PUSH_DECLARATION>
+
+### If PR
+
+- Creation: <PR_CREATION_RULES>
+- Review: <REVIEW_RULES>
+- Merge: <MERGE_RULES>
+
+### If direct-push
+
+- Branches allowed for direct-push: <DIRECT_PUSH_BRANCHES>
+- Safeguards: <DIRECT_PUSH_GUARDS>
+
+## 4. Branch model
+
+- **Model:** <TRUNK_BASED | GITFLOW | GITHUB_FLOW | OTHER>
+- **Main branch:** `<MAIN_BRANCH>`
+- **Staging branch (if distinct):** `<STAGING_BRANCH>`
+- **Feature naming convention:** `<FEATURE_BRANCH_PATTERN>`
+- **Max lifetime of a feature branch:** <MAX_LIFETIME>
+
+## 5. Commit / merge conventions
+
+- **Message format:** <COMMIT_MESSAGE_FORMAT>
+- **Conventional commits?** <YES_NO_DETAILS>
+- **Squash, rebase or merge?** <MERGE_STRATEGY>
+- **Signing required?** <SIGNING_POLICY>
+
+## 6. Release
+
+- **Who can trigger a release:** <RELEASE_AUTHORITY>
+- **How we tag:** <TAGGING_PROCESS>
+- **Versioning:** <VERSIONING_SCHEME>
+- **Rollback:** <ROLLBACK_PROCESS>
+- **Freeze windows:** <FREEZE_WINDOWS>
+- **Communication:** <RELEASE_NOTES_CHANNEL>
+
+### Minimal release runbook
+
+1. <RELEASE_STEP_1>
+2. <RELEASE_STEP_2>
+3. <RELEASE_STEP_N>
+
+### Post-release incident
+
+See <INCIDENT_RUNBOOK_REF>.

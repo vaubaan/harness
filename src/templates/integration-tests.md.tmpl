@@ -1,0 +1,50 @@
+---
+tracks:
+  - <TEST_DIR_OR_FILE_1>
+  - <TEST_DIR_OR_FILE_2>
+last_reviewed: <DATE>
+---
+
+# Integration test plan
+
+## Scope
+
+Define what is tested in integration **vs** unit **vs** e2e:
+
+- **Unit**: isolated, no real I/O, next to the code (`*.test.<ext>`).
+  Not documented here.
+- **Integration**: several modules assembled, real I/O against
+  local dependencies (ephemeral DB, service mocked at the network
+  level, temporary filesystem). This is the scope of this document.
+- **E2E**: complete system against real or staging dependencies,
+  walking through a user journey. Documented in
+  [e2e-tests.md](./e2e-tests.md).
+
+Specify here the boundaries specific to the current project.
+
+## Test stack
+
+- **Runner:** <TEST_RUNNER>
+- **Assertions:** <ASSERTION_LIB>
+- **Fixtures:** <FIXTURE_STRATEGY>
+- **Setup / teardown:** <SETUP_TEARDOWN>
+- **Data:** <DATA_STRATEGY>
+
+## Covered scenarios
+
+| ID    | Scenario                            | Linked spec             | Test file                          |
+|-------|-------------------------------------|-------------------------|------------------------------------|
+| IT-01 | <SCENARIO_1_NAME>                   | [[<SPEC_NAME_1>]]       | <TEST_FILE_PATH_1>                 |
+| IT-02 | <SCENARIO_2_NAME>                   | [[<SPEC_NAME_2>]]       | <TEST_FILE_PATH_2>                 |
+| IT-NN | <SCENARIO_N_NAME>                   | [[<SPEC_NAME_N>]]       | <TEST_FILE_PATH_N>                 |
+
+Each scenario must cross-link the spec it verifies (syntax
+`[[spec-name]]`) — the `cross-link` linter uses it.
+
+## Known gaps
+
+Explicitly list the areas not covered in integration, with a
+risk estimate and a pointer to the tracking ticket, if any.
+
+- <GAP_1> — risk <LOW | MEDIUM | HIGH> — <TRACKING_REF>
+- <GAP_N> — ...

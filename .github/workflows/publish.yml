@@ -1,0 +1,62 @@
+name: publish
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  id-token: write # npm provenance
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+          # No dependency cache in the privileged publish job (cache poisoning).
+          package-manager-cache: false
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Verify tag matches v<semver>
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Tag '$TAG' must match v<semver> (e.g. v0.1.0, v1.2.3-rc.1)"
+            exit 1
+          fi
+          echo "VERSION=${TAG#v}" >> "$GITHUB_ENV"
+
+      - name: Run full CI (typecheck + lint + test + build + lint:harness)
+        run: npm run ci
+
+      - name: Set package version from tag (no commit, no git tag)
+        run: npm version --no-git-tag-version --allow-same-version "${VERSION}"
+
+      - name: Publish to npmjs
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Verify published version and latest tag
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            PUBLISHED_VERSION=$(npm view "@vaubaan/harness@${VERSION}" version) || PUBLISHED_VERSION=""
+            LATEST_VERSION=$(npm view @vaubaan/harness dist-tags.latest) || LATEST_VERSION=""
+            if [[ "$PUBLISHED_VERSION" == "$VERSION" && "$LATEST_VERSION" == "$VERSION" ]]; then
+              echo "Verified @vaubaan/harness@${VERSION} with latest=${LATEST_VERSION}"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::Published version or latest tag did not match ${VERSION}"
+          exit 1

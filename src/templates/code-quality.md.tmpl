@@ -1,0 +1,57 @@
+# Code quality — <PROJECT_NAME>
+
+This document sets the quality rules **specific to this project**. It is
+normative: it states what the project requires, not what the code does
+today (that is the handbook's job). The code audit (`/clean-code`)
+reads it before any other context.
+
+What does not belong here:
+
+- the *why* of a structural decision → an ADR, linked from this file;
+- the description of the implementation → the handbook;
+- rules already enforced by a tool's configuration → point to the
+  configuration file, do not copy it;
+- generic principles (SOLID, Clean Code) → already in the audit
+  skill.
+
+## Mechanical checks
+
+What the tools already check. The code audit does not re-report these
+points.
+
+| Tool | Configuration | Covers | Command |
+|---|---|---|---|
+| <FORMATTER> | `<FORMATTER_CONFIG_FILE>` | <FORMATTER_SCOPE> | `<FORMAT_COMMAND>` |
+| <LINTER> | `<LINTER_CONFIG_FILE>` | <LINTER_SCOPE> | `<LINT_COMMAND>` |
+| <TYPE_CHECKER> | `<TYPE_CHECKER_CONFIG_FILE>` | <TYPE_CHECKER_SCOPE> | `<TYPECHECK_COMMAND>` |
+
+## Project rules
+
+The judgment rules that no tool checks. One rule = one sentence
+verifiable on review, with a link to the ADR when a structural
+decision motivates it.
+
+### Naming
+
+- <NAMING_RULE>
+
+### Decomposition and architecture
+
+- <ARCHITECTURE_RULE> — see [<ADR_TITLE>](../decisions/<ADR_SLUG>.md)
+
+### Typing
+
+- <TYPING_RULE>
+
+### Tests
+
+- <TESTING_RULE>
+
+## Accepted deviations
+
+The generic rules the project chooses **not** to follow.
+The code audit does not report them as defects.
+
+| Generic rule | Accepted deviation | Reason |
+|---|---|---|
+| <GENERIC_RULE> | <PROJECT_DEVIATION> | <REASON_OR_ADR_LINK> |

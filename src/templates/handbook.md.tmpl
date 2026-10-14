@@ -1,0 +1,58 @@
+---
+tracks:
+  - <RELEVANT_CODE_PATH_1>
+  - <RELEVANT_CODE_PATH_2>
+last_reviewed: <DATE>
+---
+
+# <FEATURE_NAME> — handbook
+
+## Overview
+
+Describe in one paragraph what this feature / module *actually* does
+in the code, as opposed to the spec, which describes *what we
+want*. Explicitly mention the files or directories involved.
+
+The `tracks:` frontmatter above lists the code files this
+handbook depends on. The `frontmatter-tracks` linter and the
+`drift-detector` skill rely on it to flag drifts.
+
+## How it works
+
+Explain the internals, cross-linking to the code
+files (`[<path/to/file.ext>](../../<path/to/file.ext>)`). Cover:
+
+- The main entry point and its contract.
+- The control or data flow through the modules listed
+  in `tracks:`.
+- The data structures / entities handled.
+- The implicit assumptions that are not visible in the spec.
+
+### <SUB_TOPIC_1>
+
+<DESCRIPTION_1>
+
+### <SUB_TOPIC_2>
+
+<DESCRIPTION_2>
+
+## How to use it
+
+If the feature exposes an API (function, endpoint, CLI), give a
+minimal invocation example. Mention the prerequisites (env
+variables, initial state, dependencies).
+
+```
+<USAGE_EXAMPLE>
+```
+
+## How to debug
+
+List the typical failures and their diagnosis.
+
+- **Symptom:** <SYMPTOM_1> — **Likely cause:** <CAUSE_1> —
+  **Fix:** <FIX_1>.
+- **Symptom:** <SYMPTOM_2> — ...
+
+Also mention: where to look at the logs, which flags to enable for
+verbose output, which tests reproduce the bug fastest.

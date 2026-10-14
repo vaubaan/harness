@@ -1,0 +1,79 @@
+{
+  "name": "@vaubaan/harness",
+  "version": "1.2.0",
+  "description": "Coding Agent Harness (CAH) — multi-engine skills + commands + linters for Vaubaan sandboxes",
+  "type": "module",
+  "license": "Apache-2.0",
+  "author": "Vaubaan",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vaubaan/harness.git"
+  },
+  "homepage": "https://github.com/vaubaan/harness#readme",
+  "bugs": "https://github.com/vaubaan/harness/issues",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "vaubaan-harness": "./dist/cli/index.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./render": {
+      "types": "./dist/render.d.ts",
+      "import": "./dist/render.js"
+    },
+    "./linters": {
+      "types": "./dist/linters/index.d.ts",
+      "import": "./dist/linters/index.js"
+    },
+    "./parser": {
+      "types": "./dist/parser/index.d.ts",
+      "import": "./dist/parser/index.js"
+    },
+    "./init": {
+      "types": "./dist/init.d.ts",
+      "import": "./dist/init.js"
+    }
+  },
+  "files": ["dist", "README.md", "LICENSE", "NOTICE"],
+  "scripts": {
+    "build": "tsup && node scripts/copy-content.mjs",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint:harness": "node dist/cli/index.js lint --cwd .",
+    "ci": "npm run typecheck && npm run lint && npm run test && npm run build && npm run lint:harness",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "cosmiconfig": "^9.0.2",
+    "fast-glob": "^3.3.2",
+    "gray-matter": "^4.0.3",
+    "yaml": "^2.5.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/node": "^22.7.5",
+    "@vitest/coverage-v8": "^2.1.2",
+    "execa": "^9.4.0",
+    "husky": "^9.1.7",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.2"
+  }
+}
