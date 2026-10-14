@@ -36,7 +36,7 @@ Before anything else:
    (output of the previous review agent, passed via the prompt or
    via the file under `.vaubaan/reports/`). If missing or `nogo` /
    `needs-human` → you do **not** merge, you report the inconsistency.
-3. Check that the mechanical CI linters (`npx vaubaan-harness lint`)
+3. Check that the mechanical CI linters (`npx @vaubaan/harness lint`)
    pass locally. If red, stop.
 
 ### 2. Final merge ADR

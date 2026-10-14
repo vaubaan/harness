@@ -1184,7 +1184,7 @@ cd harness/
 $EDITOR skills/doc-audit.skill.md
 
 # 3. Local render for preview
-npx vaubaan-harness render --engine=claude-code --out=/tmp/rendered
+npx @vaubaan/harness render --engine=claude-code --out=/tmp/rendered
 ls /tmp/rendered/
 
 # 4. Test on a project via override

@@ -5,7 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.3.1] — 2026-10-14
+
 ### Changed
+- Rewrite the README around adoption: why, quick start, how it works, agents, skills, linters, engine support, CI example.
 - Drop the "CAH" acronym: docs, rendered personas, CLI help and package description now say "harness".
 
 ## [1.3.0] — 2026-10-14

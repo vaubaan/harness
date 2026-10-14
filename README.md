@@ -174,10 +174,10 @@ Only use one engine? `--engines=claude-code` (or `codex-cli`, `opencode`, comma-
 
 You don't have to write all the docs on day one.
 
-- **See where you stand:** `npx vaubaan-harness lint` lists what's missing, with the skill that fixes each item.
+- **See where you stand:** `npx @vaubaan/harness lint` lists what's missing, with the skill that fixes each item.
 - **Let the agent do the first pass:** `/doc-audit`, then `/spec`, `/handbook` and `/decision` on the parts you touch.
 - **Pause the Stop hook while you bootstrap:** `HARNESS_LINT_DISABLE=1`, or install without it: `init . --no-stop-hook`. The hook also gives up after 3 attempts, or as soon as a retry makes no progress.
-- **Back out anytime:** `npx vaubaan-harness uninstall .` removes what `init` wrote. Your own files, and config entries you edited, are left in place.
+- **Back out anytime:** `npx @vaubaan/harness uninstall .` removes what `init` wrote. Your own files, and config entries you edited, are left in place.
 
 ## Use it in CI
 
@@ -209,7 +209,7 @@ jobs:
 | `check <dir>` | Quick layout check: doc folders and `.gitignore`. |
 | `render --out <dir>` | Preview the render somewhere harmless. |
 
-Run them with `npx vaubaan-harness <command>` once installed (`npm i -D @vaubaan/harness`), or `npx -y @vaubaan/harness <command>` without installing.
+Run them with `npx @vaubaan/harness <command>`. If the package is installed in the project (`npm i -D @vaubaan/harness`), that uses the local version; otherwise `npx` downloads it (`-y` skips the confirmation prompt).
 
 ## Configuration
 
@@ -259,8 +259,8 @@ None by default. `init . --with-mcp=context7` adds [Context7](https://github.com
 
 ```bash
 npm i -D @vaubaan/harness@latest
-npx vaubaan-harness update . --dry-run --json   # preview
-npx vaubaan-harness update .
+npx @vaubaan/harness update . --dry-run --json   # preview
+npx @vaubaan/harness update .
 ```
 
 `update` keeps your engines, hook preference, MCP entries and hook edits. Generated files you modified are reported instead of overwritten: move the change to `.harness-overrides/`, or keep the file as yours with `--preserve AGENTS.md`. A backup is written outside the project before any change. Details: [updating a project](./docs/handbook/project-update.md).
