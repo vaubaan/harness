@@ -70,19 +70,23 @@ Then open your agent and ask it to fill the gaps:
 
 ## How it works
 
-```mermaid
-flowchart LR
-  docs["docs/ — your conventions<br/>spec · decisions · handbook<br/>tests · workflow · quality"]
-  harness["@vaubaan/harness<br/>agents · skills · commands"]
-  claude[Claude Code]
-  codex[Codex]
-  opencode[OpenCode]
-  lint["linters<br/>(Stop hook + CI)"]
-
-  docs --> harness
-  harness --> claude & codex & opencode
-  claude & codex & opencode -- "end of each turn" --> lint
-  lint -- "report what drifted" --> claude & codex & opencode
+```
+  docs/                           your conventions, versioned in Git
+    │                             spec · decisions · handbook · tests · workflow · quality
+    │
+    ▼  init
+  AGENTS.md  .claude/  .codex/  .opencode/
+    │                             generated for each engine, gitignored
+    │
+    ▼
+  Claude Code · Codex · OpenCode  read the same conventions, write the code
+    │                     ▲
+    │ end of each turn    │ report: what drifted
+    ▼                     │
+  linters (Stop hook) ────┘
+    │
+    ▼
+  CI                              same checks on every pull request
 ```
 
 1. **Your docs are the conventions.** A small, fixed layout under `docs/` says what the project does, why it's built that way, and how it actually works today.
