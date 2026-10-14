@@ -6,6 +6,7 @@ coverage/
 .vscode/
 .harness-overrides/
 .harness-manifest.json
+.harness/
 .claude/
 .codex/
 .opencode/
