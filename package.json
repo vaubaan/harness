@@ -1,6 +1,6 @@
 {
   "name": "@vaubaan/harness",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Coding Agent Harness (CAH) — multi-engine skills + commands + linters for Vaubaan sandboxes",
   "type": "module",
   "license": "Apache-2.0",

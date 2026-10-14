@@ -5,6 +5,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.3.0] — 2026-10-14
+
 ### Changed
 - Publish publicly as `@vaubaan/harness` on npmjs (with npm provenance) instead of `@sbw-vaubaan/harness` on GitHub Packages. Rendered Stop hooks now call `npx -y @vaubaan/harness stop-hook`. See [the decision](docs/decisions/public-npmjs-vaubaan-scope.md).
 - Switch the whole harness to English: spec, ADRs, handbooks, rendered skills, agents and commands, doc templates and the generated `AGENTS.md`. See [the decision](docs/decisions/english-canonical-language.md).

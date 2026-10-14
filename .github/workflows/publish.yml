@@ -7,7 +7,7 @@ on:
 
 permissions:
   contents: read
-  id-token: write # npm provenance
+  id-token: write # npm trusted publishing (OIDC) + provenance
 
 jobs:
   publish:
@@ -19,10 +19,14 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          # Trusted publishing needs Node >= 22.14 and npm >= 11.5.1.
+          node-version: "22"
           registry-url: "https://registry.npmjs.org"
           # No dependency cache in the privileged publish job (cache poisoning).
           package-manager-cache: false
+
+      - name: Upgrade npm for trusted publishing
+        run: npm install -g npm@^11.5.1
 
       - name: Install deps
         run: npm ci
@@ -42,10 +46,10 @@ jobs:
       - name: Set package version from tag (no commit, no git tag)
         run: npm version --no-git-tag-version --allow-same-version "${VERSION}"
 
+      # Authenticates through OIDC with the trusted publisher configured on
+      # npmjs.com; no token is stored. Provenance is attached automatically.
       - name: Publish to npmjs
-        run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
 
       - name: Verify published version and latest tag
         run: |

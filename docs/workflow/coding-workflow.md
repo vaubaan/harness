@@ -17,12 +17,13 @@ last_reviewed: 2026-10-14
 | Trigger | Job | Command | Typical duration |
 |---|---|---|---|
 | `push` to `main`, `pull_request` to `main` | `ci` | `npm run ci` (typecheck → lint → test → build → lint:harness) | < 20 s |
-| Tag `v*` | `publish` | install → tag validation → `npm run ci` → package version → `npm publish --provenance` → check of the published version and of `latest` | Varies with the registry |
+| Tag `v*` | `publish` | install → tag validation → `npm run ci` → package version → `npm publish` (OIDC) → check of the published version and of `latest` | Varies with the registry |
 
 Sources: [ci.yml](../../.github/workflows/ci.yml) and
 [publish.yml](../../.github/workflows/publish.yml). The checkout and
-setup-node actions use v7; the project is tested with Node 20. The
-publish job disables automatic dependency caching.
+setup-node actions use v7; CI tests with Node 20. The publish job runs
+Node 22 and upgrades npm to 11.5.1 or later, as trusted publishing
+requires, and disables automatic dependency caching.
 
 ## Env variants
 
@@ -58,9 +59,9 @@ to install. See
 | What | How |
 |---|---|
 | Trigger | Push of a `v<X.Y.Z>` tag created on the validated release commit of `main`; the workflow listens to `v*` tags and validates their semver form. |
-| Build | `npm ci`, then `npm run ci`; package version derived from the tag with `npm version --no-git-tag-version --allow-same-version`, then `npm publish --provenance --access public`. |
+| Build | `npm ci`, then `npm run ci`; package version derived from the tag with `npm version --no-git-tag-version --allow-same-version`, then `npm publish --access public`. |
 | Post-publication check | `npm view` must find the exact tag version and `dist-tags.latest` must equal it; six attempts five seconds apart, then the job fails if a value is missing or differs. |
-| Provenance | The job has the `id-token: write` permission; npm attaches a provenance attestation linking the package to the workflow and the commit. It requires a public repository. |
+| Provenance | Attached automatically by npm when publishing through OIDC from a public repository; it links the package to the workflow and the commit. |
 | Versioning | Semver. Breaking changes = major bump. |
 | Rollback | Pin the last stable version in consumers, then publish a new fixed patch. Never move a published tag. |
 | Freeze | No planned freeze at this stage |
@@ -83,9 +84,12 @@ npm view @vaubaan/harness@<X.Y.Z> version
 npm view @vaubaan/harness dist-tags.latest
 ```
 
-The job uses the `NPM_TOKEN` secret (npmjs automation token with
-publish rights on the `vaubaan` organization), exposed as
-`NODE_AUTH_TOKEN` only to the `npm publish` step.
+Publishing uses npm **trusted publishing**: the `@vaubaan/harness`
+package on npmjs.com trusts the `vaubaan/harness` repository and its
+`publish.yml` workflow. The job authenticates through OIDC
+(`id-token: write`); no npm token is stored in the repository. The very
+first version was published by hand, since a trusted publisher is
+configured on an existing package.
 
 Once a new version is installed, `update --dry-run --json` inspects
 the project migration, then `update` applies it with a backup; this

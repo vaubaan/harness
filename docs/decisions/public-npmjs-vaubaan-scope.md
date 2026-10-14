@@ -44,8 +44,9 @@ as `vaubaan/coding-agent-harness-old`.
 - An earlier installation keeps a Stop hook pointing to the old package;
   it is reinstalled (`uninstall` then `init`) or fixed by hand.
 - `.npmrc` no longer points to GitHub Packages. Publishing on npmjs
-  requires the `vaubaan` npm organization and an npmjs publish secret
-  in the repository.
+  uses trusted publishing (OIDC) from the `publish.yml` workflow: no npm
+  token is stored in the repository. The first version is published by
+  hand to create the package under the `vaubaan` npm organization.
 
 ## Rejected alternatives
 
