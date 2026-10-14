@@ -4,7 +4,7 @@ tracks:
   - tests/integration/**/*.ts
   - tests/fixtures/legacy-0.9/manifest.json
   - vitest.config.ts
-last_reviewed: 2026-10-13
+last_reviewed: 2026-10-14
 ---
 
 # Integration tests — @vaubaan/harness
@@ -212,6 +212,35 @@ engines, with a clean then a modified project, the old
 intact and no warning is written. The clean project lets the turn
 finish; the modified project with failing lint keeps the native
 continuation response.
+
+### 11. OpenCode Stop-hook plugin, 1.x and 2.x
+
+> Covers: [one plugin for V1 and V2](../decisions/opencode-v1-v2-stop-hook-plugin.md)
+> and [the OpenCode continuation](../handbook/renderer-pipeline.md#opencode-hook-continuation).
+
+`src/renderers/opencode-hook.test.ts` evaluates the emitted module and
+runs both entry points of its default export against mocks:
+
+- `server()` (1.x): persona recovered from the history, newer user
+  selection, compaction summaries ignored, history failures, CLI exit
+  codes that let the turn end, unrelated events.
+- `setup()` (2.x): the definition exposes `id`, `server` and `setup`;
+  `session.idle` runs the lint and prompts the same session with the
+  report; other events, idle events without a session and idle events
+  from another directory are ignored; exit codes 0, 1 and an empty
+  report do not prompt; the returned cleanup aborts the subscription.
+
+`src/renderers/renderers.test.ts` checks that the module has exactly one
+export. Loading by the real OpenCode 1.14.50 and 2.0.29 binaries is a
+manual check, recorded in
+[the 14 October re-check](../research/2026-10-14-engine-recheck.md).
+
+### 12. Generated paths in `.gitignore`
+
+`lint:gitignore-harness` (`src/linters/linters.test.ts`) and `check`
+(`src/cli/check.test.ts`) read one shared list, which includes
+`.harness/` and `.mcp.json`: a complete `.gitignore` passes, and each
+missing entry is reported.
 
 ## Known gaps
 - The engine CLIs are not launched by the integration suite.
