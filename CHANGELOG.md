@@ -5,6 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- Drop the "CAH" acronym: docs, rendered personas, CLI help and package description now say "harness".
+
 ## [1.3.0] — 2026-10-14
 
 ### Changed
@@ -72,7 +75,7 @@ Engine conformance release: every renderer now emits exactly what its engine's d
 - **opencode** — skills render to `.opencode/skills/<id>/SKILL.md` (not `plugins/`, which only loads JS/TS modules) and are omitted when another rendered engine already exposes them (OpenCode also reads `.claude/skills/` and `.agents/skills/`); agents and commands use YAML frontmatter instead of TOML; MCP renders to `.opencode/opencode.json`; the stop hook is a real plugin module (`.opencode/plugins/harness-stop-hook.ts`, `session.idle`)
 - **claude-code** — `CLAUDE.md` is now the `@AGENTS.md` import instead of a prose redirect, so the umbrella is actually loaded on every Claude Code version and provider
 - Skill frontmatter emits `name:` (Agent Skills spec) instead of `id:`
-- Personas no longer embed "Available skills" / "Available commands" lists nor references to the internal CAH spec; `AGENTS.md` keeps a single compact "Doc-skills" list
+- Personas no longer embed "Available skills" / "Available commands" lists nor references to the internal harness spec; `AGENTS.md` keeps a single compact "Doc-skills" list
 - `lint:gitignore-harness` and `check` now require `.agents/` in `.gitignore`
 
 ### Added

@@ -83,7 +83,7 @@ live next to the code and do not need a separate plan.
   cross-link, `doc-audit` flags the spec as "without a test plan".
 - **Explicit known gaps**. Listing what we *do not test yet* is as
   important as listing what we test. Avoids false confidence.
-- **E2E-specific conventions** (see CAH spec §9.2): for
+- **E2E-specific conventions** (see harness spec §9.2): for
   `e2e-tests.md`, document the e2e org (dedicated Stripe org /
   Supabase project / Vercel project), fixture naming, and the
   sweeper / cleanup so as not to pollute.

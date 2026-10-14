@@ -326,5 +326,5 @@ the coding linters — same output, same format, same exit code.
 - [ADR _linters-mechanical-vs-skills_](./linters-mechanical-vs-skills.md) —
   founding principle of the separation between CI-gate linters and LLM skill,
   reused here for the supervisor linters.
-- [CAH spec §0 — Vocabulary](../spec/coding-agent-harness.md) —
+- [Harness spec §0 — Vocabulary](../spec/coding-agent-harness.md) —
   definition of the agent personas and of the harness scope.

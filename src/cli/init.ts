@@ -55,7 +55,7 @@ function resolveEngineList(requested: ReadonlyArray<string> | undefined): Engine
 }
 
 /**
- * Resolves the harness package's bundled content directory. The CAH
+ * Resolves the harness package's bundled content directory. The harness
  * tsup config emits this module to both `dist/init.js` (programmatic
  * `./init` export) and inlines it into `dist/cli/index.js` (CLI use). The
  * content (`agents/`, `skills/`, `commands/`, `templates/`) always sits

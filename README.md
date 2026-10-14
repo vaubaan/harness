@@ -4,11 +4,11 @@
 
 Define once how your project is built — architecture, code quality, decisions, workflow. Claude Code, Codex and OpenCode follow it, and linters keep it honest.
 
-Coding Agent Harness (CAH) — the Vaubaan subsystem that harnesses a project so that a coding agent (claude-code / codex-cli / opencode) is immediately productive in it, and that keeps a project's documentation alive (6 required pillars: README + spec + decisions + handbook + tests + workflow, plus two optional pillars: `docs/skills/` for the project's domain skills and `docs/quality/` for its code-quality rules).
+The Vaubaan harness is the subsystem that harnesses a project so that a coding agent (claude-code / codex-cli / opencode) is immediately productive in it, and that keeps a project's documentation alive (6 required pillars: README + spec + decisions + handbook + tests + workflow, plus two optional pillars: `docs/skills/` for the project's domain skills and `docs/quality/` for its code-quality rules).
 
 ## What is this
 
-The CAH ships:
+The harness ships:
 
 - A **pivot format** `*.skill.md` / `*.cmd.md` / `*.agent.md` that renders into the native layout of the 3 supported engines (claude-code, codex-cli, opencode).
 - A **canonical set of doc-skills** (`doc-audit`, `spec-writer`, `decision-record-writer`, `handbook-writer`, `test-plan-writer`, `workflow-writer`, `readme-writer`, `drift-detector`) — the intelligent tooling that feeds the documentation.

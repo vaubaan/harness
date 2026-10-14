@@ -52,7 +52,7 @@ no Next.js, no Supabase, no code blocks. The technical *how* lives in
      implementation details — just the external shape)?
    - What **cross-cutting constraints** (security, perf, compat)?
 6. **Draft** the spec following the style of the neighboring specs.
-   Minimal sections (see §9.2 of the CAH spec):
+   Minimal sections (see §9.2 of the harness spec):
    - Status (greenfield / overhaul / stable)
    - Vocabulary
    - Vision

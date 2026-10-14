@@ -24,7 +24,7 @@ const program = new Command();
 program
   .name("vaubaan-harness")
   .description(
-    "Coding Agent Harness (CAH) — render skills, commands, and all agent personas into a target directory",
+    "Vaubaan harness — render skills, commands, and all agent personas into a target directory",
   )
   .version(VERSION);
 

@@ -1,6 +1,6 @@
-# Coding Agent Harness (CAH) — spec
+# Vaubaan harness — spec
 
-> **Status:** greenfield spec. The CAH (`@vaubaan/harness`) *harnesses*
+> **Status:** greenfield spec. The harness (`@vaubaan/harness`) *harnesses*
 > a project directory so that a coding agent (claude-code /
 > codex-cli / opencode) is immediately productive in it, and provides
 > the skills that *keep alive* a project's **doc**
@@ -23,9 +23,9 @@
 
 ## 0. Vocabulary
 
-The CAH reasons with 9 words:
+The harness reasons with 9 words:
 
-- **CAH** — the subsystem (a `@vaubaan/harness` package + a companion
+- **Harness** — the subsystem (a `@vaubaan/harness` package + a companion
   CLI `vaubaan harness ...`). No daemon, no runtime service;
   it is *configuration dropped into a target directory*.
 - **Harness** — the set of agent configuration files placed
@@ -123,7 +123,7 @@ a harness parameter.
 
 ## 1. Vision
 
-The **Coding Agent Harness (CAH)** is the subsystem that:
+The **harness** is the subsystem that:
 
 1. **Standardizes** agent configuration across the 3 supported
    engines. The same `doc-audit.skill.md` is rendered into `.claude/skills/`,
@@ -174,11 +174,11 @@ The **Coding Agent Harness (CAH)** is the subsystem that:
   *gitignored* by design (see §11). A harness fork for a
   project = forking the `@vaubaan/harness` package, not customizing in
   the repo.
-- **No runtime daemon.** The CAH is dropped configuration;
+- **No runtime daemon.** The harness is dropped configuration;
   nothing runs in the background. Skills execute in the
   coding engine's process (claude-code, codex-cli, opencode),
-  not in a dedicated CAH process.
-- **No telemetry.** The CAH phones home about nothing. The CLI only
+  not in a dedicated harness process.
+- **No telemetry.** The harness phones home about nothing. The CLI only
   performs local file writes.
 - **No cross-project sharing.** No "skills shared across
   several projects of the same org" — all skills come from the
@@ -221,7 +221,7 @@ CLI `vaubaan harness init <target-dir> [--engines=<list>]`
 
 | Entity            | Short definition                                                                                                                               |
 |-------------------|------------------------------------------------------------------------------------------------------------------------------------------------|
-| **CAH**           | The `@vaubaan/harness` package + the `vaubaan harness *` CLI. No daemon.                                                                         |
+| **Harness**       | The `@vaubaan/harness` package + the `vaubaan harness *` CLI. No daemon.                                                                         |
 | **Harness**       | The set of files dropped into the target directory: AGENTS.md + skills + commands rendered per-engine.                                         |
 | **Engine**        | Target coding agent. v1: `claude-code`, `codex-cli`, `opencode`. Each has its native layout.                                                   |
 | **Skill format**  | `*.skill.md`: Markdown + YAML frontmatter describing a skill (id, engines, tools, body prompt). Single source rendered per-engine. See §5.      |
@@ -234,7 +234,7 @@ CLI `vaubaan harness init <target-dir> [--engines=<list>]`
 
 ### 2.3 States (statelessness)
 
-The CAH **has no persistent runtime service**. Its rendering is
+The harness **has no persistent runtime service**. Its rendering is
 functional; the install and update operations keep the artifacts'
 provenance and the necessary backups locally.
 The content operations remain:
@@ -699,7 +699,7 @@ generic behavior.
 The file declares no `tracks:`: like an ADR, it sets a
 norm and does not follow the state of the code.
 
-### 9.2 Templates (shipped by CAH)
+### 9.2 Templates (shipped by the harness)
 
 `@vaubaan/harness/templates/{readme,spec,decision,handbook,integration-tests,e2e-tests,coding-workflow,code-quality}.md.tmpl`.
 The wizards (`readme-writer`, `spec-writer`, `decision-record-writer`,
@@ -710,7 +710,7 @@ templates. Minimal format:
   (install + run) + Links (docs/spec, docs/handbook, docs/workflow,
   …) + License / Contributing.
 - **spec.md**: Status + Vocabulary + Vision + Out of scope + Domain
-  + ... (see this CAH spec — it is the canonical template).
+  + ... (see this harness spec — it is the canonical template).
 - **decision.md**: Context + Decision + Consequences + Rejected
   alternatives + Date + Author.
 - **handbook.md**: Overview + How it works (cross-link to the
@@ -1031,10 +1031,10 @@ dissolve. To propagate an improvement: upstream PR on
 
 ## 12. Security
 
-The CAH carries no security model of its own — it is merely a
+The harness carries no security model of its own — it is merely a
 dropper of text files. Execution security is carried by
 **whoever invokes the harness and launches the engine** (CI runner,
-agent orchestrator, human). The CAH relies on that trust
+agent orchestrator, human). The harness relies on that trust
 boundary.
 
 - **YOLO by design on the skills side.** No skill declares a
@@ -1070,7 +1070,7 @@ boundary.
 
 A project's operator runs `vaubaan-harness init` the first
 time, then `update` for updates. It is the orchestrating tool
-(human, script, CI, or third-party agent) that invokes the CLI — the CAH
+(human, script, CI, or third-party agent) that invokes the CLI — the harness
 assumes nothing about that caller.
 
 **First-install CLI**: `vaubaan-harness init`. Mechanical rendering.
@@ -1240,7 +1240,7 @@ this repo legitimately reports (in v1):
 
 - **Partial handbook** at the beginning (the `handbook/` pillar is built
   as the code is written).
-- Specs OK for CAH (this spec).
+- Specs OK for the harness (this spec).
 - Decisions: to be fleshed out over the course of the cutover.
 
 The `doc-audit` E2E on this repo itself is an integration test: it
@@ -1283,7 +1283,7 @@ No feature flag. No coexistence period.
 
 ### 16.1 v1 decisions
 
-- **Name**: `coding-agent-harness`, abbreviation `CAH`.
+- **Name**: the harness, published as `@vaubaan/harness`.
 - **Standalone.** The harness is a package + CLI, with no dependency
   on any particular orchestrator. It is the caller (human, CI,
   third-party script) that invokes the CLI.

@@ -46,7 +46,7 @@ It actually loads `AGENTS.md` on all versions and platforms
 (Bedrock, Vertex, telemetry disabled), without double reading.
 
 Rendered personas no longer carry the "Available skills" /
-"Available commands" sections nor `§` references to the CAH spec: the engines
+"Available commands" sections nor `§` references to the harness spec: the engines
 discover skills natively, and the agent cannot read that spec.
 `AGENTS.md` keeps a single compact list.
 
