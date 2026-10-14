@@ -26,6 +26,7 @@ Rejected alternatives) — validated by `lint:decision-schema`
 
 ## v1 index
 
+- [`init` never overwrites what it does not own](./safe-init.md) — `init` shares the `update` planner: conflicts listed before any write, `--preserve`, entry-level merge of hooks and MCP (`.mcp.json` included), untouched user `.codex/config.toml`, transaction with backup; `uninstall` keeps edited files (1.4.0).
 - [One OpenCode Stop-hook plugin for V1 and V2](./opencode-v1-v2-stop-hook-plugin.md) — a single default export with `server()` (1.x) and `setup()` (2.x); verified against OpenCode 1.14.50 and 2.0.29 (1.3.2).
 - [English as the canonical language](./english-canonical-language.md) — docs, rendered content and templates in English; linters take English ADR and quality headings and still accept the French ones (1.3.0).
 - [Public release under `@vaubaan/harness`](./public-npmjs-vaubaan-scope.md) — public package on npmjs, GitHub Packages dropped, CLI and `.vaubaan/` unchanged, no migration of old hooks (1.3.0).

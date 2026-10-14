@@ -244,10 +244,13 @@ function planActiveHook(
     plan.warnings,
     path,
   );
+  // Before 1.4.0, init wrote this file whole and listed it in the manifest:
+  // the harness created it, along with its hooks and Stop containers.
+  const legacyWholeFile = !previous && claimExisting && existed;
   const ownership = {
-    createdFile: !existed || previous?.createdFile === true,
-    addedHooks: previous?.addedHooks ?? !Object.hasOwn(config, "hooks"),
-    addedStop: previous?.addedStop ?? !Object.hasOwn(hooks, "Stop"),
+    createdFile: !existed || previous?.createdFile === true || legacyWholeFile,
+    addedHooks: previous?.addedHooks ?? (legacyWholeFile || !Object.hasOwn(config, "hooks")),
+    addedStop: previous?.addedStop ?? (legacyWholeFile || !Object.hasOwn(hooks, "Stop")),
     entries: normalized.entries,
   };
   if (!isDeepStrictEqual(groups, normalized.groups)) {

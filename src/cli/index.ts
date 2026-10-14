@@ -19,6 +19,15 @@ function resolvePackageDir(): string {
   return resolve(here, "..");
 }
 
+/** Comma-separated option value; an option given empty yields an empty list. */
+function parseList(raw: string | undefined): string[] | undefined {
+  if (raw === undefined) return undefined;
+  return raw
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 const program = new Command();
 
 program
@@ -48,10 +57,11 @@ program
     "--no-stop-hook",
     "skip rendering the Stop-hook configs that run lint at end of each agent turn",
   )
+  .option("--preserve <paths>", "comma-separated generated files to leave under user ownership")
+  .option("--backup-dir <dir>", "new backup directory outside the project")
   .action((targetDir: string, opts: Record<string, string | boolean | undefined>) => {
     const packageDir = (opts.packageDir as string | undefined) ?? resolvePackageDir();
-    const enginesRaw = opts.engines as string | undefined;
-    const engines = enginesRaw ? enginesRaw.split(",").map((s) => s.trim()) : undefined;
+    const engines = parseList(opts.engines as string | undefined);
     const withMcpRaw = opts.withMcp as string | undefined;
     const mcpServers = withMcpRaw ? withMcpRaw.split(",").map((s) => s.trim()) : undefined;
     const result = initCommand({
@@ -61,6 +71,8 @@ program
       packageDir,
       mcpServers,
       withStopHook: opts.stopHook !== false,
+      preserveFiles: parseList(opts.preserve as string | undefined),
+      backupDir: opts.backupDir as string | undefined,
     });
     process.stdout.write(`rendered ${result.filesWritten.length} files to ${targetDir}\n`);
     if (result.staleFilesRemoved.length > 0) {
@@ -70,12 +82,13 @@ program
     }
     if (result.stopHookInstalled) {
       process.stdout.write("stop-hook installed (runs lint at end-of-turn)\n");
-      if (result.filesWritten.includes(".codex/hooks.json")) {
+      if (result.engines.includes("codex-cli")) {
         process.stdout.write(
           "codex: the hook runs once you trust this project and approve the hook (startup review or /hooks)\n",
         );
       }
     }
+    if (result.backupDir) process.stdout.write(`backup: ${result.backupDir}\n`);
     for (const w of result.warnings) process.stderr.write(`warning: ${w}\n`);
   });
 
@@ -175,8 +188,7 @@ program
   .option("--no-stop-hook", "skip rendering the Stop-hook configs")
   .action((opts: Record<string, string | boolean | undefined>) => {
     const packageDir = (opts.packageDir as string | undefined) ?? resolvePackageDir();
-    const enginesRaw = opts.engines as string | undefined;
-    const engines = enginesRaw ? enginesRaw.split(",").map((s) => s.trim()) : undefined;
+    const engines = parseList(opts.engines as string | undefined);
     const withMcpRaw = opts.withMcp as string | undefined;
     const mcpServers = withMcpRaw ? withMcpRaw.split(",").map((s) => s.trim()) : undefined;
     const result = renderCommand({

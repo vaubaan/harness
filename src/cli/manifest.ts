@@ -19,6 +19,8 @@ const ManifestSchema = z.object({
   stopHookInstalled: z.boolean().optional(),
   stopHookEngines: z.array(z.string()).optional(),
   opencodeConfig: OpenCodeConfigOwnershipSchema.optional(),
+  /** Entries the harness added to `.mcp.json` (Claude Code). */
+  mcpConfig: OpenCodeConfigOwnershipSchema.optional(),
   hookConfigs: HookConfigsOwnershipSchema.optional(),
   harnessVersion: z.string().optional(),
   overridesDir: z.string().optional(),

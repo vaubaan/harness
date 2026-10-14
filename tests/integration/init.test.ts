@@ -74,7 +74,12 @@ describe("initCommand integration — multi-engine harness", () => {
     const manifest = readManifest(sandbox);
     expect(manifest).not.toBeNull();
     expect(manifest?.engines.sort()).toEqual(["claude-code", "codex-cli"]);
-    expect(manifest?.files.sort()).toEqual([...result.filesWritten].sort());
+    // Shared hook configurations are owned entry by entry, not as whole files.
+    const shared = [".claude/settings.json", ".codex/hooks.json"];
+    expect(manifest?.files.sort()).toEqual(
+      result.filesWritten.filter((path) => !shared.includes(path)).sort(),
+    );
+    expect(Object.keys(manifest?.hookConfigs ?? {}).sort()).toEqual(shared);
   });
 
   it("installs stop-hook configs by default and records it in the manifest", () => {
@@ -103,7 +108,7 @@ describe("initCommand integration — multi-engine harness", () => {
     expect(result.filesWritten).not.toContain(".opencode/plugins/harness-stop-hook.ts");
     const manifest = readManifest(sandbox);
     expect(manifest?.stopHookInstalled).toBe(false);
-    expect(manifest?.stopHookEngines).toBeUndefined();
+    expect(manifest?.stopHookEngines).toEqual([]);
   });
 
   it("does not expose /harness-lint anymore — the stop-hook runs lint directly", () => {

@@ -1,6 +1,8 @@
 ---
 tracks:
   - src/cli/init.ts
+  - src/cli/plan-render.ts
+  - src/cli/update.ts
   - src/cli/uninstall.ts
   - src/cli/manifest.ts
   - src/cli/managed-paths.ts
@@ -9,7 +11,8 @@ tracks:
   - src/cli/index.ts
   - tests/integration/uninstall.test.ts
   - tests/integration/opencode-config.test.ts
-last_reviewed: 2026-09-20
+  - tests/integration/init-safe.test.ts
+last_reviewed: 2026-10-14
 ---
 
 # Init and uninstall — lifecycle of managed files
@@ -40,14 +43,36 @@ the final file or the manifest. The root chosen by the caller may
 itself be canonicalized through a link. A parent must be a
 directory and the final destination a regular file, if it exists.
 
-### Reinstallation
+### Installation and reinstallation
 
-`initCommand` (`src/cli/init.ts`) loads the manifest, validates the old
-paths and all the destinations of the new rendering, then prepares the
-OpenCode configuration. It then deletes the old managed files
-absent from the new rendering, writes the outputs and records the v6 manifest.
-A manifest, path or configuration error detected during
-this preparation does not leave behind a deletion already performed.
+Since 1.4.0, `initCommand` (`src/cli/init.ts`) shares the planner of
+`update`, `planInstallation` (`src/cli/update.ts`). It differs only in
+where the settings come from: engines, MCP servers and the Stop hook come
+from the options; preserved files, entry ownership and the overrides
+folder come from the previous manifest, if any. Decision:
+[safe init](../decisions/safe-init.md).
+
+1. The rendering (`planInit`, `src/cli/plan-render.ts`) is split into
+   generated files and shared configurations.
+2. A generated path that already holds a file outside the manifest, or a
+   managed file whose content no longer matches its recorded hash, is a
+   conflict. All conflicts are reported in one error, before any write;
+   `--preserve <path>` leaves a file to the project.
+3. Shared configurations are merged entry by entry: Stop hooks in
+   `.claude/settings.json` and `.codex/hooks.json` (`planUpdateConfigs`),
+   MCP servers in `.opencode/opencode.json` and `.mcp.json`
+   (`planOpenCodeConfig`, `planClaudeMcpConfig`). The manifest records the
+   owned entries in `hookConfigs`, `opencodeConfig` and `mcpConfig`.
+4. `.codex/config.toml` is written only if absent, or created by the
+   harness and unchanged. Otherwise it is left alone and a warning prints
+   the `[mcp_servers.<id>]` block to add.
+5. A `.harness-overrides/` folder in the project is loaded by default.
+6. Writes and removals go through `applyUpdateTransaction`, with a
+   backup and rollback. The backup is kept, and its path printed, only
+   when an existing file was changed. Directories left empty by removals
+   are pruned.
+
+Re-running `init` with the same options writes nothing.
 
 ### Uninstallation
 
@@ -56,10 +81,13 @@ this preparation does not leave behind a deletion already performed.
 1. Validates the manifest path then reads it. If it is absent, returns
    a warning without mutation.
 2. Validates all the paths and prepares the removal of only those
-   OpenCode entries and shared hooks whose ownership is recorded.
-3. Calls `removeRenderedFiles` on the managed files. A file already
-   absent produces a warning, then cleanup continues. Directories
-   that become empty are pruned up to the target directory.
+   OpenCode and `.mcp.json` entries and shared hooks whose ownership is
+   recorded.
+3. Calls `removeRenderedFiles` on the managed files. A generated file
+   whose content no longer matches its recorded hash is kept, with a
+   `kept modified harness file` warning. A file already absent produces
+   a warning, then cleanup continues. Directories that become empty are
+   pruned up to the target directory.
 4. Writes the remaining shared configuration if needed, then deletes
    the manifest.
 

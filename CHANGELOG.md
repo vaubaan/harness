@@ -5,6 +5,23 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.4.0] — 2026-10-14
+
+### Changed
+- `init` never overwrites or deletes a file it does not own. It now shares the `update` planner: existing generated files outside the manifest, or edited since, stop the run before any write and are all listed; shared configurations are merged entry by entry; changes go through one transaction with a backup. See [the decision](docs/decisions/safe-init.md).
+- `init` accepts `--preserve <paths>` and `--backup-dir <dir>`, and loads a `.harness-overrides/` folder in the project by default, like `update`.
+- `--with-mcp` adds its servers to an existing `.mcp.json` and records only those entries (`mcpConfig` in the manifest). An existing `.codex/config.toml` is left untouched; `init` prints the block to add.
+- `uninstall` keeps a generated file edited since the harness wrote it, with a warning.
+
+### Fixed
+- `init` replaced an existing `.claude/settings.json`, `.codex/hooks.json`, `.mcp.json` or `.codex/config.toml`, and `uninstall` then deleted it.
+- `init` after `update` dropped preserved files, user hooks and their ownership.
+- `init` → `update` → `uninstall` left `{"hooks":{"Stop":[]}}` files behind.
+- `--engines` with duplicates rendered files twice; `--engines=` with no value meant all engines and is now refused.
+
+### Migration
+None required. Existing installations are read as before; hook files and `.mcp.json` that an earlier `init` recorded as whole files are converted to entry ownership on the next `init` or `update`.
+
 ## [1.3.2] — 2026-10-14
 
 ### Fixed

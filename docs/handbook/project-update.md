@@ -9,11 +9,12 @@ tracks:
   - src/cli/manifest.ts
   - src/cli/managed-paths.ts
   - src/cli/init.ts
+  - src/cli/plan-render.ts
   - src/cli/index.ts
   - src/index.ts
   - src/version.ts
   - tests/integration/update.test.ts
-last_reviewed: 2026-09-20
+last_reviewed: 2026-10-14
 ---
 
 # Updating a project
@@ -93,8 +94,12 @@ must belong to the installation's engines.
 
 ## File preparation and conflicts
 
-`planUpdate` in `src/cli/update.ts` reuses `planInit` for the
-agents, skills, commands and project skills, with hooks handled
+`planUpdate` in `src/cli/update.ts` reads the installation, then calls
+`planInstallation`, the planner it shares with `init` since 1.4.0
+([safe init](../decisions/safe-init.md)). `update` passes the engines,
+Stop-hook engines and MCP state recorded in the manifest; `init` passes
+its options. The planner reuses `planInit` (`src/cli/plan-render.ts`)
+for the agents, skills, commands and project skills, with hooks handled
 separately. It then prepares the shared configurations and removes
 the paths handed over to the user via `preservedFiles` or
 `--preserve`.
@@ -111,6 +116,8 @@ For a generated file outside shared configuration:
   `--preserve` depending on its ownership.
 - If a fingerprint exists, modified content blocks the update,
   unless it already matches the new rendering exactly.
+- All conflicts are collected and reported in one error, so a single
+  run lists every file to resolve.
 - An old managed file without a fingerprint is regenerated with a warning and
   backed up before mutation. No unlisted content is adopted by
   inference from its name.
@@ -128,9 +135,16 @@ values: these follow the per-entry ownership rules below.
 ## Shared MCP and hooks
 
 `planUpdateConfigs` (`src/cli/update-config.ts`) handles settings
-separately from generated files. `.mcp.json` and `.codex/config.toml`
-stay byte-for-byte identical. The command does not add a new
-MCP server simply because an engine is installed.
+separately from generated files. `update` leaves `.mcp.json` and
+`.codex/config.toml` byte-for-byte identical and does not add a new MCP
+server simply because an engine is installed; MCP servers are chosen by
+`init --with-mcp`. The recorded `mcpConfig` ownership of `.mcp.json` is
+carried over. A `.mcp.json` that an `init` before 1.4.0 listed as a whole
+harness file, unchanged since, is converted to entry ownership.
+
+A hook file that an `init` before 1.4.0 listed as a whole harness file
+is treated as created by the harness when its entries are first
+recorded, so `uninstall` removes it when nothing else is left in it.
 
 If the old `.opencode/mcp.json` is listed in the manifest and exists,
 its servers absent from `.opencode/opencode.json` are added in the native

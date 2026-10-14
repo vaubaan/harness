@@ -72,7 +72,7 @@ Then open your agent and ask it to fill the gaps:
 ```
 
 > [!NOTE]
-> `init` regenerates `AGENTS.md` and `CLAUDE.md` at the root. If you already have hand-written ones, move their content into `docs/` (or your README) first.
+> `init` never overwrites a file it did not write. If you already have a hand-written `AGENTS.md` or `CLAUDE.md`, it stops and lists them: move their content into `docs/`, or keep them as yours with `--preserve AGENTS.md`. Existing `.claude/settings.json`, `.mcp.json` and `.opencode/opencode.json` are merged entry by entry, with a backup.
 
 ## How it works
 
@@ -209,7 +209,7 @@ jobs:
 
 | Command | What it does |
 |---|---|
-| `init <dir>` | Render the harness into a project. |
+| `init <dir>` | Render the harness into a project. Re-run it to change engines (`--engines`), MCP servers (`--with-mcp`) or the Stop hook (`--no-stop-hook`). |
 | `update [dir]` | Re-render with the installed version, keeping your settings. `--dry-run --json` previews. |
 | `uninstall <dir>` | Remove what `init` wrote, leaving your own files in place. |
 | `lint` | Run the linters. |

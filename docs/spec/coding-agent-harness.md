@@ -186,7 +186,8 @@ The **harness** is the subsystem that:
   the package (or proposes it upstream).
 - **No hot-reload during an execution.** Once `init` has run,
   the dropped files are frozen. To pick up an update:
-  re-run `init` (idempotent — overwrites in place).
+  re-run `init` or `update` (idempotent; never overwrites a file
+  the harness does not own).
 - **No skill generation by the agent.** A skill is written
   deliberately by a human (or with an agent's help in
   brainstorm mode), then committed to `@vaubaan/harness`. No
@@ -1087,7 +1088,17 @@ vaubaan-harness init <target-dir> --engines=claude-code,codex-cli \
 ```
 
 Idempotent: re-running `init` refreshes the dropped files without
-requiring cleanup.
+requiring cleanup, and keeps the choices recorded by previous runs
+(preserved files, entry ownership, overrides folder).
+
+`init` never overwrites or deletes a file it does not own. A generated
+path already holding a file the harness did not write, or a generated
+file edited since, stops the command before any write and is reported;
+the operator moves the content or keeps the file with `--preserve`.
+Shared configurations (`.claude/settings.json`, `.codex/hooks.json`,
+`.mcp.json`, `.opencode/opencode.json`) are merged entry by entry; an
+existing `.codex/config.toml` is left untouched and the block to add is
+printed. Decision: [safe init](../decisions/safe-init.md).
 
 **Preserving the project during an update or a removal:**
 

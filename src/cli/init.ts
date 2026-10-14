@@ -1,17 +1,15 @@
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-import { loadHarness, loadOverrides, loadProjectSkills } from "../loader.js";
-import { resolveMcpIds } from "../mcp.js";
-import { type RenderOutput, render } from "../render.js";
-import { ENGINES, type Engine, type RenderedFile } from "../types.js";
+import type { Engine, RenderedFile } from "../types.js";
 import { assertManagedPaths } from "./managed-paths.js";
-import { MANIFEST_FILENAME, readManifest, writeManifest } from "./manifest.js";
-import { OPENCODE_CONFIG_PATH, planOpenCodeConfig } from "./opencode-config.js";
-import { removeRenderedFiles } from "./uninstall.js";
+import { MANIFEST_FILENAME, MANIFEST_VERSION, type Manifest, readManifest } from "./manifest.js";
+import { planInit, resolveEngineList } from "./plan-render.js";
+import { pruneEmptyDirs } from "./uninstall.js";
+import { SHARED_CONFIG_PATHS } from "./update-config.js";
+import { applyUpdateTransaction } from "./update-transaction.js";
+import { planInstallation } from "./update.js";
 
-/** Cardinal file of the optional `docs/quality/` pillar. */
-const QUALITY_DOC_PATH = "docs/quality/code-quality.md";
+export { planInit };
 
 export interface InitArgs {
   targetDir: string;
@@ -34,64 +32,22 @@ export interface InitArgs {
    * `HARNESS_LINT_DISABLE=1`).
    */
   withStopHook?: boolean;
+  /** Generated files to leave to the project instead of rendering them. */
+  preserveFiles?: ReadonlyArray<string>;
+  /** Exact new backup directory, outside the project. Defaults to private user state. */
+  backupDir?: string;
 }
 
 export interface InitResult {
+  /** Generated files the harness owns after this run, plus shared configurations it edited. */
   filesWritten: string[];
   /** Files a previous `init` rendered that this one no longer does (layout change, engine dropped). */
   staleFilesRemoved: string[];
   warnings: string[];
   stopHookInstalled: boolean;
-}
-
-function resolveEngineList(requested: ReadonlyArray<string> | undefined): Engine[] {
-  if (!requested || requested.length === 0) return [...ENGINES];
-  return requested.map((e) => {
-    if (!ENGINES.includes(e as Engine)) {
-      throw new Error(`unknown engine: ${e} (expected one of ${ENGINES.join(", ")})`);
-    }
-    return e as Engine;
-  });
-}
-
-/**
- * Resolves the harness package's bundled content directory. The harness
- * tsup config emits this module to both `dist/init.js` (programmatic
- * `./init` export) and inlines it into `dist/cli/index.js` (CLI use). The
- * content (`agents/`, `skills/`, `commands/`, `templates/`) always sits
- * at `dist/` — same dir as `dist/init.js`, parent of `dist/cli/index.js`.
- * In dev (`src/cli/init.ts`) the content also sits at `src/`. We
- * disambiguate by checking which ancestor contains `agents/`.
- */
-function defaultPackageDir(): string {
-  const here = dirname(fileURLToPath(import.meta.url));
-  if (existsSync(join(here, "agents"))) return here;
-  return resolve(here, "..");
-}
-
-export function planInit(args: InitArgs): {
   engines: Engine[];
-  output: RenderOutput;
-  stopHookInstalled: boolean;
-} {
-  const engines = resolveEngineList(args.engines);
-  const packageDir = args.packageDir ?? defaultPackageDir();
-  const harness = loadHarness(packageDir);
-  const overrides = args.overridesDir ? loadOverrides(args.overridesDir) : undefined;
-  const projectSkills = loadProjectSkills(args.targetDir);
-  const hasQualityDoc = existsSync(join(args.targetDir, QUALITY_DOC_PATH));
-  const mcpServers = args.mcpServers ? resolveMcpIds(args.mcpServers) : undefined;
-  const stopHookInstalled = args.withStopHook !== false;
-  const output = render({
-    harness,
-    engines,
-    overrides,
-    projectSkills,
-    hasQualityDoc,
-    mcpServers,
-    withStopHook: stopHookInstalled,
-  });
-  return { engines, output, stopHookInstalled };
+  /** Set when existing project files were changed; holds their previous contents. */
+  backupDir?: string;
 }
 
 export function writeFilesToTarget(
@@ -112,38 +68,58 @@ export function writeFilesToTarget(
   return written;
 }
 
+function emptyManifest(engines: ReadonlyArray<Engine>): Manifest {
+  return { version: MANIFEST_VERSION, engines: [...engines], renderedAt: "", files: [] };
+}
+
+/**
+ * Installs or re-renders the harness. Shares the planner of `update`: files
+ * the harness does not own are never overwritten or deleted, shared
+ * configurations are merged entry by entry, and changes are applied in one
+ * transaction (see docs/decisions/safe-init.md).
+ */
 export function initCommand(args: InitArgs): InitResult {
-  const { engines, output, stopHookInstalled } = planInit(args);
-  const previous = readManifest(args.targetDir);
-  assertManagedPaths(args.targetDir, [
-    MANIFEST_FILENAME,
-    ...(previous?.files ?? []),
-    ...output.files.map((file) => file.path),
-    ...(previous?.opencodeConfig ? [OPENCODE_CONFIG_PATH] : []),
-  ]);
-  const desiredConfig = output.files.find((file) => file.path === OPENCODE_CONFIG_PATH);
-  const config = planOpenCodeConfig(args.targetDir, desiredConfig, previous?.opencodeConfig);
-  const next = new Set(output.files.map((f) => f.path));
-  const stale = (previous?.files ?? []).filter((f) => !next.has(f) && f !== OPENCODE_CONFIG_PATH);
-  if (config.remove) stale.push(OPENCODE_CONFIG_PATH);
-  const staleFilesRemoved = removeRenderedFiles(resolve(args.targetDir), stale).filesRemoved;
-  const ownedFiles = output.files.filter((file) => file.path !== OPENCODE_CONFIG_PATH);
-  const filesWritten = writeFilesToTarget(ownedFiles, args.targetDir);
-  if (config.write) writeFilesToTarget([config.write], args.targetDir);
-  writeManifest(args.targetDir, engines, filesWritten, {
-    stopHookInstalled,
-    stopHookEngines: stopHookInstalled ? engines : undefined,
-    opencodeConfig: config.ownership,
-    overridesDir: args.overridesDir
-      ? resolve(args.overridesDir) === resolve(args.targetDir)
-        ? "."
-        : resolve(args.overridesDir)
-      : undefined,
-  });
-  if (config.write) filesWritten.push(OPENCODE_CONFIG_PATH);
-  const warnings = [...output.warnings, ...config.warnings];
-  if (previous?.files.includes(OPENCODE_CONFIG_PATH) && !previous.opencodeConfig) {
-    warnings.push(`preserved legacy shared configuration: ${OPENCODE_CONFIG_PATH}`);
+  const root = resolve(args.targetDir);
+  const engines = resolveEngineList(args.engines);
+  const stopHookInstalled = args.withStopHook !== false;
+  const previous = readManifest(root) ?? emptyManifest(engines);
+  const plan = planInstallation(
+    {
+      targetDir: root,
+      packageDir: args.packageDir,
+      overridesDir: args.overridesDir,
+      preserveFiles: args.preserveFiles,
+    },
+    {
+      previous,
+      sourceVersion: previous.version,
+      engines,
+      hookEngines: stopHookInstalled ? engines : [],
+      mcpServers: args.mcpServers ?? [],
+    },
+  );
+  const touchedExisting = [...plan.writes.map((file) => file.path), ...plan.removals].some(
+    (path) => path !== MANIFEST_FILENAME && existsSync(join(root, path)),
+  );
+  let backupDir: string | undefined;
+  if (plan.writes.length || plan.removals.length) {
+    backupDir = applyUpdateTransaction(root, plan.writes, plan.removals, args.backupDir).backupDir;
+    if (!touchedExisting && !args.backupDir) {
+      rmSync(backupDir, { recursive: true, force: true });
+      backupDir = undefined;
+    }
+    // Dropping an engine leaves its folders empty; remove them like uninstall does.
+    pruneEmptyDirs(root, new Set(plan.removals.map((path) => dirname(join(root, path)))));
   }
-  return { filesWritten, staleFilesRemoved, warnings, stopHookInstalled };
+  const sharedWritten = plan.writes
+    .map((file) => file.path)
+    .filter((path) => SHARED_CONFIG_PATHS.includes(path) && !plan.owned.includes(path));
+  return {
+    filesWritten: [...plan.owned, ...sharedWritten],
+    staleFilesRemoved: plan.removals,
+    warnings: plan.warnings,
+    stopHookInstalled,
+    engines,
+    ...(backupDir ? { backupDir } : {}),
+  };
 }

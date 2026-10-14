@@ -242,6 +242,33 @@ manual check, recorded in
 `.harness/` and `.mcp.json`: a complete `.gitignore` passes, and each
 missing entry is reported.
 
+### 13. Safe `init`
+
+> Covers: [safe init](../decisions/safe-init.md) and
+> [installation and reinstallation](../handbook/uninstall.md#installation-and-reinstallation).
+
+`tests/integration/init-safe.test.ts`:
+
+- Hand-written `AGENTS.md` and `CLAUDE.md`: one error lists both, nothing
+  is written. With `--preserve AGENTS.md`, the file is kept, recorded and
+  survives `uninstall`.
+- Existing `.claude/settings.json` with permissions and a user hook: the
+  Stop hook is merged, a backup is made, and `uninstall` restores the
+  original object.
+- Existing `.mcp.json` with a user server: `context7` is added and owned
+  alone; `uninstall` restores the original.
+- User `.codex/config.toml`: untouched, the block to add is printed, and
+  `uninstall` keeps it. A `.codex/config.toml` created by the harness is
+  removed when MCP is dropped.
+- `.harness-overrides/` in the project is loaded by default.
+- Re-running `init` with the same options writes nothing and keeps no
+  backup; a generated file edited since stops the run.
+- `init` after `update --preserve` keeps the preserved file and the user
+  hook.
+- Duplicate engines are collapsed; an empty selection is refused.
+- `uninstall` keeps an edited generated file with a warning, and removes
+  a hook file that a pre-1.4 `init` wrote whole, after an `update`.
+
 ## Known gaps
 - The engine CLIs are not launched by the integration suite.
   The manual results, including the TOML spawn and the trusted Codex MCP,
