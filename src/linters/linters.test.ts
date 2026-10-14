@@ -392,7 +392,7 @@ describe("lint:gitignore-harness", () => {
   it("passes with harness entries and no retired runner entry", () => {
     repo.write(
       ".gitignore",
-      ".harness-overrides/\n.harness-manifest.json\n.claude/\n.codex/\n.opencode/\n.agents/\n.vaubaan/\nAGENTS.md\nCLAUDE.md\n.mcp.json\n",
+      ".harness-overrides/\n.harness-manifest.json\n.harness/\n.claude/\n.codex/\n.opencode/\n.agents/\n.vaubaan/\nAGENTS.md\nCLAUDE.md\n.mcp.json\n",
     );
     expect(gitignoreHarness.run(repo.root)).toEqual([]);
   });
@@ -403,7 +403,7 @@ describe("lint:gitignore-harness", () => {
   it("flags missing entries", () => {
     repo.write(".gitignore", "node_modules/\n");
     const issues = gitignoreHarness.run(repo.root);
-    expect(issues).toHaveLength(10);
+    expect(issues).toHaveLength(11);
   });
 });
 
@@ -611,7 +611,7 @@ describe("runLinters aggregator", () => {
     repo.write("docs/workflow/coding-workflow.md", "---\ntracks: [package.json]\n---\n\nworkflow");
     repo.write(
       ".gitignore",
-      ".harness-overrides/\n.harness-manifest.json\n.claude/\n.codex/\n.opencode/\n.agents/\n.vaubaan/\nAGENTS.md\nCLAUDE.md\n.mcp.json\n",
+      ".harness-overrides/\n.harness-manifest.json\n.harness/\n.claude/\n.codex/\n.opencode/\n.agents/\n.vaubaan/\nAGENTS.md\nCLAUDE.md\n.mcp.json\n",
     );
     const report = runLinters(repo.root);
     if (!report.summary.pass) {

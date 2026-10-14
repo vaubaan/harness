@@ -12,7 +12,7 @@ tracks:
   - src/parser/agent.ts
   - src/parser/skill.ts
   - src/parser/cmd.ts
-last_reviewed: 2026-09-20
+last_reviewed: 2026-10-14
 ---
 
 # Renderer pipeline
@@ -151,12 +151,22 @@ natively, and the single list lives in `AGENTS.md` (the
 The [Stop hooks handbook](./stop-hook.md) describes the shared decision,
 the local retry state and the adapters' responses.
 
-`renderStopHook` in `src/renderers/opencode.ts` emits a
-`session.idle` plugin. It runs `vaubaan-harness stop-hook --engine opencode`
-and only prepares a continuation if the process returns exit code 2
-with a non-empty report on stderr.
+`renderStopHook` in `src/renderers/opencode.ts` emits
+`.opencode/plugins/harness-stop-hook.ts`, a single default export that
+OpenCode 1.x and 2.x both load (decision:
+[one plugin for V1 and V2](../decisions/opencode-v1-v2-stop-hook-plugin.md)):
 
-The plugin reads `client.session.messages` and searches backward for the last
+```js
+export default { id: "vaubaan-harness-stop-hook", server, setup };
+```
+
+Both entry points react to `session.idle`, run `npx -y @vaubaan/harness
+stop-hook --engine opencode` through the shared `lintReport` helper, and
+only continue the session if the process returns exit code 2 with a
+non-empty report on stderr.
+
+**OpenCode 1.x** calls `server({ client, directory })`, which returns an
+`event` handler. The handler reads `client.session.messages` and searches backward for the last
 user or assistant message carrying a non-empty `agent`. Internal
 compaction summaries are ignored. It passes this agent in
 `client.session.prompt({ path, body: { agent, parts } })`, with the
@@ -166,8 +176,15 @@ persona is unknown, no continuation is sent with the default
 agent. The decision is described in
 [safe lifecycle](../decisions/safe-project-artifact-lifecycle.md).
 
-`src/renderers/opencode-hook.test.ts` runs the generated module with a
-mock client; the [E2E plan](../tests/e2e-tests.md) explicitly keeps
+**OpenCode 2.x** calls `setup(context)`. It iterates
+`context.event.subscribe()` in the background, skips `session.idle`
+events whose `location.directory` is another project, and sends the
+report with `context.session.prompt({ sessionID, text })`. A 2.x session
+keeps its agent, so no persona lookup is needed. `setup` returns a
+cleanup that aborts the subscription.
+
+`src/renderers/opencode-hook.test.ts` runs both entry points of the
+generated module with mocks; the [E2E plan](../tests/e2e-tests.md) explicitly keeps
 the limitation on a full loop with a real model.
 
 ## How to use it from code

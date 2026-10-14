@@ -6,7 +6,7 @@ tracks:
   - src/stop-hook/**/*.ts
   - src/renderers/opencode.ts
   - src/renderers/opencode-hook.test.ts
-last_reviewed: 2026-09-20
+last_reviewed: 2026-10-14
 ---
 
 # Stop hooks — in-session documentation checks
@@ -48,6 +48,22 @@ lack of progress adds its explanation on stderr. The OpenCode
 plugin keeps the current persona when injecting: see
 [the OpenCode continuation](./renderer-pipeline.md#opencode-hook-continuation).
 
+On Claude Code and Codex, stderr from a hook that exits 0 is not shown
+to the user, so these explanations only appear in the engines' debug
+logs.
+
+## When each engine runs the hook
+
+Rendering the hook is not always enough; each engine has its own gate.
+Checked on 2026-10-14 against Claude Code 2.1.299, Codex 0.155.1 and
+OpenCode 1.14.50 / 2.0.29.
+
+| Engine | Gate |
+|---|---|
+| Claude Code | Interactive sessions hold back project hooks until the workspace trust dialog is accepted. `-p` and SDK sessions run them directly. |
+| Codex | The project must be trusted, **and** the hook itself must be reviewed and trusted, at the startup "Hooks need review" prompt or with `/hooks`. Trust is stored per project in the user's `~/.codex/config.toml`. `codex exec` skips untrusted hooks silently unless `--dangerously-bypass-hook-trust` is passed. `init` prints a reminder when it renders the Codex hook. |
+| OpenCode | No approval step. The plugin loads on 1.x through `server()` and on 2.x through `setup()`. |
+
 ## Removal of the CAR signal
 
 Since 1.1.1, the hook no longer writes an end-of-turn log to
@@ -61,6 +77,8 @@ above. Decision: [removal of the CAR couplings](../decisions/retire-coding-agent
 
 - No lint: check the kill switch, `stop_hook_active` and the Git
   state. `defaultGitStatus` also treats a Git error as an empty state.
+- Hook never called: check the engine's gate above (Claude workspace
+  trust, Codex project and hook trust).
 - Retries stopped: read stderr and the report; the counter is bounded
   and the progress check compares the content of the lint report.
 - No OpenCode continuation: check exit code 2, a non-empty report

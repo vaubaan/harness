@@ -1,9 +1,11 @@
 import type { LintIssue, Linter } from "./types.js";
 import { fileExists, readText } from "./util.js";
 
-const REQUIRED_ENTRIES = [
+/** Paths the harness generates or writes at runtime; none belongs in Git. */
+export const REQUIRED_GITIGNORE_ENTRIES: ReadonlyArray<string> = [
   ".harness-overrides/",
   ".harness-manifest.json",
+  ".harness/",
   ".claude/",
   ".codex/",
   ".opencode/",
@@ -36,7 +38,7 @@ export const gitignoreHarness: Linter = {
         .map((l) => l.trim())
         .filter(Boolean),
     );
-    for (const entry of REQUIRED_ENTRIES) {
+    for (const entry of REQUIRED_GITIGNORE_ENTRIES) {
       const variants = [entry, entry.replace(/\/$/, "")];
       if (!variants.some((v) => lines.has(v))) {
         issues.push({

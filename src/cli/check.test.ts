@@ -7,6 +7,7 @@ import { checkCommand } from "./check.js";
 const REQUIRED_GITIGNORE_ENTRIES = [
   ".harness-overrides/",
   ".harness-manifest.json",
+  ".harness/",
   ".claude/",
   ".codex/",
   ".opencode/",
@@ -14,6 +15,7 @@ const REQUIRED_GITIGNORE_ENTRIES = [
   ".vaubaan/",
   "AGENTS.md",
   "CLAUDE.md",
+  ".mcp.json",
 ];
 
 const REQUIRED_DIRS = [

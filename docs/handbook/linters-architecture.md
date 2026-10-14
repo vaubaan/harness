@@ -14,7 +14,7 @@ tracks:
   - src/linters/quality-schema.ts
   - src/cli/index.ts
   - src/cli/check.ts
-last_reviewed: 2026-10-13
+last_reviewed: 2026-10-14
 ---
 
 # Linters architecture
@@ -105,12 +105,18 @@ The final report is a versioned `LintReport` (`version: 1`,
 
 ### Generated files and `.gitignore`
 
-`src/linters/gitignore-harness.ts` requires the entries
-`.harness-overrides/`, `.harness-manifest.json`, `.claude/`, `.codex/`,
-`.opencode/`, `.agents/`, `.vaubaan/`, `AGENTS.md`, `CLAUDE.md` and
-`.mcp.json`. A directory entry without a trailing slash is also
-accepted. The `check` layout check (`src/cli/check.ts`) checks
-the same entries, except `.mcp.json`, as well as the documentation pillars.
+`src/linters/gitignore-harness.ts` requires the entries listed in
+`REQUIRED_GITIGNORE_ENTRIES`: `.harness-overrides/`,
+`.harness-manifest.json`, `.harness/` (Stop hook retry state),
+`.claude/`, `.codex/`, `.opencode/`, `.agents/`, `.vaubaan/`,
+`AGENTS.md`, `CLAUDE.md` and `.mcp.json`. A directory entry without a
+trailing slash is also accepted. The `check` layout check
+(`src/cli/check.ts`) reuses the same list, and also checks the
+documentation pillars.
+
+`.harness/` became required in 1.3.2: the Stop hook writes its state
+there, and an unignored state file made the worktree dirty, which kept
+the hook from ever seeing a clean tree.
 
 Since 1.1.1, neither check requires `.car/`. A legacy
 entry may remain in the project; these functions read the file

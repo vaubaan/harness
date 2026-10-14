@@ -174,10 +174,13 @@ describe("opencodeRenderer", () => {
     expect(result.files[0]?.content).toMatch(/^---\ndescription: Coding agent\.\nmode: all\n---\n/);
   });
 
-  it("renders the stop hook as a session.idle plugin module", () => {
+  it("renders the stop hook as one plugin module for OpenCode 1.x and 2.x", () => {
     const file = r.renderStopHook().files[0];
     expect(file?.path).toBe(".opencode/plugins/harness-stop-hook.ts");
-    expect(file?.content).toMatch(/export const HarnessStopHook = async/);
+    expect(file?.content).toMatch(/export default \{\n {2}id: "vaubaan-harness-stop-hook",/);
+    expect(file?.content).toMatch(/server: HarnessStopHook,/);
+    expect(file?.content).toMatch(/setup\(context\)/);
+    expect(file?.content.match(/^export /gm)).toHaveLength(1);
     expect(file?.content).toMatch(/event\.type !== "session\.idle"/);
     expect(file?.content).toMatch(/"stop-hook", "--engine", "opencode"/);
   });

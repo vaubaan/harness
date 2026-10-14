@@ -70,6 +70,11 @@ program
     }
     if (result.stopHookInstalled) {
       process.stdout.write("stop-hook installed (runs lint at end-of-turn)\n");
+      if (result.filesWritten.includes(".codex/hooks.json")) {
+        process.stdout.write(
+          "codex: the hook runs once you trust this project and approve the hook (startup review or /hooks)\n",
+        );
+      }
     }
     for (const w of result.warnings) process.stderr.write(`warning: ${w}\n`);
   });

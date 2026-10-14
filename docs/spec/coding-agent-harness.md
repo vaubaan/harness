@@ -919,7 +919,7 @@ vaubaan harness lint --fix                 # auto-fix when possible (rare)
 | `lint:spec-has-content`         | spec                     | `docs/spec/` contains at least one `.md` file (warns if the directory exists but is empty).                                                              | warning       |
 | `lint:cross-links`              | all                      | All Markdown links `[...](docs/...)` resolve to an existing file.                                                                                        | error         |
 | `lint:orphan-decisions`         | decisions                | Each ADR is referenced by at least one other doc file.                                                                                                   | warning       |
-| `lint:gitignore-harness`        | repo root                | `.gitignore` excludes `.harness-overrides/`.                                                                                                              | error         |
+| `lint:gitignore-harness`        | repo root                | `.gitignore` excludes every generated or runtime path (overrides, manifest, `.harness/`, engine folders, `AGENTS.md`, `CLAUDE.md`, `.mcp.json`, `.vaubaan/`). | error         |
 | `lint:quality-schema`           | quality (optional)       | If `docs/quality/` exists: `code-quality.md` exists and contains the 3 required sections (regex headers). No effect if the directory is absent.           | error         |
 
 **Text output** (human, default):

@@ -23,25 +23,72 @@ function message(role: string, agent?: string, summary?: boolean): SessionMessag
   return { info: { role, agent, summary }, parts: [] };
 }
 
+interface V2Event {
+  type: string;
+  data?: { sessionID?: string };
+  location?: { directory: string };
+}
+
+interface V2Plugin {
+  id: string;
+  setup(context: unknown): (() => void) | undefined;
+}
+
+// Executes the emitted plugin, replacing only its module boundaries to
+// inject the child-process mock. The hook implementation itself is unchanged.
+function evaluatePlugin(spawnSync: ReturnType<typeof vi.fn>) {
+  const content = opencodeRenderer.renderStopHook().files[0]?.content;
+  if (!content) throw new Error("missing emitted OpenCode plugin");
+  const script = content
+    .replace('import { spawnSync } from "node:child_process";', "")
+    .replace("export default {", "const definition = {");
+  return runInNewContext(
+    `${script}\n({ HarnessStopHook: definition.server, V2Plugin: definition })`,
+    {
+      spawnSync,
+      AbortController,
+    },
+  ) as {
+    HarnessStopHook: (input: { client: unknown; directory: string }) => Promise<Plugin>;
+    V2Plugin: V2Plugin;
+  };
+}
+
 async function loadPlugin(history: SessionMessage[] = [message("user", "review")]) {
   const spawnSync = vi.fn().mockReturnValue({ status: 2, stderr: "  lint report\n" });
   const messages = vi.fn().mockResolvedValue({ data: history });
   const prompt = vi.fn().mockResolvedValue({});
   const client = { session: { messages, prompt } };
-  const content = opencodeRenderer.renderStopHook().files[0]?.content;
-  if (!content) throw new Error("missing emitted OpenCode plugin");
-
-  // Execute the emitted plugin, replacing only its module boundary to inject
-  // the child-process mock. The hook implementation itself is unchanged.
-  const script = content
-    .replace('import { spawnSync } from "node:child_process";', "")
-    .replace("export const HarnessStopHook", "const HarnessStopHook");
-  const factory = runInNewContext(`${script}\nHarnessStopHook`, { spawnSync }) as (input: {
-    client: typeof client;
-    directory: string;
-  }) => Promise<Plugin>;
-  const plugin = await factory({ client, directory: "/project" });
+  const plugin = await evaluatePlugin(spawnSync).HarnessStopHook({ client, directory: "/project" });
   return { plugin, spawnSync, messages, prompt };
+}
+
+// Runs the V2 plugin until it has consumed every given event.
+async function runV2(events: V2Event[], spawnResult = { status: 2, stderr: "  lint report\n" }) {
+  const spawnSync = vi.fn().mockReturnValue(spawnResult);
+  const prompt = vi.fn().mockResolvedValue({});
+  let signal: AbortSignal | undefined;
+  let drained!: () => void;
+  const done = new Promise<void>((resolve) => {
+    drained = resolve;
+  });
+  const subscribe = vi.fn((options: { signal: AbortSignal }) => {
+    signal = options.signal;
+    return (async function* () {
+      yield* events;
+      drained();
+    })();
+  });
+  const context = {
+    location: { directory: "/project" },
+    event: { subscribe },
+    session: { prompt },
+  };
+  const { V2Plugin } = evaluatePlugin(spawnSync);
+  const cleanup = V2Plugin.setup(context);
+  await done;
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  return { V2Plugin, cleanup, spawnSync, prompt, subscribe, signal: () => signal };
 }
 
 describe("emitted OpenCode stop hook", () => {
@@ -148,5 +195,57 @@ describe("emitted OpenCode stop hook", () => {
     expect(spawnSync).not.toHaveBeenCalled();
     expect(messages).not.toHaveBeenCalled();
     expect(prompt).not.toHaveBeenCalled();
+  });
+});
+
+describe("emitted OpenCode stop hook — OpenCode 2.x", () => {
+  const v2Idle: V2Event = { type: "session.idle", data: { sessionID: "ses-1" } };
+
+  it("exposes one default definition: id, server() for 1.x and setup() for 2.x", async () => {
+    const { V2Plugin } = await runV2([]);
+    expect(V2Plugin.id).toBe("vaubaan-harness-stop-hook");
+    expect(typeof V2Plugin.setup).toBe("function");
+    expect(typeof (V2Plugin as unknown as { server: unknown }).server).toBe("function");
+  });
+
+  it("lints on session.idle and sends the report to the same session", async () => {
+    const { spawnSync, prompt } = await runV2([v2Idle]);
+    expect(spawnSync).toHaveBeenCalledWith(
+      "npx",
+      ["-y", "@vaubaan/harness", "stop-hook", "--engine", "opencode", "--cwd", "/project"],
+      { input: JSON.stringify({ sessionID: "ses-1" }), encoding: "utf-8" },
+    );
+    expect(prompt).toHaveBeenCalledWith({ sessionID: "ses-1", text: "lint report" });
+  });
+
+  it("ignores other events, idle events without a session, and other directories", async () => {
+    const { spawnSync, prompt } = await runV2([
+      { type: "session.execution.succeeded", data: { sessionID: "ses-1" } },
+      { type: "session.idle", data: {} },
+      { ...v2Idle, location: { directory: "/elsewhere" } },
+    ]);
+    expect(spawnSync).not.toHaveBeenCalled();
+    expect(prompt).not.toHaveBeenCalled();
+  });
+
+  it("accepts idle events located in its own directory", async () => {
+    const { prompt } = await runV2([{ ...v2Idle, location: { directory: "/project" } }]);
+    expect(prompt).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    { status: 0, stderr: "" },
+    { status: 1, stderr: "command failed" },
+    { status: 2, stderr: " \n" },
+  ])("does not prompt when the CLI lets the turn end (%j)", async (result) => {
+    const { prompt } = await runV2([v2Idle], result);
+    expect(prompt).not.toHaveBeenCalled();
+  });
+
+  it("returns a cleanup that aborts the subscription", async () => {
+    const { cleanup, signal } = await runV2([]);
+    expect(signal()?.aborted).toBe(false);
+    cleanup?.();
+    expect(signal()?.aborted).toBe(true);
   });
 });

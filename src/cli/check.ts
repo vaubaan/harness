@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { REQUIRED_GITIGNORE_ENTRIES } from "../linters/gitignore-harness.js";
 
 export interface CheckResult {
   pass: boolean;
@@ -12,18 +13,6 @@ const REQUIRED_DIRS = [
   "docs/handbook",
   "docs/tests",
   "docs/workflow",
-];
-
-const REQUIRED_GITIGNORE_ENTRIES = [
-  ".harness-overrides/",
-  ".harness-manifest.json",
-  ".claude/",
-  ".codex/",
-  ".opencode/",
-  ".agents/",
-  ".vaubaan/",
-  "AGENTS.md",
-  "CLAUDE.md",
 ];
 
 export function checkCommand(repoRoot: string): CheckResult {

@@ -77,18 +77,26 @@ export const opencodeRenderer: Renderer = {
   renderStopHook(): RenderResult {
     const content = `import { spawnSync } from "node:child_process";
 
-export const HarnessStopHook = async ({ client, directory }) => ({
+// Runs the harness lint and returns the report to inject, or "" when the
+// turn may end.
+const lintReport = (directory, sessionID) => {
+  const r = spawnSync(
+    "npx",
+    ["-y", "${STOP_HOOK_PACKAGE}", "stop-hook", "--engine", "opencode", "--cwd", directory],
+    { input: JSON.stringify({ sessionID }), encoding: "utf-8" },
+  );
+  const report = (r.stderr ?? "").trim();
+  return r.status === 2 ? report : "";
+};
+
+// OpenCode 1.x entry point, exposed as server() below.
+const HarnessStopHook = async ({ client, directory }) => ({
   event: async ({ event }) => {
     if (event.type !== "session.idle") return;
     const sessionID = event.properties?.sessionID;
     if (!sessionID) return;
-    const r = spawnSync(
-      "npx",
-      ["-y", "${STOP_HOOK_PACKAGE}", "stop-hook", "--engine", "opencode", "--cwd", directory],
-      { input: JSON.stringify({ sessionID }), encoding: "utf-8" },
-    );
-    const report = (r.stderr ?? "").trim();
-    if (r.status !== 2 || report === "") return;
+    const report = lintReport(directory, sessionID);
+    if (report === "") return;
     // OpenCode defaults to its build agent when a prompt omits agent.
     // Preserve the last conversation persona, excluding compaction summaries.
     const history = await client.session.messages({ path: { id: sessionID } }).catch(() => undefined);
@@ -104,6 +112,31 @@ export const HarnessStopHook = async ({ client, directory }) => ({
     });
   },
 });
+
+// One default export for both majors: OpenCode 1.x calls server(),
+// OpenCode 2.x calls setup(). A V2 session keeps its agent, so the report
+// is sent without naming the persona.
+export default {
+  id: "vaubaan-harness-stop-hook",
+  server: HarnessStopHook,
+  setup(context) {
+    const directory = context.location.directory;
+    const controller = new AbortController();
+    const listen = async () => {
+      for await (const event of context.event.subscribe({ signal: controller.signal })) {
+        if (event.type !== "session.idle") continue;
+        if (event.location?.directory && event.location.directory !== directory) continue;
+        const sessionID = event.data?.sessionID;
+        if (!sessionID) continue;
+        const report = lintReport(directory, sessionID);
+        if (report === "") continue;
+        await context.session.prompt({ sessionID, text: report }).catch(() => undefined);
+      }
+    };
+    listen().catch(() => undefined);
+    return () => controller.abort();
+  },
+};
 `;
     return {
       files: [{ path: `${BASE}/plugins/harness-stop-hook.ts`, content }],
