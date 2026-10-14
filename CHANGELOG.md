@@ -10,6 +10,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Fixed
 - OpenCode 2.x: the Stop hook plugin failed to load ("Plugin must export a default definition"). The rendered `.opencode/plugins/harness-stop-hook.ts` now has one default export with `server()` for OpenCode 1.x and `setup()` for 2.x. See [the decision](docs/decisions/opencode-v1-v2-stop-hook-plugin.md).
 - `lint:gitignore-harness` and `check` now require `.harness/`, where the Stop hook keeps its state; an unignored state file kept the worktree dirty. `check` also requires `.mcp.json`, like the linter.
+- `package.json`: the `bin` path no longer starts with `./`. npm 11 drops such a `bin` entry at publish time, which would have shipped a package without its CLI.
 - README: the `.gitignore` snippet now passes `check` and `lint` (it missed `.vaubaan/` and `.mcp.json`, and an inline comment made the `.harness/` line ineffective).
 
 ### Changed

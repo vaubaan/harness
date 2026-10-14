@@ -19,7 +19,7 @@
     "node": ">=20"
   },
   "bin": {
-    "vaubaan-harness": "./dist/cli/index.js"
+    "vaubaan-harness": "dist/cli/index.js"
   },
   "exports": {
     ".": {
