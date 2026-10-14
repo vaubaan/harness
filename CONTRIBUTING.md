@@ -10,6 +10,7 @@ git clone https://github.com/vaubaan/harness.git
 cd harness
 npm ci
 npm run build
+npm link                        # make the Stop hook run this checkout
 node dist/cli/index.js init .   # install the harness on this repository (dogfooding)
 ```
 
@@ -17,6 +18,15 @@ node dist/cli/index.js init .   # install the harness on this repository (dogfoo
 OpenCode. These generated files are ignored by git; re-run
 `node dist/cli/index.js update .` after changing the sources under
 `src/`.
+
+`npm link` matters here. The rendered Stop hook runs
+`npx -y @vaubaan/harness stop-hook`, and inside this repository `npx`
+treats the project itself as that package: it looks for the
+`vaubaan-harness` command on your `PATH` instead of downloading it.
+The link points that command to your local build, so the hook always
+checks the docs with the code you are working on. The link belongs to
+the active Node installation: run `npm link` again after switching Node
+versions, and `npm run build` after changing the linters.
 
 ## How we work
 
