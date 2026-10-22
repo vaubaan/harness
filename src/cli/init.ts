@@ -12,24 +12,15 @@ export { planInit };
 
 export interface InitArgs {
   targetDir: string;
-  engines?: ReadonlyArray<string>;
+  /** Engines to render for. Mandatory: nothing is rendered for a tool the project does not use. */
+  engines: ReadonlyArray<string>;
   overridesDir?: string;
   /**
-   * Directory containing the harness content (agents/, skills/, commands/,
+   * Directory containing the harness content (skills/, commands/,
    * templates/). Defaults to the harness package's own `dist/` (resolved
    * via `import.meta.url`), so programmatic callers usually omit it.
    */
   packageDir?: string;
-  /**
-   * Stop-hook installation. Default `true`. When enabled, each engine
-   * receives a hook config that calls `vaubaan-harness stop-hook
-   * --engine <engine>` and injects the lint report (with skill
-   * suggestions) into the running session whenever the worktree is
-   * dirty and lint fails at end-of-turn. Pass `false` to skip the
-   * hook configs entirely (runtime kill-switch remains available via
-   * `HARNESS_LINT_DISABLE=1`).
-   */
-  withStopHook?: boolean;
   /** Generated files to leave to the project instead of rendering them. */
   preserveFiles?: ReadonlyArray<string>;
   /** Exact new backup directory, outside the project. Defaults to private user state. */
@@ -42,7 +33,6 @@ export interface InitResult {
   /** Files a previous `init` rendered that this one no longer does (layout change, engine dropped). */
   staleFilesRemoved: string[];
   warnings: string[];
-  stopHookInstalled: boolean;
   engines: Engine[];
   /** Set when existing project files were changed; holds their previous contents. */
   backupDir?: string;
@@ -79,7 +69,6 @@ function emptyManifest(engines: ReadonlyArray<Engine>): Manifest {
 export function initCommand(args: InitArgs): InitResult {
   const root = resolve(args.targetDir);
   const engines = resolveEngineList(args.engines);
-  const stopHookInstalled = args.withStopHook !== false;
   const previous = readManifest(root) ?? emptyManifest(engines);
   const plan = planInstallation(
     {
@@ -88,12 +77,7 @@ export function initCommand(args: InitArgs): InitResult {
       overridesDir: args.overridesDir,
       preserveFiles: args.preserveFiles,
     },
-    {
-      previous,
-      sourceVersion: previous.version,
-      engines,
-      hookEngines: stopHookInstalled ? engines : [],
-    },
+    { previous, sourceVersion: previous.version, engines },
   );
   const touchedExisting = [...plan.writes.map((file) => file.path), ...plan.removals].some(
     (path) => path !== MANIFEST_FILENAME && existsSync(join(root, path)),
@@ -112,7 +96,6 @@ export function initCommand(args: InitArgs): InitResult {
     filesWritten: plan.owned,
     staleFilesRemoved: plan.removals,
     warnings: plan.warnings,
-    stopHookInstalled,
     engines,
     ...(backupDir ? { backupDir } : {}),
   };

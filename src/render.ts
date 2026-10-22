@@ -1,4 +1,3 @@
-import type { Agent } from "./parser/agent.js";
 import type { Cmd } from "./parser/cmd.js";
 import type { Skill } from "./parser/skill.js";
 import { buildUmbrellaBody } from "./renderers/common.js";
@@ -6,7 +5,6 @@ import { getRenderer } from "./renderers/index.js";
 import type { Engine, RenderedFile } from "./types.js";
 
 export interface Harness {
-  agents: ReadonlyArray<Agent>;
   skills: ReadonlyArray<Skill>;
   cmds: ReadonlyArray<Cmd>;
 }
@@ -23,15 +21,6 @@ export interface RenderInput {
   projectSkills?: ReadonlyArray<Skill>;
   /** True when the target project ships `docs/quality/code-quality.md` (optional pillar). */
   hasQualityDoc?: boolean;
-  /**
-   * When true (default), each engine's renderer emits a Stop-hook config
-   * that calls `vaubaan-harness stop-hook --engine <engine>` and injects
-   * the lint report (with skill suggestions) into the running session
-   * whenever the worktree is dirty and lint fails. Pass `false` to skip
-   * the hook configs entirely (kill-switch at install time; runtime
-   * kill-switch is `HARNESS_LINT_DISABLE=1`).
-   */
-  withStopHook?: boolean;
 }
 
 export interface RenderOutput {
@@ -70,7 +59,6 @@ function removeByIds<T extends { meta: { id: string } }>(
 export function applyOverrides(harness: Harness, overrides: HarnessOverrides | undefined): Harness {
   const disabled = overrides?.disable ?? [];
   return {
-    agents: removeByIds(mergeById(harness.agents, overrides?.add?.agents), disabled),
     skills: removeByIds(mergeById(harness.skills, overrides?.add?.skills), disabled),
     cmds: removeByIds(mergeById(harness.cmds, overrides?.add?.cmds), disabled),
   };
@@ -87,6 +75,13 @@ function opencodeLast(engines: ReadonlyArray<Engine>): Engine[] {
   return [...engines].sort((a, b) => Number(a === "opencode") - Number(b === "opencode"));
 }
 
+/**
+ * Pure transformation `(catalog, engines, overrides) → files`. The harness
+ * ships no agent persona and no engine hook: only the doc skills, their
+ * commands, and the engine-neutral umbrella
+ * (docs/decisions/no-personas-no-code-judgment.md,
+ * docs/decisions/lint-in-ci-and-pre-commit.md).
+ */
 export function render(input: RenderInput): RenderOutput {
   const { engines } = input;
   if (engines.length === 0) {
@@ -96,63 +91,46 @@ export function render(input: RenderInput): RenderOutput {
     ? { ...input.harness, skills: mergeById(input.harness.skills, input.projectSkills) }
     : input.harness;
   const harness = applyOverrides(base, input.overrides);
-  if (harness.agents.length === 0) {
-    throw new RenderError("No agents found in harness");
-  }
 
   const files: RenderedFile[] = [];
   const warnings: string[] = [];
 
   // Track skills + commands successfully exposed on at least one engine,
-  // for the engine-neutral umbrella's "Available skills/commands" sections.
+  // for the engine-neutral umbrella's "Doc-skills" section.
   const exposedSkills = new Map<string, Skill>();
   const exposedCmds = new Map<string, Cmd>();
 
   for (const engine of opencodeLast(engines)) {
     const renderer = getRenderer(engine);
 
-    const renderedSkills: Skill[] = [];
+    const renderedSkillIds = new Set<string>();
     for (const skill of harness.skills) {
       const result = renderer.renderSkill(skill);
       warnings.push(...result.warnings);
       if (result.files.length > 0) {
         const alreadyVisible = engine === "opencode" && exposedSkills.has(skill.meta.id);
         if (!alreadyVisible) files.push(...result.files);
-        renderedSkills.push(skill);
+        renderedSkillIds.add(skill.meta.id);
         exposedSkills.set(skill.meta.id, skill);
       }
     }
 
-    const renderedSkillIds = new Set(renderedSkills.map((s) => s.meta.id));
-    const renderedCmds: Cmd[] = [];
     for (const cmd of harness.cmds) {
       if (!renderedSkillIds.has(cmd.meta.invokes_skill)) continue;
       const result = renderer.renderCmd(cmd);
       warnings.push(...result.warnings);
       if (result.files.length > 0) {
         files.push(...result.files);
-        renderedCmds.push(cmd);
         exposedCmds.set(cmd.meta.id, cmd);
       }
-    }
-
-    const agentsResult = renderer.renderAgents(harness.agents);
-    warnings.push(...agentsResult.warnings);
-    files.push(...agentsResult.files);
-
-    if (input.withStopHook !== false) {
-      const hookResult = renderer.renderStopHook();
-      warnings.push(...hookResult.warnings);
-      files.push(...hookResult.files);
     }
   }
 
   // Engine-neutral umbrella at the root
-  const hasProjectSkills = (input.projectSkills?.length ?? 0) > 0;
-  const umbrellaContent = buildUmbrellaBody(harness.agents, {
+  const umbrellaContent = buildUmbrellaBody({
     availableSkills: Array.from(exposedSkills.values()),
     availableCommands: Array.from(exposedCmds.values()),
-    hasProjectSkills,
+    hasProjectSkills: (input.projectSkills?.length ?? 0) > 0,
     hasQualityDoc: input.hasQualityDoc === true,
   });
   files.push({ path: "AGENTS.md", content: umbrellaContent });

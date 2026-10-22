@@ -7,6 +7,13 @@ author: Vaubaan core
 
 # No MCP rendering, no code-driven merge of shared configuration
 
+> **Amended (2026-10-22)** by
+> [lint-in-ci-and-pre-commit](./lint-in-ci-and-pre-commit.md): the Stop
+> hook itself was removed the same day, so points 2 and 3 below no longer
+> write any hook file. `.claude/settings.json` and `.codex/hooks.json`
+> join the released paths; nothing is printed to add. Points 1, 4, 5
+> and 6 stand.
+
 ## Context
 
 The harness has one job: keep a project's documentation alive and make

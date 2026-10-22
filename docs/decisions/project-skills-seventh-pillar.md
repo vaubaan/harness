@@ -5,6 +5,12 @@ date: 2026-06-16
 
 # Project skills as optional seventh pillar (`docs/skills/`)
 
+> **Amended (2026-10-22)** by
+> [no-personas-no-code-judgment](./no-personas-no-code-judgment.md):
+> the harness ships 8 built-in skills, without `clean-code-guardian`.
+> `docs/skills/` is where a team keeps a persona or a code auditor of
+> its own. The merge order and the rendering stand.
+
 ## Context
 
 The harness ships 9 built-in skills (doc writers, clean-code guardian, etc.)

@@ -389,11 +389,12 @@ describe("lint:orphan-decisions", () => {
 });
 
 describe("lint:gitignore-harness", () => {
-  it("passes with harness entries and no retired runner entry", () => {
-    repo.write(
-      ".gitignore",
-      ".harness-overrides/\n.harness-manifest.json\n.harness/\n.claude/\n.codex/\n.opencode/\n.agents/\n.vaubaan/\nAGENTS.md\nCLAUDE.md\n",
-    );
+  it("passes when only the local state is ignored", () => {
+    repo.write(".gitignore", "node_modules/\n.harness-overrides/\n.vaubaan/\n");
+    expect(gitignoreHarness.run(repo.root)).toEqual([]);
+  });
+  it("accepts entries without a trailing slash, with a leading slash, and ignores comments", () => {
+    repo.write(".gitignore", "# state\n/.harness-overrides\n.vaubaan\n");
     expect(gitignoreHarness.run(repo.root)).toEqual([]);
   });
   it("flags missing .gitignore", () => {
@@ -403,7 +404,21 @@ describe("lint:gitignore-harness", () => {
   it("flags missing entries", () => {
     repo.write(".gitignore", "node_modules/\n");
     const issues = gitignoreHarness.run(repo.root);
-    expect(issues).toHaveLength(10);
+    expect(issues).toHaveLength(2);
+    expect(issues.map((i) => i.message)).toEqual([
+      '.gitignore must contain ".harness-overrides/"',
+      '.gitignore must contain ".vaubaan/"',
+    ]);
+  });
+  it("flags generated files that are ignored: they must be committed", () => {
+    repo.write(".gitignore", ".harness-overrides/\n.vaubaan/\n.claude/\nAGENTS.md\n");
+    const issues = gitignoreHarness.run(repo.root);
+    expect(issues).toHaveLength(2);
+    expect(issues[0]?.severity).toBe("error");
+    expect(issues.map((i) => i.message)).toEqual([
+      '.gitignore must not contain "AGENTS.md": files the harness generates are committed',
+      '.gitignore must not contain ".claude/": files the harness generates are committed',
+    ]);
   });
 });
 
@@ -609,10 +624,7 @@ describe("runLinters aggregator", () => {
     );
     repo.write("docs/tests/e2e-tests.md", "---\ntracks: [package.json]\n---\n\ne2e tests");
     repo.write("docs/workflow/coding-workflow.md", "---\ntracks: [package.json]\n---\n\nworkflow");
-    repo.write(
-      ".gitignore",
-      ".harness-overrides/\n.harness-manifest.json\n.harness/\n.claude/\n.codex/\n.opencode/\n.agents/\n.vaubaan/\nAGENTS.md\nCLAUDE.md\n",
-    );
+    repo.write(".gitignore", ".harness-overrides/\n.vaubaan/\n");
     const report = runLinters(repo.root);
     if (!report.summary.pass) {
       console.log("Unexpected lint issues:", JSON.stringify(report.issues, null, 2));
@@ -629,8 +641,9 @@ describe("runLinters aggregator", () => {
     const report = runLinters(repo.root, { only: ["lint:readme-presence"] });
     expect(report.issues.every((i) => i.linter === "lint:readme-presence")).toBe(true);
   });
-  it("exposes ALL_LINTERS with 14 entries", () => {
-    expect(ALL_LINTERS).toHaveLength(14);
+  it("exposes ALL_LINTERS with 15 entries, generated-fresh last", () => {
+    expect(ALL_LINTERS).toHaveLength(15);
+    expect(ALL_LINTERS[14]?.id).toBe("lint:generated-fresh");
   });
   it("wraps a linter crash in an error issue containing 'linter crashed:'", () => {
     const spy = vi.spyOn(readmePresence, "run").mockImplementation(() => {

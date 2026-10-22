@@ -2,10 +2,9 @@
 tracks:
   - src/linters/quality-schema.ts
   - src/templates/code-quality.md.tmpl
-  - src/skills/clean-code-guardian.skill.md
   - src/renderers/common.ts
-  - src/cli/init.ts
-last_reviewed: 2026-10-13
+  - src/cli/plan-render.ts
+last_reviewed: 2026-10-22
 ---
 
 # Quality pillar (`docs/quality/`)
@@ -17,18 +16,20 @@ choice: [ADR quality-optional-pillar](../decisions/quality-optional-pillar.md).
 
 ## Overview
 
-Without this file, `clean-code-guardian` audits with its generic
-criteria. With it, the audit has a project standard: what the
-tools already check, the local judgment rules, and the deliberate
-deviations not to report.
+The harness ships no code audit skill: code quality is the project's
+judgment, not the harness's
+([no personas, no code judgment](../decisions/no-personas-no-code-judgment.md)).
+This pillar is where that judgment is written down: what the tools
+already check, the local rules no tool checks, and the deliberate
+deviations. The agents read it through the project map of `AGENTS.md`
+before writing or reviewing code.
 
-Four parts of the harness react to the presence of the pillar:
+Three parts of the harness react to the presence of the pillar:
 
 | Component | File | Effect |
 |---|---|---|
 | Linter `lint:quality-schema` | `src/linters/quality-schema.ts` | Requires the required file and its 3 sections as soon as `docs/quality/` exists. |
 | `AGENTS.md` umbrella | `src/renderers/common.ts` (`buildUmbrellaBody`) | Adds a line to the "Project map". |
-| Skill `clean-code-guardian` | `src/skills/clean-code-guardian.skill.md` | Reads the file first and adapts the audit. |
 | Skill `doc-audit` | `src/skills/doc-audit.skill.md` | Checks the shape and boundaries of the pillar. |
 
 ## How to use it
@@ -46,8 +47,11 @@ fill in the three sections:
   reason or a link to the ADR.
 
 There is neither a writer skill nor a dedicated command: the file is edited
-by hand. Rerun `init` or `update` after creating it so that
-`AGENTS.md` mentions it.
+by hand. Rerun `update` after creating it so that `AGENTS.md` mentions
+it, and commit the regenerated umbrella.
+
+A project that wants an automated code audit writes it as a project
+skill in `docs/skills/`, reading this file first.
 
 ## How it works
 
@@ -77,37 +81,25 @@ the file sets a standard and does not follow the state of the code.
 
 ### Rendering
 
-`planInit` (`src/cli/init.ts`) checks whether
+`planInit` (`src/cli/plan-render.ts`) checks whether
 `<target>/docs/quality/code-quality.md` exists and passes `hasQualityDoc` to
 `render`. `buildUmbrellaBody` then adds the line to the project
 map. The check is on the **file**, not the directory: an
-empty `docs/quality/` produces no line. `update` goes through the
-same path as `init`.
+empty `docs/quality/` produces no line. `update` and
+`lint:generated-fresh` go through the same path as `init`, so a
+committed `AGENTS.md` without the line fails the lint once the file
+exists.
 
 The `render()` API accepts `hasQualityDoc` directly for a caller
 that does not use the CLI; the default value is `false`.
-
-### The audit
-
-The skill applies each section differently:
-
-- mechanical checks → items excluded from the audit;
-- project rules → audited in addition to the generic criteria;
-- accepted deviations → not reported as defects.
-
-An accepted deviation never neutralizes a critical escalation
-(plaintext secret, typing bypass on business logic, untested
-business logic).
 
 ## How to debug
 
 - **Lint fails after creating the directory** → the required file
   is missing or a section heading differs. Run
   `vaubaan-harness lint --pillar quality` to isolate the issues.
-- **`AGENTS.md` does not mention the file** → rerun `init` or
-  `update`; the umbrella is computed at render time, not at lint time.
-- **The audit ignores a rule** → check that it is under
-  `## Project rules` and phrased so it can be verified on review.
+- **`AGENTS.md` does not mention the file** → rerun `update` and
+  commit; the umbrella is computed at render time, not at lint time.
 
 ## Limits
 

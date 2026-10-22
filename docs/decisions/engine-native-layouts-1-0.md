@@ -5,6 +5,12 @@
 - **Status:** accepted
 - **Supersedes:** [toml-for-opencode](./toml-for-opencode.md), [claude-md-stub-back-compat](./claude-md-stub-back-compat.md)
 
+> **Amended (2026-10-22)** by
+> [no-personas-no-code-judgment](./no-personas-no-code-judgment.md) and
+> [lint-in-ci-and-pre-commit](./lint-in-ci-and-pre-commit.md): Codex
+> agents in TOML, OpenCode agents and the hook files are no longer
+> rendered. The skill, command and `AGENTS.md` layouts below stand.
+
 ## Context
 
 The rendering layouts in [spec §4.3](../spec/coding-agent-harness.md)

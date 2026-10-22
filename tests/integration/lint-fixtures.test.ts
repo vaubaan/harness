@@ -71,10 +71,7 @@ tracks: [package.json]
 # Coding workflow
 `,
   );
-  write(
-    ".gitignore",
-    ".harness-overrides/\n.harness-manifest.json\n.harness/\n.claude/\n.codex/\n.opencode/\n.agents/\n.vaubaan/\nAGENTS.md\nCLAUDE.md\n",
-  );
+  write(".gitignore", ".harness-overrides/\n.vaubaan/\n");
 }
 
 describe("lint integration on synthetic repos", () => {

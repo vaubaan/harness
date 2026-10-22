@@ -4,6 +4,11 @@
 **Status:** accepted
 **Author:** Vaubaan core
 
+> **Amended (2026-10-22)** by
+> [lint-in-ci-and-pre-commit](./lint-in-ci-and-pre-commit.md): the
+> in-session Stop hook mentioned below is removed. CI is the only
+> mechanical gate, with an optional git pre-commit hook in the project.
+
 ## Context
 
 Before PR #9, the repo's only GitHub Actions workflow was `publish.yml`,

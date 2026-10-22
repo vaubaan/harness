@@ -1,15 +1,20 @@
 # Self-healing lint loop via cross-engine Stop hooks
 
 **Date:** 2026-06-01
-**Status:** accepted (with an area of uncertainty — see _To accept_)
+**Status:** superseded by [lint-in-ci-and-pre-commit](./lint-in-ci-and-pre-commit.md) (2026-10-22)
 **Author:** Vaubaan core
+
+> **Superseded (2026-10-22)**: the Stop hook is removed. The linter
+> runs in CI, in a git pre-commit hook and on demand; no engine settings
+> file is rendered. The text below is kept as history.
 
 > **CAR removal (2026-09-20, 1.1.1)**: the documentation check and
 > in-session continuation remain active. The hook no longer emits a signal
 > to CAR, an abandoned runtime; the mentions of an external supervisor
 > below describe the historical context and promise no current
 > service. See [the removal ADR](./retire-coding-agent-runner-coupling.md)
-> and [the hooks handbook](../handbook/stop-hook.md).
+> and, for the removal of the hook itself,
+> [lint-in-ci-and-pre-commit](./lint-in-ci-and-pre-commit.md).
 
 > **v0.6.1 iteration (2026-06-01)**: the initial design injected the
 > `/harness-lint` slash command into the session, which invoked a

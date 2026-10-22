@@ -1,12 +1,9 @@
-import type { Agent } from "../parser/agent.js";
 import type { Cmd } from "../parser/cmd.js";
 import type { Skill } from "../parser/skill.js";
 import type { Engine } from "../types.js";
 import {
   type RenderResult,
   type Renderer,
-  STOP_HOOK_PACKAGE,
-  buildAgentBody,
   checkSkillCapabilities,
   frontmatterDataForCmd,
   frontmatterDataForSkill,
@@ -40,40 +37,6 @@ export const claudeCodeRenderer: Renderer = {
     const content = `${yamlFrontmatter(frontmatterDataForCmd(cmd))}\n${cmd.body}\n`;
     return {
       files: [{ path: `${BASE}/commands/${cmd.meta.id}.md`, content }],
-      warnings: [],
-    };
-  },
-  renderAgents(agents: ReadonlyArray<Agent>): RenderResult {
-    const files = [];
-    for (const agent of agents) {
-      const subagentFrontmatter = yamlFrontmatter({
-        name: agent.meta.id,
-        description: agent.meta.description,
-      });
-      const body = buildAgentBody(agent);
-      const content = `${subagentFrontmatter}\n${body}`;
-      files.push({ path: `${BASE}/agents/${agent.meta.id}.md`, content });
-    }
-    return { files, warnings: [] };
-  },
-  renderStopHook(): RenderResult {
-    const settings = {
-      hooks: {
-        Stop: [
-          {
-            matcher: "",
-            hooks: [
-              {
-                type: "command",
-                command: `npx -y ${STOP_HOOK_PACKAGE} stop-hook --engine claude`,
-              },
-            ],
-          },
-        ],
-      },
-    };
-    return {
-      files: [{ path: `${BASE}/settings.json`, content: `${JSON.stringify(settings, null, 2)}\n` }],
       warnings: [],
     };
   },

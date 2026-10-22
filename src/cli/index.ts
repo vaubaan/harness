@@ -7,14 +7,13 @@ import { VERSION } from "../version.js";
 import { checkCommand } from "./check.js";
 import { initCommand } from "./init.js";
 import { renderCommand } from "./render.js";
-import { stopHookCommandFromStdin } from "./stop-hook.js";
 import { uninstallCommand } from "./uninstall.js";
 import { updateCommand } from "./update.js";
 
 function resolvePackageDir(): string {
   // CLI lives at <contentRoot>/cli/index.{ts,js}.
   // In dev <contentRoot> = src/ ; in prod (after tsup + copy) = dist/.
-  // Both contain agents/, skills/, commands/, templates/ as siblings of cli/.
+  // Both contain skills/, commands/, templates/ as siblings of cli/.
   const here = dirname(fileURLToPath(import.meta.url));
   return resolve(here, "..");
 }
@@ -28,42 +27,35 @@ function parseList(raw: string | undefined): string[] | undefined {
     .filter(Boolean);
 }
 
+const ENGINES_HELP = "comma-separated engines to render: claude-code, codex-cli, opencode";
+
 const program = new Command();
 
 program
   .name("vaubaan-harness")
   .description(
-    "Vaubaan harness — render skills, commands, and all agent personas into a target directory",
+    "Vaubaan harness — keep a project's docs alive: render the doc skills into each engine's native layout, lint the docs in CI",
   )
   .version(VERSION);
 
 program
   .command("init")
   .description(
-    "Render the harness (all agents, skills, commands) into a target directory. Defaults to all engines.",
+    "Render the harness (doc skills, commands, AGENTS.md) into a project. Commit the result.",
   )
   .argument("<target-dir>", "directory to render harness into")
-  .option(
-    "--engines <list>",
-    "comma-separated subset of engines (claude-code, codex-cli, opencode) — defaults to all 3",
-  )
+  .requiredOption("--engines <list>", ENGINES_HELP)
   .option("--overrides-dir <dir>", "directory containing .harness-overrides/")
   .option("--package-dir <dir>", "override harness package directory (for dev/test)")
-  .option(
-    "--no-stop-hook",
-    "skip rendering the Stop-hook configs that run lint at end of each agent turn",
-  )
   .option("--preserve <paths>", "comma-separated generated files to leave under user ownership")
   .option("--backup-dir <dir>", "new backup directory outside the project")
   .action((targetDir: string, opts: Record<string, string | boolean | undefined>) => {
     const packageDir = (opts.packageDir as string | undefined) ?? resolvePackageDir();
-    const engines = parseList(opts.engines as string | undefined);
     const result = initCommand({
       targetDir,
-      engines,
+      engines: parseList(opts.engines as string | undefined) ?? [],
       overridesDir: opts.overridesDir as string | undefined,
       packageDir,
-      withStopHook: opts.stopHook !== false,
       preserveFiles: parseList(opts.preserve as string | undefined),
       backupDir: opts.backupDir as string | undefined,
     });
@@ -73,23 +65,16 @@ program
         `removed ${result.staleFilesRemoved.length} stale files from a previous render\n`,
       );
     }
-    if (result.stopHookInstalled) {
-      process.stdout.write("stop-hook installed (runs lint at end-of-turn)\n");
-      if (result.engines.includes("codex-cli")) {
-        process.stdout.write(
-          "codex: the hook runs once you trust this project and approve the hook (startup review or /hooks)\n",
-        );
-      }
-    }
     if (result.backupDir) process.stdout.write(`backup: ${result.backupDir}\n`);
     for (const w of result.warnings) process.stderr.write(`warning: ${w}\n`);
+    process.stdout.write(
+      "next: commit the generated files, then run `npx @vaubaan/harness lint` before each commit (add it to your pre-commit hook and CI)\n",
+    );
   });
 
 program
   .command("update")
-  .description(
-    "Migrate an existing harness installation, retaining its engines and project settings",
-  )
+  .description("Re-render an existing installation with this version, keeping its engines")
   .argument("[target-dir]", "project directory", ".")
   .option("--dry-run", "preview changes without writing files or backups")
   .option("--json", "print the migration summary as JSON")
@@ -116,6 +101,9 @@ program
       );
     if (result.backupDir) process.stdout.write(`backup: ${result.backupDir}\n`);
     for (const warning of result.warnings) process.stderr.write(`warning: ${warning}\n`);
+    if (!result.dryRun && !result.upToDate) {
+      process.stdout.write("next: commit the generated files\n");
+    }
   });
 
 program
@@ -132,7 +120,7 @@ program
 
 program
   .command("check")
-  .description("Verify repo layout: 6 pillars present and .gitignore correct")
+  .description("Verify repo layout: doc pillars present and .gitignore correct")
   .argument("<repo>", "path to repo to check")
   .action((repo: string) => {
     const result = checkCommand(repo);
@@ -167,42 +155,33 @@ program
 
 program
   .command("render")
-  .description("Render harness for preview (no overrides applied). Defaults to all engines.")
-  .option(
-    "--engines <list>",
-    "comma-separated subset of engines (claude-code, codex-cli, opencode) — defaults to all 3",
-  )
+  .description("Render harness for preview (no overrides applied)")
+  .requiredOption("--engines <list>", ENGINES_HELP)
   .requiredOption("--out <dir>", "output directory")
   .option("--package-dir <dir>", "override harness package directory")
-  .option("--no-stop-hook", "skip rendering the Stop-hook configs")
   .action((opts: Record<string, string | boolean | undefined>) => {
     const packageDir = (opts.packageDir as string | undefined) ?? resolvePackageDir();
-    const engines = parseList(opts.engines as string | undefined);
     const result = renderCommand({
-      engines,
+      engines: parseList(opts.engines as string | undefined) ?? [],
       outDir: opts.out as string,
       packageDir,
-      withStopHook: opts.stopHook !== false,
     });
     process.stdout.write(`rendered ${result.filesWritten.length} files to ${opts.out}\n`);
     for (const w of result.warnings) process.stderr.write(`warning: ${w}\n`);
   });
 
+// 1.x wrote this command into engine Stop hooks. It stays a silent no-op so an
+// un-migrated hook entry does not fail every turn; it goes away in 3.0.
 program
-  .command("stop-hook")
-  .description(
-    "Stop-hook entrypoint invoked by each engine's hook config — runs lint and decides whether to inject the report into the running session, terminate, or passthrough",
-  )
-  .requiredOption("--engine <engine>", "claude | codex | opencode")
-  .option("--cwd <dir>", "repo root", ".")
-  .action((opts: Record<string, string | undefined>) => {
-    const result = stopHookCommandFromStdin({
-      engine: opts.engine as string,
-      cwd: opts.cwd,
-    });
-    if (result.stdout) process.stdout.write(result.stdout);
-    if (result.stderr) process.stderr.write(result.stderr);
-    process.exit(result.exitCode);
+  .command("stop-hook", { hidden: true })
+  .description("deprecated no-op kept for Stop hook entries written by 1.x")
+  .option("--engine <engine>")
+  .option("--cwd <dir>")
+  .action(() => {
+    process.stderr.write(
+      "vaubaan-harness stop-hook was removed in 2.0: remove this entry from your engine settings and run `npx @vaubaan/harness lint` in CI and pre-commit instead\n",
+    );
+    process.exit(0);
   });
 
 program.parseAsync(process.argv).catch((err) => {

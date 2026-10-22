@@ -1,6 +1,9 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { REQUIRED_GITIGNORE_ENTRIES } from "../linters/gitignore-harness.js";
+import {
+  forbiddenGitignoreEntries,
+  missingGitignoreEntries,
+} from "../linters/gitignore-harness.js";
 
 export interface CheckResult {
   pass: boolean;
@@ -33,17 +36,11 @@ export function checkCommand(repoRoot: string): CheckResult {
     issues.push(".gitignore missing at repo root");
   } else {
     const text = readFileSync(gitignorePath, "utf8");
-    const lines = new Set(
-      text
-        .split("\n")
-        .map((l) => l.trim())
-        .filter(Boolean),
-    );
-    for (const entry of REQUIRED_GITIGNORE_ENTRIES) {
-      const variants = [entry, entry.replace(/\/$/, "")];
-      if (!variants.some((v) => lines.has(v))) {
-        issues.push(`.gitignore missing entry: ${entry}`);
-      }
+    for (const entry of missingGitignoreEntries(text)) {
+      issues.push(`.gitignore missing entry: ${entry}`);
+    }
+    for (const entry of forbiddenGitignoreEntries(text)) {
+      issues.push(`.gitignore must not ignore generated file: ${entry}`);
     }
   }
 

@@ -9,16 +9,15 @@ import { assertManagedPaths } from "./managed-paths.js";
 export const MANIFEST_FILENAME = ".harness-manifest.json";
 export const MANIFEST_VERSION = "6";
 
-// Entry ownership fields written by 1.x (`hookConfigs`, `opencodeConfig`,
-// `mcpConfig`) are unknown keys here and dropped on read: the harness no
-// longer merges shared files (docs/decisions/no-mcp-no-code-merge.md).
+// Fields written by 1.x and dropped on read as unknown keys: the entry
+// ownership of shared files (`hookConfigs`, `opencodeConfig`, `mcpConfig`)
+// and the Stop hook preference (`stopHookInstalled`, `stopHookEngines`).
+// Decisions: no-mcp-no-code-merge, lint-in-ci-and-pre-commit.
 const ManifestSchema = z.object({
   version: z.enum(["4", "5", MANIFEST_VERSION]),
   engines: z.array(z.string()),
   renderedAt: z.string(),
   files: z.array(z.string()),
-  stopHookInstalled: z.boolean().optional(),
-  stopHookEngines: z.array(z.string()).optional(),
   harnessVersion: z.string().optional(),
   overridesDir: z.string().optional(),
   fileHashes: z.record(z.string().regex(/^[a-f0-9]{64}$/)).optional(),
@@ -28,8 +27,6 @@ const ManifestSchema = z.object({
 export type Manifest = z.infer<typeof ManifestSchema>;
 
 export interface WriteManifestExtras {
-  stopHookInstalled?: boolean;
-  stopHookEngines?: ReadonlyArray<Engine>;
   overridesDir?: string;
   preservedFiles?: string[];
 }
@@ -59,12 +56,6 @@ export function writeManifest(
     ),
     ...(extras.overridesDir ? { overridesDir: extras.overridesDir } : {}),
     ...(extras.preservedFiles ? { preservedFiles: extras.preservedFiles } : {}),
-    ...(extras.stopHookInstalled !== undefined
-      ? { stopHookInstalled: extras.stopHookInstalled }
-      : {}),
-    ...(extras.stopHookEngines !== undefined
-      ? { stopHookEngines: [...extras.stopHookEngines].sort() }
-      : {}),
   };
   const path = manifestPath(targetDir);
   if (existsSync(path)) chmodSync(path, 0o600);

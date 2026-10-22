@@ -1,7 +1,6 @@
 import { existsSync, readFileSync, readdirSync, rmdirSync, unlinkSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
-import { RELEASED_PATHS } from "./hook-configs.js";
-import { assertManagedPaths } from "./managed-paths.js";
+import { RELEASED_PATHS, assertManagedPaths } from "./managed-paths.js";
 import { MANIFEST_FILENAME, hashContent, manifestPath, readManifest } from "./manifest.js";
 
 export interface UninstallArgs {

@@ -1,8 +1,13 @@
 # Multi-agent and multi-engine by default at install
 
 **Date:** 2026-05-22
-**Status:** accepted
+**Status:** superseded by [no-personas-no-code-judgment](./no-personas-no-code-judgment.md) and [engine-choice-mandatory](./engine-choice-mandatory.md) (2026-10-22)
 **Author:** Vaubaan core
+
+> **Superseded (2026-10-22)**: the harness ships no persona any more,
+> and `--engines` is mandatory. What stands from this decision is that
+> several engines can be rendered side by side. The text below is kept
+> as history.
 
 > **Updated context (2026-09-20)**: CAR has been abandoned. Its mentions
 > below describe the caller envisioned at the time of this decision.

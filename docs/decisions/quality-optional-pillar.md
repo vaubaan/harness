@@ -5,6 +5,12 @@ date: 2026-10-13
 
 # Optional pillar `docs/quality/` for project quality rules
 
+> **Amended (2026-10-22)** by
+> [no-personas-no-code-judgment](./no-personas-no-code-judgment.md):
+> `clean-code-guardian` is removed from the harness. The pillar, its
+> linter and its mention in `AGENTS.md` stand; agents read the file
+> directly. The number of linters is no longer 14.
+
 ## Context
 
 The `clean-code-guardian` skill carries **generic** quality criteria,

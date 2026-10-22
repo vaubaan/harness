@@ -25,11 +25,9 @@ describe("assertManagedPaths", () => {
         "AGENTS.md",
         "CLAUDE.md",
         ".harness-manifest.json",
-        ".claude/settings.json",
         ".claude/agents/coding.md",
         ".claude/commands/decision.md",
         ".claude/skills/doc-audit/SKILL.md",
-        ".codex/hooks.json",
         ".codex/agents/coding.toml",
         ".codex/agents/coding.md",
         ".codex/commands/decision.md",
@@ -99,7 +97,9 @@ describe("assertManagedPaths", () => {
     const alias = join(sandbox, "project-alias");
     symlinkSync(root, alias, "dir");
     writeFileSync(join(root, "AGENTS.md"), "managed");
-    expect(() => assertManagedPaths(alias, ["AGENTS.md", ".codex/hooks.json"])).not.toThrow();
+    expect(() =>
+      assertManagedPaths(alias, ["AGENTS.md", ".claude/commands/decision.md"]),
+    ).not.toThrow();
   });
 
   it("rejects an existing directory where a generated file belongs", () => {

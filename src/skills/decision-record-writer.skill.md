@@ -20,10 +20,9 @@ lost and the same debates are revisited every 6 months.
 
 ## When to invoke you
 
-- The `coding` agent finishes a feature that involves a non-trivial
-  choice (lib, pattern, architecture, dependency) → write the ADR
-  before commit.
-- The `merge` agent closes a PR carrying a decision → confirm that an
+- A feature is finished that involves a non-trivial choice (lib,
+  pattern, architecture, dependency) → write the ADR before commit.
+- A PR carrying a decision is about to be merged → confirm that an
   ADR exists (otherwise create a light "merge decision" one).
 - `/decision` invoked explicitly by the human.
 - `doc-audit` flagged an implicit decision in `git log` → write the

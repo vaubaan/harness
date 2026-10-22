@@ -41,6 +41,29 @@ describe("readManifest", () => {
     writeFileSync(path, `${JSON.stringify(raw, null, 2)}\n`);
     expect(() => readManifest(dir)).toThrow();
   });
+
+  it("drops the 1.x hook and MCP ownership fields on read", () => {
+    writeManifest(dir, ["claude-code"], ["AGENTS.md"]);
+    const path = manifestPath(dir);
+    const raw = JSON.parse(readFileSync(path, "utf8"));
+    raw.stopHookInstalled = true;
+    raw.stopHookEngines = ["claude-code"];
+    raw.hookConfigs = {};
+    raw.mcpConfig = { entries: {} };
+    raw.opencodeConfig = { entries: {} };
+    writeFileSync(path, `${JSON.stringify(raw, null, 2)}\n`);
+    const manifest = readManifest(dir) as Record<string, unknown> | null;
+    expect(manifest).not.toBeNull();
+    for (const key of [
+      "stopHookInstalled",
+      "stopHookEngines",
+      "hookConfigs",
+      "mcpConfig",
+      "opencodeConfig",
+    ]) {
+      expect(manifest?.[key]).toBeUndefined();
+    }
+  });
 });
 
 describe("writeManifest + readManifest", () => {
@@ -62,20 +85,13 @@ describe("writeManifest + readManifest", () => {
     expect(manifest?.renderedAt).toBeTruthy();
   });
 
-  it("includes stopHookInstalled and stopHookEngines when extras provided", () => {
+  it("records preserved files and the overrides parent when provided", () => {
     writeManifest(dir, ["claude-code"], ["AGENTS.md"], {
-      stopHookInstalled: true,
-      stopHookEngines: ["opencode", "claude-code"],
+      preservedFiles: ["CLAUDE.md"],
+      overridesDir: ".",
     });
     const manifest = readManifest(dir);
-    expect(manifest?.stopHookInstalled).toBe(true);
-    expect(manifest?.stopHookEngines).toEqual(["claude-code", "opencode"]);
-  });
-
-  it("omits stopHookInstalled and stopHookEngines when no extras provided", () => {
-    writeManifest(dir, ["claude-code"], ["AGENTS.md"]);
-    const manifest = readManifest(dir);
-    expect(manifest?.stopHookInstalled).toBeUndefined();
-    expect(manifest?.stopHookEngines).toBeUndefined();
+    expect(manifest?.preservedFiles).toEqual(["CLAUDE.md"]);
+    expect(manifest?.overridesDir).toBe(".");
   });
 });

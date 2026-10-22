@@ -5,18 +5,15 @@ import { DisableYamlSchema } from "../loader.js";
 import type { Engine, RenderedFile } from "../types.js";
 import { parseYAML } from "../util/yaml.js";
 import { VERSION } from "../version.js";
-import {
-  HOOK_CONFIG_PATHS,
-  RELEASED_PATHS,
-  isHookConfig,
-  planHookConfigs,
-  renderStopHooks,
-} from "./hook-configs.js";
-import { assertManagedPaths } from "./managed-paths.js";
+import { RELEASED_PATHS, assertManagedPaths } from "./managed-paths.js";
 import { MANIFEST_FILENAME, MANIFEST_VERSION, type Manifest, hashContent } from "./manifest.js";
 import { planInit } from "./plan-render.js";
 import { readUpdateInstallation } from "./update-manifest.js";
 import { applyUpdateTransaction } from "./update-transaction.js";
+
+/** Engine settings files 1.x wrote a Stop hook into, and the command it called. */
+const LEGACY_HOOK_FILES = [".claude/settings.json", ".codex/hooks.json"] as const;
+const LEGACY_HOOK_MARKER = "@vaubaan/harness stop-hook";
 
 export interface UpdateArgs {
   targetDir: string;
@@ -52,19 +49,10 @@ export interface InstallationSettings {
   previous: Manifest;
   sourceVersion: string;
   engines: Engine[];
-  hookEngines: Engine[];
 }
 
 function currentContent(root: string, path: string): string | undefined {
   return existsSync(join(root, path)) ? readFileSync(join(root, path), "utf8") : undefined;
-}
-
-/** True when the manifest lists `path` and the file still has the content the harness wrote. */
-function ownedUnchanged(root: string, previous: Manifest, path: string): boolean {
-  const content = currentContent(root, path);
-  if (content === undefined || !previous.files.includes(path)) return false;
-  const hash = previous.fileHashes?.[path];
-  return hash === undefined || hash === hashContent(content);
 }
 
 /** Collects every conflict before failing, so one run lists all files to resolve. */
@@ -77,8 +65,6 @@ function checkArtifactConflicts(
   const desired = new Map(writes.map((file) => [file.path, file.content]));
   const conflicts: string[] = [];
   for (const path of [...desired.keys(), ...removals]) {
-    // Hook files are decided by planHookConfigs: left alone when not ours.
-    if (isHookConfig(path)) continue;
     const content = currentContent(root, path);
     if (content === undefined || content === desired.get(path)) continue;
     if (!previous.files.includes(path)) {
@@ -95,7 +81,7 @@ function checkArtifactConflicts(
   }
 }
 
-/** Files 1.x edited entry by entry leave the manifest and stay in place. */
+/** Files 1.x edited or wrote into engine settings leave the manifest and stay in place. */
 function releaseLegacyPaths(previous: Manifest, warnings: string[]): Manifest {
   const released = previous.files.filter((path) => RELEASED_PATHS.includes(path));
   for (const path of released) {
@@ -105,13 +91,27 @@ function releaseLegacyPaths(previous: Manifest, warnings: string[]): Manifest {
   return { ...previous, files: previous.files.filter((path) => !released.includes(path)) };
 }
 
+/** A Stop hook entry 1.x merged into an engine settings file now points at a no-op. */
+function legacyHookWarnings(root: string): string[] {
+  const warnings: string[] = [];
+  for (const path of LEGACY_HOOK_FILES) {
+    const content = currentContent(root, path);
+    if (content?.includes(LEGACY_HOOK_MARKER)) {
+      warnings.push(
+        `remove the harness Stop hook entry from ${path}: the Stop hook was removed in 2.0, run \`npx @vaubaan/harness lint\` in CI and pre-commit instead`,
+      );
+    }
+  }
+  return warnings;
+}
+
 /** All reads and validation precede backup creation and project mutations. */
 export function planInstallation(
   args: Omit<UpdateArgs, "dryRun" | "backupDir">,
   settings: InstallationSettings,
 ): Omit<UpdatePlan, "result"> & { manifest: Manifest; warnings: string[] } {
   const root = resolve(args.targetDir);
-  const { engines, hookEngines } = settings;
+  const { engines } = settings;
   const warnings: string[] = [];
   const previous = releaseLegacyPaths(settings.previous, warnings);
   const preserved = [
@@ -119,7 +119,7 @@ export function planInstallation(
   ].sort();
   if (preserved.includes(MANIFEST_FILENAME))
     throw new Error("cannot preserve the harness manifest");
-  assertManagedPaths(root, [...previous.files, ...preserved, ...HOOK_CONFIG_PATHS]);
+  assertManagedPaths(root, [...previous.files, ...preserved]);
   const requestedOverrides = args.overridesDir ?? previous.overridesDir;
   const overridesDir = args.overridesDir
     ? resolve(args.overridesDir)
@@ -143,41 +143,15 @@ export function planInstallation(
     packageDir: args.packageDir,
     engines,
     overridesDir: hasOverrides ? overridesDir : undefined,
-    withStopHook: false,
   });
-  const hooks = renderStopHooks(hookEngines);
-  const generated = [
-    ...rendered.output.files,
-    ...hooks.files.filter((file) => !isHookConfig(file.path)),
-  ];
-  const hookPlan = planHookConfigs(
-    root,
-    hooks.files.filter((file) => isHookConfig(file.path)),
-    previous.files,
-    (path) => ownedUnchanged(root, previous, path),
+  const output = rendered.output.files.filter((file) => !preserved.includes(file.path));
+  const owned = output.map((file) => file.path).sort();
+  const removals = previous.files.filter(
+    (file) => !owned.includes(file) && !preserved.includes(file),
   );
-  const output = [...generated, ...hookPlan.writes].filter(
-    (file) => !preserved.includes(file.path),
-  );
-  const owned = [...new Set([...generated.map((file) => file.path), ...hookPlan.owned])]
-    .filter((file) => !preserved.includes(file))
-    .sort();
-  const removals = [
-    ...new Set([
-      ...previous.files.filter((file) => !owned.includes(file) && !isHookConfig(file)),
-      ...hookPlan.removals,
-    ]),
-  ].filter((file) => !preserved.includes(file));
-  assertManagedPaths(root, [...output.map((file) => file.path), ...removals]);
+  assertManagedPaths(root, [...owned, ...removals]);
   checkArtifactConflicts(root, previous, output, removals);
-  const hashes = Object.fromEntries(
-    owned.map((path) => {
-      const content =
-        output.find((file) => file.path === path)?.content ?? currentContent(root, path);
-      if (content === undefined) throw new Error(`missing planned harness file: ${path}`);
-      return [path, hashContent(content)];
-    }),
-  );
+  const hashes = Object.fromEntries(output.map((file) => [file.path, hashContent(file.content)]));
   const manifest: Manifest = {
     version: MANIFEST_VERSION,
     harnessVersion: VERSION,
@@ -185,8 +159,6 @@ export function planInstallation(
     renderedAt: previous.renderedAt,
     files: owned,
     fileHashes: hashes,
-    stopHookInstalled: hookEngines.length > 0,
-    stopHookEngines: [...hookEngines].sort(),
     ...(hasOverrides ? { overridesDir: overridesDir === root ? "." : overridesDir } : {}),
     ...(preserved.length ? { preservedFiles: preserved } : {}),
   };
@@ -196,7 +168,7 @@ export function planInstallation(
     manifest.renderedAt = new Date().toISOString();
     writes.push({ path: MANIFEST_FILENAME, content: `${JSON.stringify(manifest, null, 2)}\n` });
   }
-  warnings.push(...rendered.output.warnings, ...hooks.warnings, ...hookPlan.warnings);
+  warnings.push(...rendered.output.warnings, ...legacyHookWarnings(root));
   if (preserved.length) warnings.push(`preserved user-owned artifacts: ${preserved.join(", ")}`);
   return { writes, removals: existingRemovals, owned, manifest, warnings };
 }
@@ -204,16 +176,14 @@ export function planInstallation(
 /** All reads and validation precede backup creation and project mutations. */
 export function planUpdate(args: UpdateArgs): UpdatePlan {
   const root = resolve(args.targetDir);
-  const { manifest: previous, sourceVersion, engines, hookEngines } = readUpdateInstallation(root);
-  const plan = planInstallation(args, { previous, sourceVersion, engines, hookEngines });
+  const { manifest: previous, sourceVersion, engines } = readUpdateInstallation(root);
+  const plan = planInstallation(args, { previous, sourceVersion, engines });
   const warnings = [...plan.warnings];
   if (!previous.fileHashes) {
     warnings.push(
       "legacy manifest has no file fingerprints: managed artifacts will be regenerated; backup preserves their previous contents",
     );
   }
-  if (engines.includes("codex-cli"))
-    warnings.push("ensure .agents/ is ignored by Git (run harness check)");
   return {
     writes: plan.writes,
     removals: plan.removals,

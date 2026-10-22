@@ -2,7 +2,6 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import fg from "fast-glob";
 import { z } from "zod";
-import { parseAgent } from "./parser/agent.js";
 import { parseCmd } from "./parser/cmd.js";
 import { type Skill, parseSkill } from "./parser/skill.js";
 import type { Harness, HarnessOverrides } from "./render.js";
@@ -13,22 +12,18 @@ export const DisableYamlSchema = z
   .passthrough();
 
 export interface LoadOptions {
-  agentsDir?: string;
   skillsDir?: string;
   commandsDir?: string;
 }
 
 export function loadHarness(packageDir: string, opts: LoadOptions = {}): Harness {
-  const agentsDir = opts.agentsDir ?? join(packageDir, "agents");
   const skillsDir = opts.skillsDir ?? join(packageDir, "skills");
   const commandsDir = opts.commandsDir ?? join(packageDir, "commands");
 
-  const agentFiles = fg.sync("*.agent.md", { cwd: agentsDir, absolute: true });
   const skillFiles = fg.sync("*.skill.md", { cwd: skillsDir, absolute: true });
   const cmdFiles = fg.sync("*.cmd.md", { cwd: commandsDir, absolute: true });
 
   return {
-    agents: agentFiles.map((f) => parseAgent(f, readFileSync(f, "utf8"))),
     skills: skillFiles.map((f) => parseSkill(f, readFileSync(f, "utf8"))),
     cmds: cmdFiles.map((f) => parseCmd(f, readFileSync(f, "utf8"))),
   };
@@ -46,7 +41,6 @@ export function loadOverrides(worktreeDir: string): HarnessOverrides | undefined
   if (!existsSync(overridesDir)) return undefined;
 
   const added = loadHarness(overridesDir, {
-    agentsDir: join(overridesDir, "agents"),
     skillsDir: join(overridesDir, "skills"),
     commandsDir: join(overridesDir, "commands"),
   });

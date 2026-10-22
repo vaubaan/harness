@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { parseAgent } from "../parser/agent.js";
 import { parseCmd } from "../parser/cmd.js";
 import { parseSkill } from "../parser/skill.js";
 import { getRenderer } from "./index.js";
@@ -49,16 +48,6 @@ description: Audit doc scope.
 # /doc-audit
 `;
 
-const AGENT_SRC = `---
-id: coding
-description: Coding agent.
----
-
-# Coding Agent
-
-Workflow.
-`;
-
 describe("claudeCodeRenderer", () => {
   const r = getRenderer("claude-code");
 
@@ -71,21 +60,18 @@ describe("claudeCodeRenderer", () => {
     expect(result.warnings).toEqual([]);
   });
 
+  it("does not propagate build-time constraints (engines, requires) to the output", () => {
+    const skill = parseSkill("m.skill.md", SKILL_MULTI_STEP);
+    const content = r.renderSkill(skill).files[0]?.content ?? "";
+    expect(content).not.toMatch(/requires/);
+    expect(content).not.toMatch(/engines/);
+  });
+
   it("renders cmd under .claude/commands/<id>.md", () => {
     const cmd = parseCmd("doc-audit.cmd.md", CMD_SRC);
     const result = r.renderCmd(cmd);
     expect(result.files[0]?.path).toBe(".claude/commands/doc-audit.md");
     expect(result.files[0]?.content).toMatch(/trigger: \/doc-audit/);
-  });
-
-  it("renders subagents under .claude/agents/<id>.md with Claude Code frontmatter", () => {
-    const agent = parseAgent("coding.agent.md", AGENT_SRC);
-    const result = r.renderAgents([agent]);
-    expect(result.files).toHaveLength(1);
-    expect(result.files[0]?.path).toBe(".claude/agents/coding.md");
-    expect(result.files[0]?.content).toMatch(/^---\nname: coding\n/);
-    expect(result.files[0]?.content).toMatch(/# Coding Agent/);
-    expect(result.files[0]?.content).not.toMatch(/## Available/);
   });
 
   it("renders skill that requires multi-step (supported on claude-code)", () => {
@@ -102,6 +88,15 @@ describe("claudeCodeRenderer", () => {
     expect(result.files).toEqual([]);
     expect(result.warnings.length).toBe(1);
   });
+
+  it("exposes only renderSkill and renderCmd: no persona, no hook, no MCP", () => {
+    for (const engine of ["claude-code", "codex-cli", "opencode"] as const) {
+      const renderer = getRenderer(engine) as unknown as Record<string, unknown>;
+      expect(renderer.renderAgents).toBeUndefined();
+      expect(renderer.renderStopHook).toBeUndefined();
+      expect(renderer.renderMcp).toBeUndefined();
+    }
+  });
 });
 
 describe("codexCliRenderer", () => {
@@ -117,28 +112,6 @@ describe("codexCliRenderer", () => {
   it("renders no command file (custom prompts are deprecated in Codex)", () => {
     const cmd = parseCmd("doc-audit.cmd.md", CMD_SRC);
     expect(r.renderCmd(cmd)).toEqual({ files: [], warnings: [] });
-  });
-
-  it("renders subagents as TOML under .codex/agents/<id>.toml", () => {
-    const agent = parseAgent("coding.agent.md", AGENT_SRC);
-    const result = r.renderAgents([agent]);
-    expect(result.files).toHaveLength(1);
-    expect(result.files[0]?.path).toBe(".codex/agents/coding.toml");
-    const content = result.files[0]?.content ?? "";
-    expect(content).toMatch(/^name = "coding"\ndescription = "Coding agent\."\n/);
-    expect(content).toMatch(/developer_instructions = """\n# Coding Agent\n[\s\S]*\n"""\n$/);
-  });
-
-  it("escapes backslashes and triple quotes in developer_instructions", () => {
-    const agent = parseAgent("coding.agent.md", `${AGENT_SRC}\nregex \\d and """quoted"""\n`);
-    const content = r.renderAgents([agent]).files[0]?.content ?? "";
-    expect(content).toContain('regex \\\\d and ""\\"quoted""\\"');
-  });
-
-  it("nests the Stop command under a hooks[] group", () => {
-    const parsed = JSON.parse(r.renderStopHook().files[0]?.content ?? "{}");
-    expect(parsed.hooks.Stop[0].hooks[0].type).toBe("command");
-    expect(parsed.hooks.Stop[0].hooks[0].command).toMatch(/stop-hook --engine codex$/);
   });
 
   it("renders skill requiring multi-step on codex-cli with degradation warning", () => {
@@ -165,23 +138,5 @@ describe("opencodeRenderer", () => {
     const result = r.renderCmd(cmd);
     expect(result.files[0]?.path).toBe(".opencode/commands/doc-audit.md");
     expect(result.files[0]?.content).toMatch(/^---\ndescription: Audit doc scope\.\n---\n/);
-  });
-
-  it("renders agents with YAML description + mode, named by file", () => {
-    const agent = parseAgent("coding.agent.md", AGENT_SRC);
-    const result = r.renderAgents([agent]);
-    expect(result.files[0]?.path).toBe(".opencode/agents/coding.md");
-    expect(result.files[0]?.content).toMatch(/^---\ndescription: Coding agent\.\nmode: all\n---\n/);
-  });
-
-  it("renders the stop hook as one plugin module for OpenCode 1.x and 2.x", () => {
-    const file = r.renderStopHook().files[0];
-    expect(file?.path).toBe(".opencode/plugins/harness-stop-hook.ts");
-    expect(file?.content).toMatch(/export default \{\n {2}id: "vaubaan-harness-stop-hook",/);
-    expect(file?.content).toMatch(/server: HarnessStopHook,/);
-    expect(file?.content).toMatch(/setup\(context\)/);
-    expect(file?.content.match(/^export /gm)).toHaveLength(1);
-    expect(file?.content).toMatch(/event\.type !== "session\.idle"/);
-    expect(file?.content).toMatch(/"stop-hook", "--engine", "opencode"/);
   });
 });

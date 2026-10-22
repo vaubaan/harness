@@ -2,14 +2,17 @@
 tracks:
   - src/loader.ts
   - src/render.ts
-  - src/cli/init.ts
+  - src/cli/plan-render.ts
+last_reviewed: 2026-10-22
 ---
 
 # Project skills (`docs/skills/`)
 
 Project skills are domain-specific skills versioned with the project. They
 live in `docs/skills/` and use the same `*.skill.md` format as built-in
-skills.
+skills. They are also where a project puts the know-how the harness
+deliberately does not ship: a code audit against `docs/quality/`, a
+review checklist, a migration runbook.
 
 ## Creating a project skill
 
@@ -41,8 +44,9 @@ Identical to built-in skills (Zod strict validation):
 
 ## Discovery and merge order
 
-At `init` time the harness scans `<target-dir>/docs/skills/*.skill.md`.
-The merge order is:
+At `init` and `update` time the harness scans
+`<target-dir>/docs/skills/*.skill.md` (`loadProjectSkills`,
+`src/loader.ts`, called from `planInit`). The merge order is:
 
 ```
 stock (src/skills/) → project (docs/skills/) → overrides (.harness-overrides/)
@@ -63,7 +67,10 @@ skills:
 | codex-cli | `.agents/skills/<id>/SKILL.md` |
 | opencode | `.opencode/skills/<id>/SKILL.md` (omitted when another rendered engine already exposes the skill) |
 
-They appear in the "Doc-skills" section of `AGENTS.md`.
+They appear in the "Doc-skills" section of `AGENTS.md`. The rendered
+copies are generated files: committed, and checked by
+`lint:generated-fresh`. After adding or editing a project skill, run
+`npx @vaubaan/harness update .` and commit the result.
 
 ## Limitations
 

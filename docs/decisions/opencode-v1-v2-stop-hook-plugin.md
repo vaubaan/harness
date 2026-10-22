@@ -1,11 +1,17 @@
 ---
 title: One OpenCode Stop-hook plugin for V1 and V2
-status: accepted
+status: superseded
+superseded_by: lint-in-ci-and-pre-commit
 date: 2026-10-14
 author: Vaubaan core
 ---
 
 # One OpenCode Stop-hook plugin for V1 and V2
+
+> **Superseded (2026-10-22)** by
+> [lint-in-ci-and-pre-commit](./lint-in-ci-and-pre-commit.md): the
+> OpenCode plugin is no longer rendered. The text below is kept as
+> history.
 
 ## Context
 

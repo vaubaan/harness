@@ -121,25 +121,22 @@ describe("applyUpdateTransaction", () => {
     expect(readFileSync(join(second.backupDir, "files/AGENTS.md"), "utf8")).toBe("first");
   });
 
-  it("keeps manifests and new hook files private without changing existing file modes", () => {
+  it("keeps the manifest private without changing existing file modes", () => {
     put(".harness-manifest.json", "old manifest", 0o644);
-    put(".codex/hooks.json", "existing hooks", 0o640);
+    put("CLAUDE.md", "existing stub", 0o640);
     applyUpdateTransaction(
       root,
       [
-        { path: ".claude/settings.json", content: "private config" },
-        { path: ".codex/hooks.json", content: "updated hooks" },
+        { path: "CLAUDE.md", content: "@AGENTS.md\n" },
         { path: "AGENTS.md", content: "instructions" },
-        { path: ".harness-manifest.json", content: "private ownership snapshots" },
+        { path: ".harness-manifest.json", content: "ownership" },
       ],
       [],
       backup,
     );
 
-    for (const path of [".claude/settings.json", ".harness-manifest.json"]) {
-      expect(statSync(join(root, path)).mode & 0o777, path).toBe(0o600);
-    }
-    expect(statSync(join(root, ".codex/hooks.json")).mode & 0o777).toBe(0o640);
+    expect(statSync(join(root, ".harness-manifest.json")).mode & 0o777).toBe(0o600);
+    expect(statSync(join(root, "CLAUDE.md")).mode & 0o777).toBe(0o640);
     expect(statSync(join(root, "AGENTS.md")).mode & 0o777).toBe(0o644);
   });
 
@@ -267,7 +264,7 @@ describe("applyUpdateTransaction", () => {
     expect(() =>
       applyUpdateTransaction(
         root,
-        [{ path: ".codex/hooks.json", content: "{}" }],
+        [{ path: ".codex/agents/old.toml", content: "stale" }],
         ["AGENTS.md"],
         backup,
       ),

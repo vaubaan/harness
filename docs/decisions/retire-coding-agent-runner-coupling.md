@@ -8,6 +8,11 @@ supersedes: supervisor-harness-design
 
 # Remove couplings to the abandoned coding-agent-runner
 
+> **Amended (2026-10-22)** by
+> [lint-in-ci-and-pre-commit](./lint-in-ci-and-pre-commit.md): the Stop
+> hook and its native continuation, mentioned below, are removed. The
+> removal of `.car/` and of the end-of-turn log stands.
+
 ## Context
 
 The user confirmed that CAR (`coding-agent-runner`) has been abandoned.

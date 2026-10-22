@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { AGENT_IDS, CAPABILITIES, ENGINES } from "../types.js";
+import { CAPABILITIES, ENGINES } from "../types.js";
 
 const IdSchema = z
   .string()
@@ -51,19 +51,9 @@ const CmdFrontmatterSchema = z
 
 export type CmdFrontmatter = z.infer<typeof CmdFrontmatterSchema>;
 
-const AgentFrontmatterSchema = z
-  .object({
-    id: z.enum(AGENT_IDS),
-    description: z.string().min(1),
-  })
-  .strict();
-
-export type AgentFrontmatter = z.infer<typeof AgentFrontmatterSchema>;
-
 export const Schemas = {
   Skill: SkillFrontmatterSchema,
   Cmd: CmdFrontmatterSchema,
-  Agent: AgentFrontmatterSchema,
 } as const;
 
 export class ParseError extends Error {

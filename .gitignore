@@ -5,16 +5,7 @@ coverage/
 
 .vscode/
 .harness-overrides/
-.harness-manifest.json
-.harness/
-.claude/
-.codex/
-.opencode/
-.agents/
 .vaubaan/
-AGENTS.md
-CLAUDE.md
-.mcp.json
 
 .DS_Store
 *.log

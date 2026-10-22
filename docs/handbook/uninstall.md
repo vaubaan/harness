@@ -6,7 +6,6 @@ tracks:
   - src/cli/uninstall.ts
   - src/cli/manifest.ts
   - src/cli/managed-paths.ts
-  - src/cli/hook-configs.ts
   - src/cli/index.ts
   - tests/integration/uninstall.test.ts
   - tests/integration/init-safe.test.ts
@@ -16,15 +15,22 @@ last_reviewed: 2026-10-22
 
 # Init and uninstall — lifecycle of managed files
 
-`vaubaan-harness init <target-dir>` refreshes the rendering and removes
-old managed files that are no longer needed. `uninstall <target-dir>` removes
-the files owned by the harness. Files outside the manifest, and files
-the project edited since the harness wrote them, are preserved according
-to the rules below. Decisions: [safe lifecycle](../decisions/safe-project-artifact-lifecycle.md),
+`vaubaan-harness init <target-dir> --engines=<list>` renders the harness
+and removes old managed files that are no longer needed. `uninstall
+<target-dir>` removes the files owned by the harness. Files outside the
+manifest, and files the project edited since the harness wrote them, are
+preserved according to the rules below. Decisions:
+[safe lifecycle](../decisions/safe-project-artifact-lifecycle.md),
 [safe init](../decisions/safe-init.md),
-[no MCP, no code merge](../decisions/no-mcp-no-code-merge.md).
-To update an existing installation while keeping its choices
+[no MCP, no code merge](../decisions/no-mcp-no-code-merge.md),
+[engine choice mandatory](../decisions/engine-choice-mandatory.md).
+To re-render an existing installation while keeping its engines
 and with a backup, use [the `update` command](./project-update.md).
+
+The generated files are committed
+([decision](../decisions/generated-files-committed.md)): after `init`,
+`update` or `uninstall`, commit the result. The CLI says so on its last
+line.
 
 ## Mechanics
 
@@ -35,10 +41,11 @@ before any mutation. Paths must be relative, belong to native or legacy
 managed locations, and contain no `..`, no `.`, no
 empty segment, no backslash, no null byte. POSIX and
 Windows absolute paths are refused. `AGENTS.md`, `CLAUDE.md`, the
-manifest, the two Stop hook files and the engines' content
-subdirectories make up the list of allowed locations. `.mcp.json`,
-`.codex/config.toml`, `.opencode/opencode.json` and `.opencode/mcp.json`
-are not managed locations any more.
+manifest and the engines' content subdirectories make up the list of
+allowed locations. Engine settings and MCP files (`RELEASED_PATHS`:
+`.mcp.json`, `.codex/config.toml`, `.opencode/opencode.json`,
+`.opencode/mcp.json`, `.claude/settings.json`, `.codex/hooks.json`) are
+not managed locations: the harness never writes, edits or removes them.
 
 Each existing component under the root is inspected with `lstatSync`.
 A symbolic link, even internal or dangling, is refused, including on
@@ -50,41 +57,31 @@ directory and the final destination a regular file, if it exists.
 
 `initCommand` (`src/cli/init.ts`) shares the planner of `update`,
 `planInstallation` (`src/cli/update.ts`). It differs only in where the
-settings come from: engines and the Stop hook come from the options;
-preserved files and the overrides folder come from the previous
+engines come from: `init` takes its mandatory `engines` (an empty or
+missing list is refused with `no engine selected`); `update` reads the
+manifest. Preserved files and the overrides folder come from the previous
 manifest, if any.
 
-1. Paths 1.x edited entry by entry are dropped from the manifest with a
-   warning and never touched again (`RELEASED_PATHS`,
-   `src/cli/hook-configs.ts`).
+1. Paths in `RELEASED_PATHS` are dropped from the manifest with a
+   warning and never touched again. A Stop hook entry 1.x left in an
+   engine settings file produces a second warning asking to remove it
+   by hand.
 2. The rendering (`planInit`, `src/cli/plan-render.ts`) gives the
-   agents, skills, commands and umbrella; the Stop hook of each hook
-   engine is rendered separately.
+   skills, commands and umbrella for the selected engines. Nothing else
+   is rendered: no persona, no hook, no settings file.
 3. A generated path that already holds a file outside the manifest, or a
    managed file whose content no longer matches its recorded hash, is a
    conflict. All conflicts are reported in one error, before any write;
    `--preserve <path>` leaves a file to the project.
-4. The two Stop hook files follow their own rule, without merge: see
-   [Stop hook files](#stop-hook-files).
+4. A file the previous manifest lists and the render no longer produces
+   is removed when unchanged. Dropping an engine removes its folder.
 5. A `.harness-overrides/` folder in the project is loaded by default.
 6. Writes and removals go through `applyUpdateTransaction`, with a
    backup and rollback. The backup is kept, and its path printed, only
    when an existing file was changed. Directories left empty by removals
    are pruned.
 
-Re-running `init` with the same options writes nothing.
-
-### Stop hook files
-
-`.claude/settings.json` and `.codex/hooks.json` are shared with the
-project. `planHookConfigs` (`src/cli/hook-configs.ts`) writes one only
-when it is absent or when the manifest records it unchanged. An
-existing file the harness does not own stays byte-for-byte as it is,
-leaves the manifest, and a warning either prints the Stop hook block to
-add or, when the file already contains `@vaubaan/harness stop-hook`,
-says the file already runs the hook and stays the project's. No JSON is
-parsed. Details and the removal rule:
-[the update handbook](./project-update.md#stop-hook-files).
+Re-running `init` with the same engines writes nothing.
 
 ### Uninstallation
 
@@ -101,9 +98,7 @@ parsed. Details and the removal rule:
    pruned up to the target directory.
 4. Deletes the manifest.
 
-The result exposes `{ filesRemoved, dirsPruned, warnings }`. A Stop
-hook file is removed under the same rule as any generated file:
-listed in the manifest and unchanged.
+The result exposes `{ filesRemoved, dirsPruned, warnings }`.
 
 ## Safeguards
 
@@ -135,11 +130,11 @@ listed in the manifest and unchanged.
 4. **`init → uninstall → init` cycle** — the 2nd installation produces
    exactly the same list of files as the 1st.
 
-`tests/integration/init-safe.test.ts` covers the Stop hook files
-(existing, already hooked, created then edited, preserved, disabled) and
-the release of files 1.x edited. `tests/integration/legacy-migration.test.ts`
-replays the real 0.9.0 manifest. The atomic path checks are tested next
-to the CLI modules.
+`tests/integration/init-safe.test.ts` covers conflicts, `--preserve`,
+the release of files 1.x wrote or edited, the legacy Stop hook warning
+and idempotence. `tests/integration/legacy-migration.test.ts` replays
+the real 0.9.0 manifest. The atomic path checks are tested next to the
+CLI modules.
 
 ## Pitfalls
 
@@ -149,19 +144,18 @@ to the CLI modules.
   longer harness content, it is your file).
 - **Manifest version**. `src/cli/manifest.ts` writes v6 and accepts
   v4, v5 and v6 when reading. v6 also records the package version
-  and the fingerprints used by `update`. The 1.x entry ownership fields
-  are dropped on read; what they covered is now the project's. An
-  invalid manifest or one with an unsupported version makes the
-  operation fail before mutation; inspect and repair the manifest
-  before rerunning. For a valid v1 to v3 manifest, use `update`, which
-  carries the legacy migration.
+  and the fingerprints used by `update`. The 1.x ownership and Stop hook
+  fields are dropped on read. An invalid manifest or one with an
+  unsupported version makes the operation fail before mutation; inspect
+  and repair the manifest before rerunning. For a valid v1 to v3
+  manifest, use `update`, which carries the legacy migration.
 - **No `--force`**. Deliberate: if something is off, read the
   manifest, understand, act. A bypass flag would become a foot-gun.
 
 ## When to invoke it
 
 - An ordinary update is done with `update`, which keeps the
-  previous choices, detects modifications to managed files and backs up the
-  affected files. `init` is for installing or explicitly reconfiguring.
+  engines, detects modifications to managed files and backs up the
+  affected files. `init` is for installing or changing engines.
 - Before un-harnessing a project (rare).
 - When debugging, to start again from a clean base.
