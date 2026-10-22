@@ -30,7 +30,6 @@ function install() {
     targetDir: root,
     engines: ["claude-code"],
     packageDir: PACKAGE_DIR,
-    withStopHook: false,
   });
 }
 function manifest(files: string[]) {

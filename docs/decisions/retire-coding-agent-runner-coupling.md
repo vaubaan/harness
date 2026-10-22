@@ -1,52 +1,46 @@
 ---
-title: Remove couplings to the abandoned coding-agent-runner
+title: The harness is standalone, with no runtime coupling
 status: accepted
 date: 2026-09-20
 author: Vaubaan core
-supersedes: supervisor-harness-design
 ---
 
-# Remove couplings to the abandoned coding-agent-runner
+# The harness is standalone, with no runtime coupling
 
 ## Context
 
-The user confirmed that CAR (`coding-agent-runner`) has been abandoned.
-The harness is a standalone package, but two behaviors kept a coupling
-to that runtime: `check` and `lint:gitignore-harness` required a
-`.car/` entry, and the Stop hook tried to write an end-of-turn signal
-to `CAR_TURN_END_LOG` or `/var/run/car/turn-end.log`.
-
-The documentation also announced automatic injection at session
-startup. The supervisor support project of 2026-06-04 was only
-proposed: the `./supervisor` export, the associated subcommand, the
-schemas and the five envisioned linters are absent from the code and
-from the package exports.
+The harness was first designed next to a session runtime, CAR
+(`coding-agent-runner`), which was to install it at session start,
+read an end-of-turn signal and later host a supervisor role. CAR was
+abandoned in September 2026. Two couplings survived it: `check` and
+`lint:gitignore-harness` required a `.car/` entry, and the end-of-turn
+check wrote a signal to `CAR_TURN_END_LOG` or
+`/var/run/car/turn-end.log`. The documentation also announced an
+automatic injection at session startup and a supervisor support that
+was only ever proposed.
 
 ## Decision
 
-The harness removes these CAR conventions. Project checks no longer
-require `.car/`. Stop hooks still decide on lint and on the engines'
-native continuation, but no longer emit an end-of-turn log intended
-for CAR. The old `CAR_TURN_END_LOG` variable no longer has any effect.
+The harness is a standalone package: a CLI and a library that drop
+files into a project and lint its docs. No daemon, no runtime service,
+no protocol with an orchestrator.
 
-Installation and update are explicit operations via CLI or API. The
-harness promises no injection by a session runtime. The historical
-supervisor plan is retired, without deleting its text; ADRs that
-mention CAR keep their dated context.
+- Project checks require no `.car/` entry; an old one may remain.
+- No end-of-turn signal is written anywhere; `CAR_TURN_END_LOG` has no
+  effect.
+- Installation and update are explicit operations via CLI or API. No
+  injection by a session runtime is promised.
+- Supervision, task backlogs and session orchestration are out of
+  scope. A team that wants them keeps them in its own tooling or in
+  `docs/skills/`.
 
 ## Consequences
 
 - A standalone project no longer needs to ignore a CAR directory it
-  does not use. An old `.car/` entry can remain without error.
-- The Stop hook no longer writes to an external location associated
-  with CAR and no longer produces a warning when that location is
-  absent.
-- A consumer that relied on this signal must handle its own
-  end-of-turn notifications; no replacement signal is introduced in
-  this patch.
-- Operational removal of the CAR services and their archives remains
-  a separate infrastructure operation. The package deletes neither
-  historical directories nor session data.
+  does not use.
+- A consumer that relied on the end-of-turn signal must handle its
+  own notifications; no replacement signal is introduced.
+- The spec's position section describes the flow without any caller.
 
 ## Rejected alternatives
 
@@ -60,15 +54,17 @@ writes on every agent turn.
 No new runtime has been chosen. The standalone contract requires no
 additional protocol to run the documentation checks.
 
-### Delete the historical decisions
+### Ship supervisor support in the harness (proposed 2026-06-04)
 
-Their reasoning remains useful for understanding how the project
-evolved. An explicit retirement note prevents reading them as
-currently shipped features.
+A `tasks.md` schema, a `supervisor` subcommand, a `./supervisor` export
+and five supervisor linters were designed for CAR. None was
+implemented; the harness stays a static transformation.
 
-## References
+## History
 
-- [Harness spec](../spec/coding-agent-harness.md#01-position)
-- [Retired supervisor plan](./supervisor-harness-design.md)
-- [Linters](../handbook/linters-architecture.md)
-- [Test plan](../tests/integration-tests.md)
+- 2026-06-04: supervisor support designed for CAR (decision
+  `supervisor-harness-design`), never implemented.
+- 2026-09-20: CAR abandoned; `.car/` requirement and end-of-turn log
+  removed, supervisor plan withdrawn (1.1.1).
+- 2026-10-22, c45b319: the end-of-turn check itself removed
+  ([lint-in-ci-and-pre-commit](./lint-in-ci-and-pre-commit.md)).

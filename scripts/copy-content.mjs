@@ -2,7 +2,7 @@ import { cpSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 
 const repoRoot = resolve(import.meta.dirname, "..");
-const DIRS = ["agents", "skills", "commands", "templates"];
+const DIRS = ["skills", "commands", "templates"];
 
 for (const dir of DIRS) {
   const src = resolve(repoRoot, "src", dir);

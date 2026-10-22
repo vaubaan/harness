@@ -5,6 +5,7 @@ import { crossLinks } from "./cross-links.js";
 import { decisionSchema } from "./decision-schema.js";
 import { docLayout } from "./doc-layout.js";
 import { frontmatterTracks } from "./frontmatter-tracks.js";
+import { generatedFresh } from "./generated-fresh.js";
 import { gitignoreHarness } from "./gitignore-harness.js";
 import { orphanDecisions } from "./orphan-decisions.js";
 import { qualitySchema } from "./quality-schema.js";
@@ -30,6 +31,7 @@ export const ALL_LINTERS: ReadonlyArray<Linter> = [
   orphanDecisions,
   gitignoreHarness,
   qualitySchema,
+  generatedFresh,
 ];
 
 export interface RunOptions {

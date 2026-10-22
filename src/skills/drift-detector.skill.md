@@ -19,7 +19,7 @@ the doc content still matches reality.
 
 ## When to invoke you
 
-- `review` agent: after `doc-audit`, to dig into the flagged
+- After `doc-audit`, during a review, to dig into the flagged
   `⚠️ stale` items.
 - `/drift` or `/drift <handbook-name>` invoked by the human.
 - Before a major release: full drift audit.

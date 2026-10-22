@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { initCommand } from "../../src/cli/init.js";
 import { MANIFEST_FILENAME, readManifest } from "../../src/cli/manifest.js";
 import { renderCommand } from "../../src/cli/render.js";
-import { AGENT_IDS, ENGINES, ENGINE_ROOT_DIR } from "../../src/types.js";
+import { ENGINES, ENGINE_ROOT_DIR } from "../../src/types.js";
 
 const PACKAGE_DIR = resolve(__dirname, "..", "..", "src");
 
@@ -19,7 +19,7 @@ afterEach(() => {
 
 describe("initCommand integration — multi-engine harness", () => {
   for (const engine of ENGINES) {
-    it(`renders all 4 agent personas for engines=[${engine}]`, () => {
+    it(`renders the umbrella, skills and commands for engines=[${engine}], no persona`, () => {
       const result = initCommand({
         targetDir: sandbox,
         engines: [engine],
@@ -31,14 +31,13 @@ describe("initCommand integration — multi-engine harness", () => {
 
       const agentsMd = readFileSync(join(sandbox, "AGENTS.md"), "utf8");
       expect(agentsMd.length).toBeGreaterThan(100);
-      // The umbrella is method-first: it teaches doc-first workflow + lists
-      // skills/commands. Persona files (next assertion) carry persona-specific
-      // bodies; the umbrella deliberately does not enumerate personas.
+      // The umbrella is method-first: the one working rule, the project map,
+      // the checks and the exposed skills. It names no persona.
       expect(agentsMd).toMatch(/How we work/);
+      expect(agentsMd).toMatch(/## Checks/);
 
-      const personaDir = `${ENGINE_ROOT_DIR[engine]}/agents/`;
-      const personaFiles = result.filesWritten.filter((p) => p.startsWith(personaDir));
-      expect(personaFiles.length).toBe(AGENT_IDS.length);
+      expect(result.filesWritten.some((p) => p.includes("/agents/"))).toBe(false);
+      expect(existsSync(join(sandbox, ENGINE_ROOT_DIR[engine], "agents"))).toBe(false);
 
       const exposedSkillCount = result.filesWritten.filter((p) => p.includes("/skills/")).length;
       expect(exposedSkillCount).toBeGreaterThan(0);
@@ -47,23 +46,36 @@ describe("initCommand integration — multi-engine harness", () => {
       const cmdCount = result.filesWritten.filter((p) => p.includes("/commands/")).length;
       if (engine === "codex-cli") expect(cmdCount).toBe(0);
       else expect(cmdCount).toBeGreaterThan(0);
+
+      // No engine settings, hook or plugin is ever written.
+      expect(result.filesWritten).not.toContain(".claude/settings.json");
+      expect(result.filesWritten).not.toContain(".codex/hooks.json");
+      expect(result.filesWritten.some((p) => p.startsWith(".opencode/plugins/"))).toBe(false);
     });
   }
 
-  it("defaults to all 3 engines when --engines is omitted", () => {
-    const result = initCommand({
-      targetDir: sandbox,
-      packageDir: PACKAGE_DIR,
-    });
-    for (const engine of ENGINES) {
-      const personaFiles = result.filesWritten.filter((p) =>
-        p.startsWith(`${ENGINE_ROOT_DIR[engine]}/agents/`),
-      );
-      expect(personaFiles.length).toBe(AGENT_IDS.length);
-    }
+  it("requires an explicit engine selection", () => {
+    expect(() => initCommand({ targetDir: sandbox, engines: [], packageDir: PACKAGE_DIR })).toThrow(
+      /no engine selected/,
+    );
+    expect(existsSync(join(sandbox, MANIFEST_FILENAME))).toBe(false);
   });
 
-  it("writes a manifest tracking engines + files (no agent field)", () => {
+  it("renders every requested engine side by side with a single umbrella", () => {
+    const result = initCommand({
+      targetDir: sandbox,
+      engines: [...ENGINES],
+      packageDir: PACKAGE_DIR,
+    });
+    expect(result.filesWritten.filter((p) => p === "AGENTS.md")).toHaveLength(1);
+    expect(result.filesWritten).toContain(".claude/skills/doc-audit/SKILL.md");
+    expect(result.filesWritten).toContain(".agents/skills/doc-audit/SKILL.md");
+    expect(result.filesWritten).toContain(".opencode/commands/doc-audit.md");
+    // OpenCode reuses the skills exposed by the other engines.
+    expect(result.filesWritten.some((p) => p.startsWith(".opencode/skills/"))).toBe(false);
+  });
+
+  it("writes a manifest tracking engines + files with their fingerprints", () => {
     const result = initCommand({
       targetDir: sandbox,
       engines: ["claude-code", "codex-cli"],
@@ -73,57 +85,17 @@ describe("initCommand integration — multi-engine harness", () => {
     expect(existsSync(join(sandbox, MANIFEST_FILENAME))).toBe(true);
     const manifest = readManifest(sandbox);
     expect(manifest).not.toBeNull();
+    expect(manifest?.version).toBe("6");
     expect(manifest?.engines.sort()).toEqual(["claude-code", "codex-cli"]);
-    // Shared hook configurations are owned entry by entry, not as whole files.
-    const shared = [".claude/settings.json", ".codex/hooks.json"];
-    expect(manifest?.files.sort()).toEqual(
-      result.filesWritten.filter((path) => !shared.includes(path)).sort(),
-    );
-    expect(Object.keys(manifest?.hookConfigs ?? {}).sort()).toEqual(shared);
-  });
-
-  it("installs stop-hook configs by default and records it in the manifest", () => {
-    const result = initCommand({
-      targetDir: sandbox,
-      packageDir: PACKAGE_DIR,
-    });
-    expect(result.stopHookInstalled).toBe(true);
-    expect(result.filesWritten).toContain(".claude/settings.json");
-    expect(result.filesWritten).toContain(".codex/hooks.json");
-    expect(result.filesWritten).toContain(".opencode/plugins/harness-stop-hook.ts");
-    const manifest = readManifest(sandbox);
-    expect(manifest?.stopHookInstalled).toBe(true);
-    expect(manifest?.stopHookEngines?.sort()).toEqual([...ENGINES].sort());
-  });
-
-  it("withStopHook: false skips the stop-hook configs and flags the manifest", () => {
-    const result = initCommand({
-      targetDir: sandbox,
-      packageDir: PACKAGE_DIR,
-      withStopHook: false,
-    });
-    expect(result.stopHookInstalled).toBe(false);
-    expect(result.filesWritten).not.toContain(".claude/settings.json");
-    expect(result.filesWritten).not.toContain(".codex/hooks.json");
-    expect(result.filesWritten).not.toContain(".opencode/plugins/harness-stop-hook.ts");
-    const manifest = readManifest(sandbox);
-    expect(manifest?.stopHookInstalled).toBe(false);
-    expect(manifest?.stopHookEngines).toEqual([]);
-  });
-
-  it("does not expose /harness-lint anymore — the stop-hook runs lint directly", () => {
-    const result = initCommand({
-      targetDir: sandbox,
-      packageDir: PACKAGE_DIR,
-    });
-    expect(result.filesWritten).not.toContain(".claude/commands/harness-lint.md");
-    expect(result.filesWritten).not.toContain(".codex/commands/harness-lint.md");
-    expect(result.filesWritten).not.toContain(".opencode/commands/harness-lint.md");
+    expect(manifest?.files.sort()).toEqual([...result.filesWritten].sort());
+    for (const path of manifest?.files ?? []) {
+      expect(manifest?.fileHashes?.[path]).toMatch(/^[a-f0-9]{64}$/);
+    }
   });
 
   it("re-init removes files of the previous manifest that are no longer rendered", () => {
-    initCommand({ targetDir: sandbox, packageDir: PACKAGE_DIR });
-    const userFile = join(sandbox, ".codex", "notes.md");
+    initCommand({ targetDir: sandbox, engines: [...ENGINES], packageDir: PACKAGE_DIR });
+    const userFile = join(sandbox, ".agents", "notes.md");
     writeFileSync(userFile, "mine");
 
     const result = initCommand({
@@ -132,11 +104,12 @@ describe("initCommand integration — multi-engine harness", () => {
       packageDir: PACKAGE_DIR,
     });
 
-    expect(result.staleFilesRemoved).toContain(".codex/agents/coding.toml");
-    expect(existsSync(join(sandbox, ".codex", "agents"))).toBe(false);
-    expect(existsSync(join(sandbox, ".agents"))).toBe(false);
+    expect(result.staleFilesRemoved).toContain(".agents/skills/doc-audit/SKILL.md");
+    expect(result.staleFilesRemoved).toContain(".opencode/commands/doc-audit.md");
+    expect(existsSync(join(sandbox, ".agents", "skills"))).toBe(false);
+    expect(existsSync(join(sandbox, ".opencode"))).toBe(false);
     expect(existsSync(userFile)).toBe(true);
-    expect(existsSync(join(sandbox, ".claude", "agents", "coding.md"))).toBe(true);
+    expect(existsSync(join(sandbox, ".claude", "skills", "doc-audit", "SKILL.md"))).toBe(true);
   });
 
   it("rejects unknown engine", () => {
@@ -219,22 +192,21 @@ describe("initCommand integration — quality pillar", () => {
 });
 
 describe("renderCommand integration", () => {
-  it("renders preview output for all engines by default", () => {
+  it("renders preview output for every engine", () => {
     const out = mkdtempSync(join(tmpdir(), "cah-render-"));
     try {
       const result = renderCommand({
+        engines: [...ENGINES],
         outDir: out,
         packageDir: PACKAGE_DIR,
       });
       expect(result.filesWritten.some((p) => p === "AGENTS.md")).toBe(true);
       const umbrella = readFileSync(join(out, "AGENTS.md"), "utf8");
       expect(umbrella).toMatch(/How we work/);
-      for (const engine of ENGINES) {
-        for (const id of AGENT_IDS) {
-          const ext = engine === "codex-cli" ? "toml" : "md";
-          expect(result.filesWritten).toContain(`${ENGINE_ROOT_DIR[engine]}/agents/${id}.${ext}`);
-        }
-      }
+      expect(result.filesWritten).toContain(".claude/commands/doc-audit.md");
+      expect(result.filesWritten).toContain(".agents/skills/doc-audit/SKILL.md");
+      expect(result.filesWritten).toContain(".opencode/commands/doc-audit.md");
+      expect(result.filesWritten.some((p) => p.includes("/agents/"))).toBe(false);
     } finally {
       rmSync(out, { recursive: true, force: true });
     }

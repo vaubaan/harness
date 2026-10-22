@@ -1,6 +1,4 @@
 import { stringify as yamlStringify } from "yaml";
-import type { McpServerSpec } from "../mcp.js";
-import type { Agent } from "../parser/agent.js";
 import type { Cmd } from "../parser/cmd.js";
 import type { Skill } from "../parser/skill.js";
 import {
@@ -27,12 +25,7 @@ export interface Renderer {
   readonly engine: Engine;
   renderSkill(skill: Skill): RenderResult;
   renderCmd(cmd: Cmd): RenderResult;
-  renderAgents(agents: ReadonlyArray<Agent>): RenderResult;
-  renderMcp(servers: ReadonlyArray<McpServerSpec>): RenderResult;
-  renderStopHook(): RenderResult;
 }
-
-export const STOP_HOOK_PACKAGE = "@vaubaan/harness";
 
 export interface CapabilityCheck {
   blockingWarnings: string[];
@@ -69,45 +62,6 @@ export function yamlFrontmatter(data: Record<string, unknown>): string {
   return `---\n${rendered}\n---\n`;
 }
 
-const SCALAR_NEEDS_QUOTE = /[^a-zA-Z0-9_./-]/;
-
-function tomlEscapeString(s: string): string {
-  return `"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n")}"`;
-}
-
-function tomlValue(v: unknown): string {
-  if (Array.isArray(v)) {
-    return `[${v.map((x) => tomlValue(x)).join(", ")}]`;
-  }
-  if (typeof v === "string") {
-    if (v.includes("\n")) return tomlEscapeString(v);
-    return SCALAR_NEEDS_QUOTE.test(v) ? tomlEscapeString(v) : `"${v}"`;
-  }
-  if (typeof v === "boolean" || typeof v === "number") {
-    return String(v);
-  }
-  return tomlEscapeString(String(v));
-}
-
-/** TOML multi-line basic string (`"""…"""`), used for Codex `developer_instructions`. */
-export function tomlMultilineString(s: string): string {
-  const escaped = s.replace(/\\/g, "\\\\").replace(/"""/g, '""\\"');
-  return `"""\n${escaped}\n"""`;
-}
-
-export function tomlQuoteString(s: string): string {
-  return tomlValue(s);
-}
-
-export function tomlInlineArray(items: ReadonlyArray<unknown>): string {
-  return tomlValue([...items]);
-}
-
-export function tomlInlineTable(table: Record<string, string>): string {
-  const entries = Object.entries(table).map(([k, v]) => `${k} = ${tomlValue(v)}`);
-  return `{ ${entries.join(", ")} }`;
-}
-
 export function frontmatterDataForSkill(skill: Skill): Record<string, unknown> {
   // Agent Skills spec (agentskills.io): `name` must match the directory name.
   const data: Record<string, unknown> = {
@@ -140,14 +94,11 @@ export function frontmatterDataForCmd(cmd: Cmd): Record<string, unknown> {
 }
 
 /**
- * Personas carry their role contract only: engines discover skills and
- * commands natively, so listing them per persona is pure context cost.
+ * The engine-neutral umbrella: the one working rule the harness imposes,
+ * the project map, the checks, and the doc skills the engines expose.
+ * Everything project-specific lives in `README.md` and `docs/`.
  */
-export function buildAgentBody(agent: Agent): string {
-  return `${agent.body.trim()}\n`;
-}
-
-export function buildUmbrellaBody(_agents: ReadonlyArray<Agent>, extras: UmbrellaExtras): string {
+export function buildUmbrellaBody(extras: UmbrellaExtras): string {
   const triggerBySkill = new Map(
     extras.availableCommands.map((c) => [c.meta.invokes_skill, c.meta.trigger]),
   );
@@ -168,7 +119,7 @@ export function buildUmbrellaBody(_agents: ReadonlyArray<Agent>, extras: Umbrell
     "- `docs/handbook/<feature>.md` — *how it actually works* today.",
     "- `docs/decisions/<slug>.md` — ADRs: structural choices and rejected alternatives.",
     "- `docs/tests/integration-tests.md` & `e2e-tests.md` — core scenarios.",
-    "- `docs/workflow/coding-workflow.md` — CI, branches, PR, release.",
+    "- `docs/workflow/coding-workflow.md` — CI, branches, PR, release. How this team works: follow it.",
     ...(extras.hasProjectSkills
       ? ["- `docs/skills/*.skill.md` — the project's domain skills."]
       : []),
@@ -186,6 +137,12 @@ export function buildUmbrellaBody(_agents: ReadonlyArray<Agent>, extras: Umbrell
     "- Implicit structural decision in your changes → an ADR (`/decision`).",
     "- Changed feature behavior → update the matching handbook (`/handbook`).",
     "- Suspected code ↔ doc drift → `/drift` before moving on.",
+    "",
+    "## Checks",
+    "",
+    "Run `npx @vaubaan/harness lint` before you commit; CI runs the same linters on every pull request. Fix what it reports with the skill it suggests.",
+    "",
+    "The files the harness generates (`AGENTS.md`, `CLAUDE.md`, the `.claude/`, `.agents/` and `.opencode/` folders, `.harness-manifest.json`) are committed. Never edit them by hand: change their source in `docs/` or `.harness-overrides/`, run `npx @vaubaan/harness update .`, and commit the result. The linter fails when a generated file no longer matches its render.",
   ];
   if (skillLines.length > 0) {
     sections.push("", "## Doc-skills", "", skillLines.join("\n"));

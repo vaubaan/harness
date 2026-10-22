@@ -5,6 +5,40 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.0.0] — 2026-10-22
+
+Breaking. The harness narrows to one job: keep a project's context in `docs/`, render it for the engines the project uses, lint it in CI. Decisions of 2026-10-22: [no MCP, no code merge](docs/decisions/no-mcp-no-code-merge.md), [lint in CI and pre-commit](docs/decisions/lint-in-ci-and-pre-commit.md), [generated files committed](docs/decisions/generated-files-committed.md), [engine choice mandatory](docs/decisions/engine-choice-mandatory.md), [no personas, no code judgment](docs/decisions/no-personas-no-code-judgment.md), [decisions as current state](docs/decisions/decisions-as-current-state.md).
+
+### Removed
+- The four agent personas (`coding`, `review`, `merge`, `planning`), the `*.agent.md` pivot format and the `.<engine>/agents/` output. The harness imposes one working rule, doc-first, and asks the team to write its workflow in `docs/workflow/`.
+- The Stop hook: no `.claude/settings.json`, `.codex/hooks.json` or OpenCode plugin is written; `src/stop-hook/` and the `.harness/` state are gone. `lint` runs in CI, in the project's pre-commit hook and on demand. The `stop-hook` command stays as a hidden no-op until 3.0 so a 1.x hook entry does not fail every turn.
+- `clean-code-guardian` and `/clean-code`. The optional `docs/quality/` pillar stays and is read directly by agents.
+- MCP rendering: `--with-mcp`, the context7 registry and the `.mcp.json`, `.codex/config.toml`, `.opencode/opencode.json` outputs.
+- Code-driven merge of shared configuration files and the entry ownership it recorded (`hookConfigs`, `opencodeConfig`, `mcpConfig`, `stopHookInstalled`, `stopHookEngines`).
+- `--no-stop-hook`, and the default "all engines" when `--engines` is omitted.
+
+### Added
+- `lint --only <ids>` runs a subset of linters; the `drift-detector` skill uses it as a pre-flight.
+- `update` prunes the directories its removals leave empty, like `init`.
+- `lint:generated-fresh`: renders with the manifest's engines and overrides and fails when a committed generated file differs, is missing or is stale.
+- A `## Checks` section in `AGENTS.md`: run `lint` before committing; generated files are committed and never edited by hand.
+- `coding-workflow.md` template: optional `## Languages` section (docs, code, domain), asked by `/workflow`.
+- `/spec` is progressive: three questions on a greenfield subsystem, extraction from the code on a mature one, one section at a time after.
+
+### Changed
+- Decisions are current state: superseded ADRs are deleted and folded into a `## History` line of their successor; the decisions index lists only decisions in force. First compaction pass: 10 files removed, the pillar halved.
+- Generated files (`AGENTS.md`, `CLAUDE.md`, `.claude/`, `.codex/`, `.agents/`, `.opencode/`, `.harness-manifest.json`) are committed. `lint:gitignore-harness` and `check` now require only `.harness-overrides/` and `.vaubaan/` to be ignored, and fail when a generated path is ignored.
+- `--engines` is required on `init` and `render`. `update` keeps the manifest's engines.
+- `init` and `update` leave `.claude/settings.json`, `.codex/hooks.json` and every MCP file untouched; a manifest that still lists one drops it with a warning. When a settings file still contains the 1.x Stop hook command, `init` and `update` ask you to remove the entry.
+- Linters: 15. Skills: 8. Commands: 8.
+
+### Migration
+1. `npm i -D @vaubaan/harness@2` then `npx vaubaan-harness update .`: stale agent files and the OpenCode plugin are removed, released files are left in place.
+2. Remove the `npx -y @vaubaan/harness stop-hook` entry from `.claude/settings.json` or `.codex/hooks.json` if you had one.
+3. Remove `AGENTS.md`, `CLAUDE.md`, `.claude/`, `.codex/`, `.agents/`, `.opencode/`, `.harness-manifest.json`, `.harness/` and `.mcp.json` from `.gitignore`; keep `.harness-overrides/` and `.vaubaan/`. Commit the generated files.
+4. Run `npx vaubaan-harness lint` in CI and add it to your pre-commit hook.
+5. If you used `--with-mcp=context7`, the entry 1.x added to your engine configuration is now yours; keep or delete it.
+
 ## [1.4.0] — 2026-10-14
 
 ### Changed
@@ -25,13 +59,13 @@ None required. Existing installations are read as before; hook files and `.mcp.j
 ## [1.3.2] — 2026-10-14
 
 ### Fixed
-- OpenCode 2.x: the Stop hook plugin failed to load ("Plugin must export a default definition"). The rendered `.opencode/plugins/harness-stop-hook.ts` now has one default export with `server()` for OpenCode 1.x and `setup()` for 2.x. See [the decision](docs/decisions/opencode-v1-v2-stop-hook-plugin.md).
+- OpenCode 2.x: the Stop hook plugin failed to load ("Plugin must export a default definition"). The rendered `.opencode/plugins/harness-stop-hook.ts` now has one default export with `server()` for OpenCode 1.x and `setup()` for 2.x. See the decision `opencode-v1-v2-stop-hook-plugin`, folded into [lint-in-ci-and-pre-commit](docs/decisions/lint-in-ci-and-pre-commit.md) in 2.0.
 - `lint:gitignore-harness` and `check` now require `.harness/`, where the Stop hook keeps its state; an unignored state file kept the worktree dirty. `check` also requires `.mcp.json`, like the linter.
 - `package.json`: the `bin` path no longer starts with `./`. npm 11 drops such a `bin` entry at publish time, which would have shipped a package without its CLI.
 - README: the `.gitignore` snippet now passes `check` and `lint` (it missed `.vaubaan/` and `.mcp.json`, and an inline comment made the `.harness/` line ineffective).
 
 ### Changed
-- `init` reminds you that Codex runs the Stop hook only after the project is trusted and the hook approved (`/hooks`). Engine prerequisites are documented in the [Stop hook handbook](docs/handbook/stop-hook.md).
+- `init` reminds you that Codex runs the Stop hook only after the project is trusted and the hook approved (`/hooks`). Engine prerequisites are documented in the Stop hook handbook (removed in 2.0 with the hook itself).
 
 ### Migration
 Run `npx @vaubaan/harness update .` to get the new OpenCode plugin, and add `.harness/` to `.gitignore`.
@@ -86,7 +120,7 @@ Run the selected package version's `update --dry-run --json`, then `update`. The
 
 ## [1.0.1] — 2026-09-20
 
-[Release decision](docs/decisions/release-safety-patch-1-0-1.md) — PR #51, validation and publication conditions.
+Release decision `release-safety-patch-1-0-1` (PR #51, validation and publication conditions), folded into [github-actions-ci](docs/decisions/github-actions-ci.md) in 2.0.
 
 ### Fixed
 - Validate every managed path before installation or removal; reject traversal, absolute paths, unexpected locations and symbolic links before touching any file.
@@ -177,7 +211,7 @@ Add `.agents/` to `.gitignore`, then re-run `vaubaan-harness init`.
 ### Added
 - Stop hook emits a JSONL turn-end event to `CAR_TURN_END_LOG` after every engine turn (`emitTurnEnd` in `src/cli/stop-hook.ts`, PR #3)
 - `formatReportText` unit tests — 10 cases covering all output code paths (PR #1)
-- ADR: supervisor harness design (`docs/decisions/supervisor-harness-design.md`)
+- ADR: supervisor harness design (`supervisor-harness-design`, withdrawn 2026-09-20 and folded into `retire-coding-agent-runner-coupling` in 2.0)
 
 ### Changed
 - Replaced FIFO-based turn signalling with append-only JSONL log (`/var/run/car/turn-end.log`)

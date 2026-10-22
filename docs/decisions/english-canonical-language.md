@@ -10,7 +10,7 @@ author: Vaubaan core
 ## Context
 
 Until 1.2.0 the harness was written in French: its spec, ADRs and
-handbooks, the skills, agents and commands it renders into projects, the
+handbooks, the skills and commands it renders into projects, the
 generated `AGENTS.md`, and the doc templates. Two linters encoded French
 section headings: `lint:decision-schema` (`Contexte`, `Décision`,
 `Conséquences`, `Alternatives rejetées`) and `lint:quality-schema`
@@ -34,7 +34,7 @@ harnessed project inherit French prompts and doc skeletons.
 
 ## Consequences
 
-- New projects get English templates, skills, agents and `AGENTS.md`.
+- New projects get English templates, skills, commands and `AGENTS.md`.
 - Existing French docs in harnessed projects stay valid; nothing has to
   be rewritten. Mixing languages within one ADR is accepted, since each
   section is matched independently.
@@ -50,7 +50,7 @@ every harnessed project.
 
 ### Make the language configurable
 
-Rendering every skill, agent and template in several languages
+Rendering every skill, command and template in several languages
 multiplies the content to maintain and test, for no current demand.
 
 ### English only, dropping the French headings

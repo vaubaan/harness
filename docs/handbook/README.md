@@ -25,29 +25,26 @@ The other doc pillars live elsewhere:
 
 - [Renderer pipeline](./renderer-pipeline.md) — pivot parse →
   pure orchestrator → per-engine renderers → write to the
-  target directory.
+  target directory; skills, commands and the umbrella only.
 - [Capabilities matrix](./capabilities-matrix.md) —
   `CAPABILITIES_MATRIX` + `DEGRADED_CAPABILITIES`, blocking vs degraded
   warnings, adding a new capability.
 - [Linters architecture](./linters-architecture.md) — the `Linter`
-  interface shared by the 14 linters, the aggregator, the versioned JSON report.
+  interface shared by the 15 linters, the aggregator, the versioned JSON
+  report, the gitignore and generated-files checks.
 - [CLI package resolution](./cli-package-resolution.md) —
-  `resolvePackageDir()` in dev/prod, the role of `scripts/copy-content.mjs`,
-  override via `--package-dir`.
+  `resolvePackageDir()` and `defaultPackageDir()` in dev/prod, the role of
+  `scripts/copy-content.mjs`, override via `--package-dir`.
 - [Overrides loading](./overrides-loading.md) — semantics of
   `.harness-overrides/`, stock + add - disable merge, end-to-end example.
 - [File lifecycle](./uninstall.md) — path validation,
-  cleanup on re-init and uninstall, ownership of MCP entries
-  in the shared OpenCode configuration.
+  cleanup on re-init and uninstall, files released to the project.
 - [Updating a project](./project-update.md) — manifest migrations,
-  preview, settings preservation, backup and rollback.
-- [Stop hooks](./stop-hook.md) — lint decision, retry state,
-  native responses and removal of the CAR log.
+  preview, backup and rollback, legacy Stop hook warning.
 - [Project skills](./project-skills.md) — domain skills kept in
   `docs/skills/` and rendered alongside the built-in skills.
 - [Quality pillar](./quality-pillar.md) — `docs/quality/code-quality.md`,
-  optional pillar: shape linter, mention in `AGENTS.md`, effect
-  on the code audit.
+  optional pillar: shape linter, mention in `AGENTS.md`.
 
 ## When to update
 

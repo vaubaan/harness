@@ -1,17 +1,21 @@
 import { lstatSync, realpathSync, statSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, resolve, win32 } from "node:path";
 
-const MANAGED_FILES = new Set([
-  "AGENTS.md",
-  "CLAUDE.md",
+const MANAGED_FILES = new Set(["AGENTS.md", "CLAUDE.md", ".harness-manifest.json"]);
+
+/**
+ * Files 1.x wrote or edited and 2.0 never touches again: MCP configurations
+ * and engine settings holding the Stop hook. A manifest that still lists one
+ * drops it with a warning; the file stays in place as the project's.
+ */
+export const RELEASED_PATHS: ReadonlyArray<string> = [
   ".mcp.json",
-  ".harness-manifest.json",
-  ".claude/settings.json",
   ".codex/config.toml",
-  ".codex/hooks.json",
   ".opencode/opencode.json",
   ".opencode/mcp.json",
-]);
+  ".claude/settings.json",
+  ".codex/hooks.json",
+];
 
 // Includes legacy layouts so upgrades can remove their generated artifacts.
 const MANAGED_DIRECTORIES = [

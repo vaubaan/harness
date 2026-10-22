@@ -6,7 +6,18 @@
     "useIgnoreFile": true
   },
   "files": {
-    "ignore": ["dist/**", "node_modules/**", "coverage/**", "tests/fixtures/**", ".vscode/**"]
+    "ignore": [
+      "dist/**",
+      "node_modules/**",
+      "coverage/**",
+      "tests/fixtures/**",
+      ".vscode/**",
+      ".claude/**",
+      ".codex/**",
+      ".opencode/**",
+      ".agents/**",
+      ".harness-manifest.json"
+    ]
   },
   "organizeImports": { "enabled": true },
   "linter": {

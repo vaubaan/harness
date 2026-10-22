@@ -1,4 +1,4 @@
-# 0005 — Capabilities matrix with degraded mode
+# Capabilities matrix with degraded mode
 
 **Date:** 2026-05-21
 **Status:** accepted
@@ -42,7 +42,7 @@ Renderer policy (see `src/renderers/common.ts`):
 | Case                                          | Renderer action                                            |
 |-----------------------------------------------|------------------------------------------------------------|
 | Skill requires a cap not listed for the engine | **Skip** the skill + blocking warning (the skill is not rendered) |
-| Skill requires a cap listed as degraded       | **Render** the skill + informational warning in `audit.log` |
+| Skill requires a cap listed as degraded       | **Render** the skill + informational warning on stderr |
 | Skill requires only full caps                 | Render normally                                            |
 
 The `engineSupports(engine, cap)` helper lets renderers and
@@ -66,8 +66,7 @@ linters ask the question without knowing the internal structure.
   codex-cli where they are actually usable (degraded quality but
   useful).
 - **Render blindly without flagging the degradation**: the agent does not know
-  it is operating in degraded mode, and we lose traceability in
-  `audit.log`.
+  it is operating in degraded mode, and we lose traceability.
 - **A single boolean `supported` level per cap**: not expressive enough
   for the codex-cli `multi-step` case.
 - **Tag the degradation directly in the skill's

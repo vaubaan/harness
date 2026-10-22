@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { ENGINES } from "../types.js";
 import { renderCommand } from "./render.js";
 
-// The src/ directory contains agents/, skills/, and commands/ — it is a valid packageDir.
+// The src/ directory contains skills/ and commands/ — it is a valid packageDir.
 const PACKAGE_DIR = join(__dirname, "..");
 
 let outDir: string;
@@ -26,10 +26,18 @@ describe("renderCommand", () => {
     ).toThrow("unknown engine: bad-engine");
   });
 
-  it("with no engines arg, renders all supported engines and writes files", () => {
-    const result = renderCommand({ outDir, packageDir: PACKAGE_DIR });
+  it("requires an engine selection", () => {
+    expect(() => renderCommand({ engines: [], outDir, packageDir: PACKAGE_DIR })).toThrow(
+      /no engine selected/,
+    );
+    expect(existsSync(join(outDir, "AGENTS.md"))).toBe(false);
+  });
+
+  it("with every engine, renders all supported engines and writes files", () => {
+    const result = renderCommand({ engines: [...ENGINES], outDir, packageDir: PACKAGE_DIR });
     expect(result.filesWritten.length).toBeGreaterThan(0);
     expect(result.filesWritten).toContain("AGENTS.md");
+    expect(result.filesWritten).toContain(".agents/skills/doc-audit/SKILL.md");
   });
 
   it("with a single engine, writes only that engine's files", () => {

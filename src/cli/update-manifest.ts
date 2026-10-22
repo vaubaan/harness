@@ -18,17 +18,7 @@ export interface UpdateInstallation {
   manifest: Manifest;
   sourceVersion: string;
   engines: Engine[];
-  hookEngines: Engine[];
 }
-
-const HOOK_PATHS: Record<Engine, string[]> = {
-  "claude-code": [".claude/settings.json"],
-  "codex-cli": [".codex/hooks.json"],
-  opencode: [
-    ".opencode/plugins/harness-stop-hook/index.ts",
-    ".opencode/plugins/harness-stop-hook.ts",
-  ],
-};
 
 /** Historical schemas are accepted only by the explicit migration command. */
 export function readUpdateInstallation(root: string): UpdateInstallation {
@@ -54,18 +44,5 @@ export function readUpdateInstallation(root: string): UpdateInstallation {
     manifest = current;
   }
   const engines = [...new Set(z.array(EngineSchema).nonempty().parse(manifest.engines))];
-  const hookEngines =
-    manifest.stopHookInstalled === false
-      ? []
-      : manifest.stopHookEngines !== undefined
-        ? z.array(EngineSchema).parse(manifest.stopHookEngines)
-        : manifest.stopHookInstalled === true
-          ? engines
-          : engines.filter((engine) =>
-              HOOK_PATHS[engine].some((path) => manifest.files.includes(path)),
-            );
-  if (hookEngines.some((engine) => !engines.includes(engine))) {
-    throw new Error("manifest stopHookEngines must be a subset of installed engines");
-  }
-  return { manifest, sourceVersion, engines, hookEngines: [...new Set(hookEngines)] };
+  return { manifest, sourceVersion, engines };
 }

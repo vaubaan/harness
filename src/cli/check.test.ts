@@ -4,19 +4,7 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { checkCommand } from "./check.js";
 
-const REQUIRED_GITIGNORE_ENTRIES = [
-  ".harness-overrides/",
-  ".harness-manifest.json",
-  ".harness/",
-  ".claude/",
-  ".codex/",
-  ".opencode/",
-  ".agents/",
-  ".vaubaan/",
-  "AGENTS.md",
-  "CLAUDE.md",
-  ".mcp.json",
-];
+const REQUIRED_GITIGNORE_ENTRIES = [".harness-overrides/", ".vaubaan/"];
 
 const REQUIRED_DIRS = [
   "docs/spec",
@@ -133,6 +121,21 @@ describe("checkCommand", () => {
     for (const entry of missingEntries) {
       expect(result.issues).toContain(`.gitignore missing entry: ${entry}`);
     }
+  });
+
+  it("rejects ignoring a generated file: generated files are committed", () => {
+    scaffoldFullRepo();
+    write(".gitignore", `${REQUIRED_GITIGNORE_ENTRIES.join("\n")}\n.claude/\nAGENTS.md\n`);
+    const result = checkCommand(repo);
+    expect(result.pass).toBe(false);
+    expect(result.issues).toContain(".gitignore must not ignore generated file: .claude/");
+    expect(result.issues).toContain(".gitignore must not ignore generated file: AGENTS.md");
+  });
+
+  it("ignores comments and a leading slash when reading .gitignore", () => {
+    scaffoldFullRepo();
+    write(".gitignore", "# local state\n/.harness-overrides/\n/.vaubaan\n");
+    expect(checkCommand(repo).pass).toBe(true);
   });
 
   it("reports all issues on an empty repo", () => {

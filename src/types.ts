@@ -1,6 +1,3 @@
-export const AGENT_IDS = ["coding", "review", "merge", "planning"] as const;
-export type AgentId = (typeof AGENT_IDS)[number];
-
 export const ENGINES = ["claude-code", "codex-cli", "opencode"] as const;
 export type Engine = (typeof ENGINES)[number];
 

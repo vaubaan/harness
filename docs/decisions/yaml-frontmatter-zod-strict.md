@@ -1,4 +1,4 @@
-# 0003 — YAML frontmatter validated by Zod in `strict()` mode
+# YAML frontmatter validated by Zod in `strict()` mode
 
 **Date:** 2026-05-21
 **Status:** accepted
@@ -6,12 +6,11 @@
 
 ## Context
 
-Every source `*.skill.md`, `*.cmd.md` and `*.agent.md` carries a
-YAML frontmatter that declares structural fields: `id`,
-`description`, `engines`, `requires`, `tags`, `trigger`,
-`invokes_skill`, `args`, … (see [spec §5 and §6](../spec/coding-agent-harness.md)).
-These fields drive persona choice, per-engine selection, and the
-capabilities matrix.
+Every source `*.skill.md` and `*.cmd.md` carries a YAML frontmatter
+that declares structural fields: `id`, `description`, `engines`,
+`requires`, `tags`, `trigger`, `invokes_skill`, `args`, … (see
+[spec §5 and §6](../spec/coding-agent-harness.md)). These fields drive
+per-engine selection and the capabilities matrix.
 
 A typo in the frontmatter (`engine: claude-code` in the singular instead
 of `engines:`, or `descriptio:`) would raise no error if we only did
@@ -24,15 +23,14 @@ prevent.
 - **Parsing**: `gray-matter` extracts `meta` + `body` from the
   Markdown — the standard choice, robust on all delimiters.
 - **Validation**: one Zod schema per artifact type
-  (`SkillMetaSchema`, `CmdMetaSchema`, `AgentMetaSchema`) in
+  (`SkillFrontmatterSchema`, `CmdFrontmatterSchema`) in
   `.strict()` mode — any field not declared in the schema makes the
   parse fail with a precise message (`Unrecognized key(s) in object: "descriptio"`).
 - **Fatal error at parse time**: we do not load a skill whose
   frontmatter does not validate. The renderer only receives already
   typed objects.
-- **Shared enumerations**: the finite lists (`Engine`,
-  `AgentId`, `Capability`) come from `src/types.ts` and are
-  reused by Zod via `z.enum(ENGINES)`.
+- **Shared enumerations**: the finite lists (`Engine`, `Capability`)
+  come from `src/types.ts` and are reused by Zod via `z.enum(ENGINES)`.
 
 ## Consequences
 
@@ -53,10 +51,15 @@ prevent.
 - **JSON Schema**: verbose to write, no native TypeScript inference,
   more painful integration with shared enums.
 - **TOML everywhere instead of YAML**: YAML frontmatter is the Markdown
-  standard recognized by every editor (opencode is the exception,
-  handled by [ADR _toml-for-opencode_](./toml-for-opencode.md)).
+  standard recognized by every editor, and every engine reads it
+  ([engine-native-layouts-1-0](./engine-native-layouts-1-0.md)).
 - **Optional or opt-in `.strict()`**: inconsistent, we lose the guarantee
   on files that forget the opt-in.
 - **Validation at runtime in the target engine**: too late, we
   want the error at harness build time, not at invocation
   by the engine.
+
+## History
+
+- 2026-05-21: decided with three schemas, `*.agent.md` included.
+- 2026-10-22, c45b319: the agent schema and `AgentId` removed.

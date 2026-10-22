@@ -1,4 +1,4 @@
-# 0002 — TypeScript / Node ≥20 / ESM / tsup stack
+# TypeScript / Node ≥20 / ESM / tsup stack
 
 **Date:** 2026-05-21
 **Status:** accepted

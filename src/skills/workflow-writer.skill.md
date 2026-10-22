@@ -19,8 +19,8 @@ file in v1: `coding-workflow.md`.
 
 ## When to invoke you
 
-- The `coding` or `merge` agent modifies a CI workflow, a deployment
-  config, or a `package.json` script → update the workflow doc.
+- The agent modifies a CI workflow, a deployment config, or a
+  `package.json` script → update the workflow doc.
 - `doc-audit` flags `coding-workflow.md` as missing or stale.
 - `/workflow` invoked by the human.
 - Onboarding: a new contributor needs a recap of the process.
@@ -39,6 +39,10 @@ file in v1: `coding-workflow.md`.
    - `.github/PULL_REQUEST_TEMPLATE.md` (if it exists).
    - `CODEOWNERS`, `.changeset/`, etc. depending on the project's
      conventions.
+   - The languages in use: the language of the docs, of the code
+     (identifiers, comments, commit messages) and of the domain
+     vocabulary. Read `docs/spec/` and a few commits to infer them,
+     then confirm with the human.
 3. **Load the template** `coding-workflow.md.tmpl`.
 4. **Draft** the 5 required sections:
    - **CI pipeline**: which workflows run on which events (`push`,
@@ -55,6 +59,12 @@ file in v1: `coding-workflow.md`.
      Branch naming, typical lifetime, who can push where.
    - **Release**: who triggers it, how we tag, auto-deploy vs manual,
      rollback (exact command), freeze windows, communication.
+   Then propose the optional **Languages** section when the project
+   is not single-language by default: documentation language, code
+   language (identifiers, comments, commit messages), domain language
+   (the one the spec vocabulary is written in) and where the glossary
+   lives. It is optional information, but worth keeping explicit:
+   an agent that guesses the language gets it wrong silently.
 5. **`tracks:` frontmatter**: typically
    `[.github/workflows/*, vercel.json, package.json, CODEOWNERS]`.
 6. **Submit** to the human. Iterate.
@@ -68,7 +78,8 @@ file in v1: `coding-workflow.md`.
 
 - **5 sections present**. The `lint:cardinal-files` linter checks the
   file's presence; `doc-audit` checks the presence of the 5 required
-  sections by their header (regex). All 5 are mandatory.
+  sections by their header (regex). All 5 are mandatory; the
+  Languages section is optional.
 - **Concrete and actionable**. Mention the exact commands
   (`npm run deploy:prod`), the exact CI job names, the env vars by
   name. No vague abstractions ("we deploy via our usual process").
@@ -141,6 +152,12 @@ Details: `[.github/workflows/ci.yml](../../.github/workflows/ci.yml)`
 - Rollback: `vercel rollback <deployment-id>` (TTR < 5min)
 - Freeze windows: <e.g.: no release on Friday after 5pm>
 - Communication: <where we announce — Slack, changelog, etc.>
+
+## 6. Languages (optional)
+
+- Documentation: <language of docs/ and README>
+- Code: <language of identifiers, comments and commit messages>
+- Domain: <language of the spec vocabulary>; glossary in `docs/spec/<name>.md` §0
 
 ## References
 

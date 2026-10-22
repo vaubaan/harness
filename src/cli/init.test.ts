@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { RenderedFile } from "../types.js";
 import { initCommand, writeFilesToTarget } from "./init.js";
 
-// src/ is a valid packageDir — it contains agents/, skills/, commands/.
+// src/ is a valid packageDir — it contains skills/ and commands/.
 const PACKAGE_DIR = join(__dirname, "..");
 
 let targetDir: string;
@@ -26,30 +26,23 @@ describe("initCommand", () => {
     ).toThrow("unknown engine: bad-engine");
   });
 
-  it("with no engines writes files including AGENTS.md", () => {
-    const result = initCommand({ targetDir, packageDir: PACKAGE_DIR });
+  it("requires an engine selection and writes nothing without one", () => {
+    expect(() => initCommand({ targetDir, engines: [], packageDir: PACKAGE_DIR })).toThrow(
+      /no engine selected/,
+    );
+    expect(existsSync(join(targetDir, "AGENTS.md"))).toBe(false);
+  });
+
+  it("with engines: ['claude-code'] writes files including AGENTS.md and CLAUDE.md", () => {
+    const result = initCommand({
+      targetDir,
+      engines: ["claude-code"],
+      packageDir: PACKAGE_DIR,
+    });
     expect(result.filesWritten.length).toBeGreaterThan(0);
     expect(result.filesWritten).toContain("AGENTS.md");
-  });
-
-  it("with engines: ['claude-code'] writes files and stopHookInstalled is true", () => {
-    const result = initCommand({
-      targetDir,
-      engines: ["claude-code"],
-      packageDir: PACKAGE_DIR,
-    });
-    expect(result.filesWritten.length).toBeGreaterThan(0);
-    expect(result.stopHookInstalled).toBe(true);
-  });
-
-  it("with withStopHook: false sets stopHookInstalled to false", () => {
-    const result = initCommand({
-      targetDir,
-      engines: ["claude-code"],
-      packageDir: PACKAGE_DIR,
-      withStopHook: false,
-    });
-    expect(result.stopHookInstalled).toBe(false);
+    expect(result.filesWritten).toContain("CLAUDE.md");
+    expect(result.engines).toEqual(["claude-code"]);
   });
 });
 

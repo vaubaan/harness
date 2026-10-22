@@ -1,4 +1,4 @@
-# 0001 — Multi-engine pivot format
+# Multi-engine pivot format
 
 **Date:** 2026-05-21
 **Status:** accepted
@@ -6,59 +6,53 @@
 
 ## Context
 
-The harness targets three coding agent engines — `claude-code`,
-`codex-cli`, `opencode` — each with its own distinct native filesystem
-layout (see [spec §4.3](../spec/coding-agent-harness.md)):
-
-- `claude-code`: `~/.claude/skills/<id>/SKILL.md`, YAML frontmatter.
-- `codex-cli`: `~/.codex/skills/<id>.md`, YAML frontmatter.
-- `opencode`: `~/.opencode/plugins/<id>/index.md`, TOML frontmatter.
-
-We want to ship a single set of doc-skills (`doc-audit`, `spec-writer`,
-`decision-record-writer`, …) that works identically on all three
-engines, without duplicating the content N times and without building a
-heavy abstraction.
+The harness targets three coding agent engines, `claude-code`,
+`codex-cli` and `opencode`, each with its own native filesystem layout
+and frontmatter conventions
+([engine-native-layouts-1-0](./engine-native-layouts-1-0.md)). We want
+one set of doc skills that works identically on all three, without
+duplicating the content or building a heavy abstraction.
 
 ## Decision
 
 A single **pivot format** per artifact type:
 
-- `*.skill.md` — source of every skill (see [spec §5](../spec/coding-agent-harness.md)).
-- `*.cmd.md` — source of every slash command (see spec §6).
-- `*.agent.md` — source of the main system prompt (see spec §7.1).
+- `*.skill.md`, the source of every skill (spec §5);
+- `*.cmd.md`, the source of every slash command (spec §6).
 
 Three pure **per-engine renderers** (`src/renderers/claude-code.ts`,
-`codex-cli.ts`, `opencode.ts`) transform the pivot into the engine's native
-layout. Rendering is a pure function
-`(skill, engine) → RenderedFile[]` — no I/O, no state, idempotent.
+`codex-cli.ts`, `opencode.ts`) transform the pivot into the engine's
+native layout. Rendering is a pure function `(skill, engine) →
+RenderedFile[]`: no I/O, no state, idempotent.
 
-The pivot is Markdown + YAML frontmatter, readable and editable by
-hand by a human. No templating engine sits in between.
+The pivot is Markdown with YAML frontmatter, readable and editable by
+hand. No templating engine sits in between.
 
 ## Consequences
 
-- **Single source**: one skill = one `*.skill.md` file in the
-  package. Cross-engine differences are handled by the frontmatter
-  (`engines:`, `requires:`) and by the renderers' code, not by
-  duplication.
-- **Adding an engine** = writing a fourth renderer (~100 lines).
-  No source file needs to be touched.
-- **Capabilities**: the same pivot can be skipped or rendered in degraded
-  mode depending on the engine, via the matrix
-  (see [ADR _capabilities-matrix-with-degradation_](./capabilities-matrix-with-degradation.md)).
-- **Frontmatter conversion**: YAML → TOML for opencode is handled
-  by the renderer (see [ADR _toml-for-opencode_](./toml-for-opencode.md)).
+- One skill is one file in the package. Cross-engine differences live
+  in the frontmatter (`engines:`, `requires:`) and in the renderers,
+  not in duplicated copies.
+- Adding an engine is writing a fourth renderer; no source file
+  changes.
+- The same pivot can be skipped or rendered in degraded mode per engine
+  through the capabilities matrix
+  ([capabilities-matrix-with-degradation](./capabilities-matrix-with-degradation.md)).
 
 ## Rejected alternatives
 
-- **Separate sources per engine** (`skills/claude-code/`,
-  `skills/codex-cli/`, …): N× duplication, inevitable drift between
-  copies of the same skill.
-- **Handlebars / Jinja-style templating engine on the source**:
-  needless runtime complexity; a skill's body is a *prompt*, not
-  a *template* — no conditional logic in the content
-  (see spec §5, writing rules).
-- **A single common layout imposed on all three engines**: unrealistic,
-  each engine has its native loader that scans its own folder.
-- **Convert on the fly at runtime inside the agent**: moves the
-  problem into the target engine, breaks the idempotence of `init`.
+- **Separate sources per engine**: N× duplication, inevitable drift.
+- **A templating engine on the source**: needless runtime complexity; a
+  skill's body is a prompt, not a template.
+- **One common layout imposed on all three engines**: each engine has
+  its own loader scanning its own folder.
+- **Convert on the fly inside the agent**: moves the problem into the
+  engine and breaks the idempotence of `init`.
+
+## History
+
+- 2026-05-21: decided with three pivot types, `*.agent.md` included,
+  and a YAML to TOML conversion for OpenCode.
+- 2026-09-20: TOML output dropped, OpenCode reads YAML (1.0.0).
+- 2026-10-22, c45b319: `*.agent.md` and `renderAgents` removed
+  ([no-personas-no-code-judgment](./no-personas-no-code-judgment.md)).

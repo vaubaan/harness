@@ -13,7 +13,7 @@ model, against the installed CLIs on a freshly rendered project.
 | Claude Code | No breaking change. Rendered `.claude/`, `CLAUDE.md`, `.mcp.json` and the Stop hook protocol still match the docs (`claude doctor`, `claude plugin validate`, `claude mcp list`). | Docs only. |
 | Codex | Formats unchanged up to 0.162.1. Missed on 20 September: project hooks only run after the project is trusted **and** the hook is approved. | Documented; `init` prints a reminder. |
 | OpenCode 1.x | 1.14.50 → 1.19.0 is safe: plugin and SDK types unchanged on what the harness uses. | None. |
-| OpenCode 2.x | Released 2026-09-12. Agents, skills, commands, MCP and `AGENTS.md` load. The Stop hook plugin failed to load. | Fixed in 1.3.2: [one plugin for V1 and V2](../decisions/opencode-v1-v2-stop-hook-plugin.md). |
+| OpenCode 2.x | Released 2026-09-12. Agents, skills, commands, MCP and `AGENTS.md` load. The Stop hook plugin failed to load. | Fixed in 1.3.2 with one plugin for V1 and V2; the plugin was removed in 2.0 ([lint-in-ci-and-pre-commit](../decisions/lint-in-ci-and-pre-commit.md)). |
 
 ## Claude Code
 

@@ -21,8 +21,8 @@ points, how to debug.
 
 ## When to invoke you
 
-- The `coding` agent finishes a feature: create or update its handbook
-  before committing.
+- A feature is finished: create or update its handbook before
+  committing.
 - `/handbook <name>` invoked explicitly.
 - `doc-audit` flagged an outdated or missing handbook.
 - Major refactor: the existing handbook no longer describes reality.

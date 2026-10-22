@@ -10,23 +10,21 @@ git clone https://github.com/vaubaan/harness.git
 cd harness
 npm ci
 npm run build
-npm link                        # make the Stop hook run this checkout
-node dist/cli/index.js init .   # install the harness on this repository (dogfooding)
 ```
 
-`init` renders the agents, skills and commands for Claude Code, Codex and
-OpenCode. These generated files are ignored by git; re-run
-`node dist/cli/index.js update .` after changing the sources under
-`src/`.
+This repository is harnessed by itself and its generated files
+(`AGENTS.md`, `CLAUDE.md`, `.claude/`, `.agents/`, `.opencode/`,
+`.harness-manifest.json`) are committed, so a fresh clone needs no
+`init`. After changing anything under `src/skills/`, `src/commands/` or
+`src/templates/`, re-render and commit the result:
 
-`npm link` matters here. The rendered Stop hook runs
-`npx -y @vaubaan/harness stop-hook`, and inside this repository `npx`
-treats the project itself as that package: it looks for the
-`vaubaan-harness` command on your `PATH` instead of downloading it.
-The link points that command to your local build, so the hook always
-checks the docs with the code you are working on. The link belongs to
-the active Node installation: run `npm link` again after switching Node
-versions, and `npm run build` after changing the linters.
+```bash
+npm run build && node dist/cli/index.js update .
+```
+
+`lint:generated-fresh` fails otherwise, locally and in CI. There is no
+engine hook: the `husky` pre-commit runs `npm run ci`, which ends with
+`lint:harness` on this repository.
 
 ## How we work
 

@@ -4,27 +4,21 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { loadHarness, loadOverrides, loadProjectSkills } from "./loader.js";
 import { render } from "./render.js";
-import { AGENT_IDS, ENGINES, ENGINE_ROOT_DIR } from "./types.js";
+import { ENGINES } from "./types.js";
 
 const PACKAGE_DIR = __dirname;
 
 describe("loadHarness on the stock harness in repo root", () => {
   const harness = loadHarness(PACKAGE_DIR);
 
-  it("loads 4 agents (one per AgentId)", () => {
-    const ids = new Set(harness.agents.map((a) => a.meta.id));
-    expect(ids.size).toBe(4);
-    for (const id of AGENT_IDS) {
-      expect(ids.has(id)).toBe(true);
-    }
+  it("loads the 8 doc skills (no code-quality skill)", () => {
+    expect(harness.skills.length).toBe(8);
+    expect(harness.skills.map((s) => s.meta.id)).not.toContain("clean-code-guardian");
   });
 
-  it("loads 9 skills (8 doc + clean-code-guardian)", () => {
-    expect(harness.skills.length).toBe(9);
-  });
-
-  it("loads 9 commands", () => {
-    expect(harness.cmds.length).toBe(9);
+  it("loads 8 commands", () => {
+    expect(harness.cmds.length).toBe(8);
+    expect(harness.cmds.map((c) => c.meta.id)).not.toContain("clean-code");
   });
 
   it("every command's invokes_skill points to a real skill", () => {
@@ -38,18 +32,18 @@ describe("loadHarness on the stock harness in repo root", () => {
     for (const engine of ENGINES) {
       const out = render({ harness, engines: [engine] });
       expect(out.files.length).toBeGreaterThan(0);
-      const hasAgents = out.files.some((f) => f.path === "AGENTS.md");
-      expect(hasAgents).toBe(true);
+      expect(out.files.some((f) => f.path === "AGENTS.md")).toBe(true);
+      expect(out.files.some((f) => f.path.includes("/agents/"))).toBe(false);
     }
   });
 
-  it("renders all engines together (default = all 3) with one persona file per agent per engine", () => {
+  it("renders all engines together with every skill exposed and one umbrella", () => {
     const out = render({ harness, engines: [...ENGINES] });
-    for (const engine of ENGINES) {
-      const personaFiles = out.files.filter((f) =>
-        f.path.startsWith(`${ENGINE_ROOT_DIR[engine]}/agents/`),
+    expect(out.files.filter((f) => f.path === "AGENTS.md")).toHaveLength(1);
+    for (const skill of harness.skills) {
+      expect(out.files.some((f) => f.path.endsWith(`/skills/${skill.meta.id}/SKILL.md`))).toBe(
+        true,
       );
-      expect(personaFiles.length).toBe(AGENT_IDS.length);
     }
   });
 
@@ -141,7 +135,7 @@ describe("loadOverrides", () => {
   it("returns empty overrides when .harness-overrides/ exists but has no content", () => {
     mkdirSync(join(tempDir, ".harness-overrides"));
     const result = loadOverrides(tempDir);
-    expect(result).toEqual({ add: { agents: [], skills: [], cmds: [] }, disable: [] });
+    expect(result).toEqual({ add: { skills: [], cmds: [] }, disable: [] });
   });
 
   it("loads disable list from disable.yaml", () => {

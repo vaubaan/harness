@@ -51,16 +51,29 @@ describe("uninstallCommand", () => {
   });
 
   it("removes files listed in the manifest and returns their paths", () => {
-    write(".claude/agents/foo.md", "# agent");
-    write(".claude/settings.json", "{}");
-    writeManifestFile([".claude/agents/foo.md", ".claude/settings.json"]);
+    write(".claude/skills/foo/SKILL.md", "# skill");
+    write(".claude/commands/foo.md", "# cmd");
+    writeManifestFile([".claude/skills/foo/SKILL.md", ".claude/commands/foo.md"]);
 
     const result = uninstallCommand({ targetDir: root });
-    expect(result.filesRemoved).toContain(".claude/agents/foo.md");
-    expect(result.filesRemoved).toContain(".claude/settings.json");
+    expect(result.filesRemoved).toContain(".claude/skills/foo/SKILL.md");
+    expect(result.filesRemoved).toContain(".claude/commands/foo.md");
     expect(result.warnings).toHaveLength(0);
-    expect(existsSync(join(root, ".claude/agents/foo.md"))).toBe(false);
-    expect(existsSync(join(root, ".claude/settings.json"))).toBe(false);
+    expect(existsSync(join(root, ".claude/skills/foo/SKILL.md"))).toBe(false);
+    expect(existsSync(join(root, ".claude/commands/foo.md"))).toBe(false);
+  });
+
+  it("leaves a released 1.x file in place with a warning", () => {
+    write(".claude/settings.json", '{"hooks":{}}');
+    write("AGENTS.md", "# agents");
+    writeManifestFile(["AGENTS.md", ".claude/settings.json"]);
+
+    const result = uninstallCommand({ targetDir: root });
+    expect(result.filesRemoved).toEqual(["AGENTS.md"]);
+    expect(result.warnings).toEqual([
+      "no longer managed by the harness, left in place: .claude/settings.json",
+    ]);
+    expect(readFileSync(join(root, ".claude/settings.json"), "utf8")).toBe('{"hooks":{}}');
   });
 
   it("adds a warning for each file in the manifest that is already missing", () => {

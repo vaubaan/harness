@@ -6,6 +6,7 @@ tracks:
   - src/renderers/codex-cli.ts
   - src/renderers/opencode.ts
   - src/parser/schemas.ts
+last_reviewed: 2026-10-22
 ---
 
 # Capabilities matrix
@@ -15,7 +16,7 @@ what happens when it is only half compatible.
 
 ## Overview
 
-Three capabilities are declared in `src/types.ts:13`:
+Three capabilities are declared in `src/types.ts`:
 
 ```ts
 export const CAPABILITIES = ["multi-step", "slash-command", "inline-exec"] as const;
@@ -26,12 +27,12 @@ export const CAPABILITIES = ["multi-step", "slash-command", "inline-exec"] as co
 - `inline-exec` — inline execution of code/tools
 
 A skill *may* declare `requires: [...]` in its frontmatter
-(`SkillFrontmatterSchema`, `src/parser/schemas.ts:14`). If it does not,
+(`SkillFrontmatterSchema`, `src/parser/schemas.ts`). If it does not,
 it is assumed to work everywhere.
 
 ## The matrix
 
-Two tables, in `src/types.ts:25-33`:
+Two tables, in `src/types.ts`:
 
 ```ts
 export const CAPABILITIES_MATRIX: Record<Engine, ReadonlyArray<Capability>> = {
@@ -52,15 +53,15 @@ export const DEGRADED_CAPABILITIES: Partial<Record<Engine, ReadonlyArray<Capabil
 
 Today: all engines declare all three capabilities. Only
 `codex-cli + multi-step` is marked as degraded — multi-step remains
-less smooth there than in claude-code (see spec v2 §4).
+less smooth there than in claude-code (see spec §4.2).
 
 Simple boolean helper: `engineSupports(engine, capability)`
-(`src/types.ts:35-37`).
+(`src/types.ts`).
 
 ## The check at render time
 
 All the decision logic lives in `checkSkillCapabilities`
-(`src/renderers/common.ts:42-60`):
+(`src/renderers/common.ts`):
 
 ```ts
 for (const cap of skill.meta.requires) {
@@ -75,15 +76,15 @@ for (const cap of skill.meta.requires) {
 Two distinct buckets:
 
 - **`blockingWarnings`** — the skill is *skipped*. The renderers return
-  `{ files: [], warnings: blockingWarnings }` (see `src/renderers/claude-code.ts:32-34`,
-  `src/renderers/codex-cli.ts:35-37`, `src/renderers/opencode.ts:32-34`).
+  `{ files: [], warnings: blockingWarnings }` (see `src/renderers/claude-code.ts`,
+  `src/renderers/codex-cli.ts`, `src/renderers/opencode.ts`).
   The `render()` orchestrator sees `files.length === 0` and does not add the
-  skill to `renderedSkills` (`src/render.ts:110-114`). Cascade: any cmd that
+  skill to `renderedSkillIds` (`src/render.ts`). Cascade: any cmd that
   pointed to this skill via `invokes_skill` is also dropped
-  (`src/render.ts:119-121`).
+  (`src/render.ts`).
 - **`degradedWarnings`** — the skill is rendered normally, but the warning
   is surfaced in `RenderResult.warnings`. The CLI prints them on stderr
-  (`src/cli/index.ts:67`) without blocking the command.
+  (`src/cli/index.ts`) without blocking the command.
 
 ## Concrete example
 
@@ -105,7 +106,7 @@ requires: [multi-step]
 
 Conversely, a hypothetical `requires: [vision]` (nonexistent capability)
 would be rejected by Zod at parse time — `requires` is typed `z.enum(CAPABILITIES)`
-(`src/parser/schemas.ts:14`). So an undeclared capability can never
+(`src/parser/schemas.ts`). So an undeclared capability can never
 reach the check; you will never hit `blockingWarnings` unless
 you add a new capability and then remove it from an engine's
 `CAPABILITIES_MATRIX`.
@@ -114,7 +115,7 @@ you add a new capability and then remove it from an engine's
 
 Independently of `requires`, a skill can whitelist engines via
 `engines: [...]` in its frontmatter. The `isSkillEngineAllowed` check
-(`src/renderers/common.ts:62-65`) short-circuits before the capability check
+(`src/renderers/common.ts`) short-circuits before the capability check
 and emits a warning `skill "<id>" excluded from engine "<engine>"`. This is
 the escape hatch for deliberately single-engine skills.
 
@@ -122,12 +123,12 @@ the escape hatch for deliberately single-engine skills.
 
 Three places to touch:
 
-1. **The enum** — add `"my-cap"` to `CAPABILITIES` in `src/types.ts:13`.
+1. **The enum** — add `"my-cap"` to `CAPABILITIES` in `src/types.ts`.
    Zod will recognize it automatically (the schema reads `CAPABILITIES`).
 2. **`CAPABILITIES_MATRIX`** — list the engines that support it
-   (`src/types.ts:25-29`). Omitting = blocking for that engine.
+   (`src/types.ts`). Omitting = blocking for that engine.
 3. **`DEGRADED_CAPABILITIES`** — optional, if the engine supports it but
-   less well (`src/types.ts:31-33`).
+   less well (`src/types.ts`).
 
 No change needed in the renderers or in `checkSkillCapabilities`:
 the logic is table-driven. A test in `src/render.test.ts` will check that
@@ -135,7 +136,7 @@ filtering works for your new capability — just add a case.
 
 ## Debug
 
-- **A skill silently disappears?** Run the CLI with `--engine X` and
+- **A skill silently disappears?** Run the CLI with `--engines <engine>` and
   inspect stderr — a blocking warning always shows up there.
 - **Too many degradation warnings?** Check `DEGRADED_CAPABILITIES` —
   they accumulate per required capability.

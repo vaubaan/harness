@@ -19,10 +19,10 @@ live next to the code and do not need a separate plan.
 
 ## When to invoke you
 
-- The `coding` agent adds / modifies an integration or E2E test →
+- The agent adds / modifies an integration or E2E test →
   update the corresponding test plan.
-- The `planning` agent detects (via `doc-audit`) that a spec has no
-  associated test scenario → add the missing scenario.
+- `doc-audit` shows that a spec has no associated test scenario →
+  add the missing scenario.
 - `/test-plan [integration|e2e]` invoked by the human.
 - Overhaul of the test scope: re-split integration vs e2e.
 

@@ -63,17 +63,15 @@ describe("project update", () => {
       expect(result.fromManifestVersion).toBe(version);
       expect(result.backupDir).toBe(backup);
       expect(existsSync(join(root, ".codex/skills/doc-audit.md"))).toBe(false);
-      expect(readFileSync(join(root, ".codex/agents/coding.toml"), "utf8")).toContain(
-        'name = "coding"',
-      );
       expect(existsSync(join(root, ".agents/skills/doc-audit/SKILL.md"))).toBe(true);
+      expect(readFileSync(join(root, "AGENTS.md"), "utf8")).toMatch(/^# How we work/);
       const manifest = readManifest(root);
       expect(manifest?.version).toBe("6");
       expect(manifest?.harnessVersion).toBe(VERSION);
       expect(manifest?.engines).toEqual(["codex-cli"]);
-      expect(manifest?.stopHookInstalled).toBe(false);
       expect(existsSync(join(root, ".claude"))).toBe(false);
       expect(existsSync(join(root, ".codex/hooks.json"))).toBe(false);
+      expect(existsSync(join(root, ".codex/agents"))).toBe(false);
       expect(before.equals(readFileSync(join(root, MANIFEST_FILENAME)))).toBe(false);
     },
   );
@@ -82,7 +80,7 @@ describe("project update", () => {
     legacy();
     const before = readFileSync(join(root, MANIFEST_FILENAME));
     const preview = update({ dryRun: true });
-    expect(preview.filesToWrite).toContain(".codex/agents/coding.toml");
+    expect(preview.filesToWrite).toContain(".agents/skills/doc-audit/SKILL.md");
     expect(preview.backupDir).toBeUndefined();
     expect(existsSync(backup)).toBe(false);
     expect(readFileSync(join(root, MANIFEST_FILENAME))).toEqual(before);
@@ -95,8 +93,8 @@ describe("project update", () => {
     expect(readFileSync(join(root, MANIFEST_FILENAME))).toEqual(once);
   });
 
-  it("keeps private MCP and settings byte-identical when hooks are disabled", () => {
-    legacy("4", { stopHookInstalled: false });
+  it("leaves the project's own configuration files byte-identical", () => {
+    legacy("4");
     const files = {
       ".codex/config.toml": '# private settings\nmodel = "my-model"\n',
       ".mcp.json": '{"mcpServers":{"private":{"url":"http://localhost:9999"}}}\n',
@@ -111,33 +109,43 @@ describe("project update", () => {
     }
   });
 
-  it("retains a partial hook selection", () => {
+  it("drops the 1.x hook preference and plugin, and asks to remove a merged hook entry", () => {
     legacy("4", {
       engines: ["claude-code", "codex-cli", "opencode"],
       stopHookInstalled: true,
       stopHookEngines: ["claude-code"],
+      files: ["AGENTS.md", ".opencode/plugins/harness-stop-hook.ts"],
     });
-    update();
-    expect(readManifest(root)?.stopHookEngines).toEqual(["claude-code"]);
-    expect(existsSync(join(root, ".claude/settings.json"))).toBe(true);
-    expect(existsSync(join(root, ".codex/hooks.json"))).toBe(false);
+    write(".opencode/plugins/harness-stop-hook.ts", "export default {};\n");
+    const settings =
+      '{"hooks":{"Stop":[{"hooks":[{"command":"npx -y @vaubaan/harness stop-hook --engine claude"}]}]}}\n';
+    write(".claude/settings.json", settings);
+    const result = update();
     expect(existsSync(join(root, ".opencode/plugins/harness-stop-hook.ts"))).toBe(false);
+    expect(readFileSync(join(root, ".claude/settings.json"), "utf8")).toBe(settings);
+    expect(result.warnings.join("\n")).toMatch(
+      /remove the harness Stop hook entry from \.claude\/settings\.json/,
+    );
+    const manifest = readManifest(root) as Record<string, unknown> | null;
+    expect(manifest?.stopHookEngines).toBeUndefined();
+    expect(manifest?.stopHookInstalled).toBeUndefined();
+    expect(existsSync(join(root, ".codex/hooks.json"))).toBe(false);
   });
 
   it("rejects collisions outside the manifest before backup or mutation", () => {
     legacy();
-    write(".codex/agents/coding.toml", 'name = "my-custom-agent"\n');
+    write(".agents/skills/doc-audit/SKILL.md", "# my custom skill\n");
     expect(() => update()).toThrow("outside harness manifest");
     expect(existsSync(backup)).toBe(false);
     expect(readFileSync(join(root, "AGENTS.md"), "utf8")).toBe("old generated umbrella\n");
   });
 
   it("protects local edits using fingerprints recorded by init", () => {
-    initCommand({ targetDir: root, packageDir, engines: ["codex-cli"], withStopHook: false });
-    write(".codex/agents/coding.toml", "customized instructions\n");
-    expect(() => update()).toThrow("modified harness file: .codex/agents/coding.toml");
+    initCommand({ targetDir: root, packageDir, engines: ["codex-cli"] });
+    write(".agents/skills/doc-audit/SKILL.md", "customized instructions\n");
+    expect(() => update()).toThrow("modified harness file: .agents/skills/doc-audit/SKILL.md");
     expect(existsSync(backup)).toBe(false);
-    expect(readFileSync(join(root, ".codex/agents/coding.toml"), "utf8")).toBe(
+    expect(readFileSync(join(root, ".agents/skills/doc-audit/SKILL.md"), "utf8")).toBe(
       "customized instructions\n",
     );
   });
