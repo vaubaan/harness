@@ -100,6 +100,8 @@ The final report is a versioned `LintReport` (`version: 1`,
 `vaubaan-harness lint` in `src/cli/index.ts`:
 
 - `--pillar <pillar>` — filter by pillar
+- `--only <ids>` — comma-separated linter ids, run those only (the
+  `drift-detector` skill uses it as a pre-flight)
 - `--format text|json` — `text` (default) prints the report via
   `formatReportText` (`src/linters/index.ts`), with the suggested skill of
   each issue; `json` dumps the raw report. The JSON is versioned by
@@ -247,7 +249,7 @@ frontmatter. Useful for critical handbooks that must be updated sooner.
 - The order in `ALL_LINTERS` determines the order of the displayed issues —
   useful for the readability of the text report.
 - Linters run **sequentially**, not in parallel. The git helpers
-  (`execSync`) justify it — no fork bomb.
+  (`execFileSync`) justify it — no fork bomb.
 - `generated-fresh` is the one linter that loads the harness content:
   `dist/linters/index.js` bundles `planInit` and locates `skills/` by
   walking up from its own location (see

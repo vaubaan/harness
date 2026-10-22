@@ -7,7 +7,8 @@ tracks:
   - tsup.config.ts
   - .github/workflows/ci.yml
   - .github/workflows/publish.yml
-last_reviewed: 2026-10-14
+  - .husky/pre-commit
+last_reviewed: 2026-10-22
 ---
 
 # Coding workflow — @vaubaan/harness
@@ -32,7 +33,8 @@ No runtime environment variants at this stage — this is a published npm packag
 ## PR process
 
 - Feature branch pushed → PR opened against `main`.
-- Green CI required (typecheck + lint + tests + build).
+- Green CI required (typecheck + lint + tests + build + `lint:harness`).
+- The husky pre-commit hook (`.husky/pre-commit`) runs the same `npm run ci` locally: what fails there fails in CI.
 - At least one human review.
 - Squash merge by default.
 
@@ -47,6 +49,7 @@ Trunk-based: `main` is the default branch. Features branch off as `feature/<slug
 - Conventional commits encouraged but not enforced.
 - Commit messages, docs and code comments are in English.
 - Squash-merge by default.
+- Generated files are committed. After changing `src/skills/`, `src/commands/` or `src/templates/`, run `npm run build && node dist/cli/index.js update .` and commit the regenerated `AGENTS.md`, `CLAUDE.md`, `.claude/`, `.agents/`, `.opencode/` and `.harness-manifest.json`; `lint:generated-fresh` fails otherwise.
 
 ## Release
 
@@ -92,8 +95,9 @@ first version was published by hand, since a trusted publisher is
 configured on an existing package.
 
 Once a new version is installed, `update --dry-run --json` inspects
-the project migration, then `update` applies it with a backup; this
-step does not change the consuming project's npm pins. See
+the project migration, then `update` applies it with a backup, and the
+regenerated files are committed; this step does not change the
+consuming project's npm pins. See
 [updating a project](../handbook/project-update.md).
 
 To temporarily roll back to a stable version in a project:
@@ -101,6 +105,14 @@ To temporarily roll back to a stable version in a project:
 ```bash
 npm install --save-dev @vaubaan/harness@<stable-version>
 ```
+
+## Languages
+
+| What | Language |
+|---|---|
+| Documentation (`README.md`, `docs/`) | English, canonical; see [the decision](../decisions/english-canonical-language.md). |
+| Code: identifiers, comments, commit messages | English. |
+| Domain vocabulary | English, defined in [spec §0](../spec/coding-agent-harness.md#0-vocabulary). The linters still accept French ADR and quality headings for backward compatibility. |
 
 ## Notes
 

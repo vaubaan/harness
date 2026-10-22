@@ -6,7 +6,7 @@
     "codex-cli",
     "opencode"
   ],
-  "renderedAt": "2026-10-22T09:31:31.116Z",
+  "renderedAt": "2026-10-22T09:49:07.426Z",
   "files": [
     ".agents/skills/decision-record-writer/SKILL.md",
     ".agents/skills/doc-audit/SKILL.md",
@@ -48,7 +48,7 @@
     ".claude/skills/doc-audit/SKILL.md": "854fd4f51ca195e484dd323a59f56183a12c20d689d4e35ef4139f8af71cb339",
     ".claude/skills/drift-detector/SKILL.md": "1c0c54532c73226bc2fcd248775849cbc786bebbee44a67741147723c5dfd84d",
     ".claude/skills/handbook-writer/SKILL.md": "17f9496df110953e6750339e8a1063e35cd5a4ade1d2c9c12c14e13ac463a9b3",
-    ".claude/skills/readme-writer/SKILL.md": "383dea031714bb575abcad52bac26ea98b9039bbac6c5ebaab92bb56cd88ed09",
+    ".claude/skills/readme-writer/SKILL.md": "f74b22a2692e0e40854f38ef5aa15684bc28f424aed41e509e6ac3dd9fdcb7b9",
     ".claude/skills/spec-writer/SKILL.md": "2a9efbfc0ac7e158e013f0af2a7d6e06b8be15f034fc579feb35a6c2e62d3e86",
     ".claude/skills/test-plan-writer/SKILL.md": "217676e1e7fb4da11314a16daffb450b27abb733976f6caf57f8ca4d9df088f8",
     ".claude/skills/workflow-writer/SKILL.md": "fbbabf9735228d6b4fccd188ca0c6e65906e752500f08f5f616373a611381b21",
@@ -64,7 +64,7 @@
     ".agents/skills/doc-audit/SKILL.md": "854fd4f51ca195e484dd323a59f56183a12c20d689d4e35ef4139f8af71cb339",
     ".agents/skills/drift-detector/SKILL.md": "1c0c54532c73226bc2fcd248775849cbc786bebbee44a67741147723c5dfd84d",
     ".agents/skills/handbook-writer/SKILL.md": "17f9496df110953e6750339e8a1063e35cd5a4ade1d2c9c12c14e13ac463a9b3",
-    ".agents/skills/readme-writer/SKILL.md": "383dea031714bb575abcad52bac26ea98b9039bbac6c5ebaab92bb56cd88ed09",
+    ".agents/skills/readme-writer/SKILL.md": "f74b22a2692e0e40854f38ef5aa15684bc28f424aed41e509e6ac3dd9fdcb7b9",
     ".agents/skills/spec-writer/SKILL.md": "2a9efbfc0ac7e158e013f0af2a7d6e06b8be15f034fc579feb35a6c2e62d3e86",
     ".agents/skills/test-plan-writer/SKILL.md": "217676e1e7fb4da11314a16daffb450b27abb733976f6caf57f8ca4d9df088f8",
     ".agents/skills/workflow-writer/SKILL.md": "fbbabf9735228d6b4fccd188ca0c6e65906e752500f08f5f616373a611381b21",
@@ -76,7 +76,7 @@
     ".opencode/commands/spec.md": "c809502114670893ec72083d69448439a931207acd8ae69d912b491a553087d1",
     ".opencode/commands/test-plan.md": "e9e1d754fe24abedd953987749430467c6fa576e979277f0c3ee1ff52444d5c1",
     ".opencode/commands/workflow.md": "769b18667fdc004de7293cdf2ea0ddd0491bd3df5a109f943ebe779090a023df",
-    "AGENTS.md": "7c5f0370d9e4e29542eeaa947d7475ea4462d2b6bc1ff42a9cb926e0e3cf2293",
+    "AGENTS.md": "60958328b927163101ff04ab8a6f4d8b77a3f8226e1d4336549923e6e21f2adf",
     "CLAUDE.md": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49"
   }
 }

@@ -29,8 +29,8 @@ and with a backup, use [the `update` command](./project-update.md).
 
 The generated files are committed
 ([decision](../decisions/generated-files-committed.md)): after `init`,
-`update` or `uninstall`, commit the result. The CLI says so on its last
-line.
+`update` or `uninstall`, commit the result. `init` and `update` say so
+on their last line.
 
 ## Mechanics
 
@@ -74,7 +74,9 @@ manifest, if any.
    conflict. All conflicts are reported in one error, before any write;
    `--preserve <path>` leaves a file to the project.
 4. A file the previous manifest lists and the render no longer produces
-   is removed when unchanged. Dropping an engine removes its folder.
+   is removed when unchanged. If it was edited since, it is a conflict
+   like any other: the run stops before any write, and `--preserve`
+   hands the file to the project. Dropping an engine removes its folder.
 5. A `.harness-overrides/` folder in the project is loaded by default.
 6. Writes and removals go through `applyUpdateTransaction`, with a
    backup and rollback. The backup is kept, and its path printed, only

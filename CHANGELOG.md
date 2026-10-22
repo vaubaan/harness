@@ -16,6 +16,8 @@ Next release: **2.0.0**, breaking. The harness narrows to one job: keep a projec
 - `--no-stop-hook`, and the default "all engines" when `--engines` is omitted.
 
 ### Added
+- `lint --only <ids>` runs a subset of linters; the `drift-detector` skill uses it as a pre-flight.
+- `update` prunes the directories its removals leave empty, like `init`.
 - `lint:generated-fresh`: renders with the manifest's engines and overrides and fails when a committed generated file differs, is missing or is stale.
 - A `## Checks` section in `AGENTS.md`: run `lint` before committing; generated files are committed and never edited by hand.
 - `coding-workflow.md` template: optional `## Languages` section (docs, code, domain), asked by `/workflow`.

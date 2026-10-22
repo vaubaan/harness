@@ -162,6 +162,9 @@ byte-for-byte and leave the manifest with a warning.
 - Preview with no write and no backup, apply then idempotent second
   invocation, and backup into an explicit directory.
 - Byte-for-byte preservation of the project's own configuration files.
+- A 1.x manifest with a hook preference and a Stop plugin: the
+  preference is dropped, the plugin removed, and a Stop hook entry 1.x
+  merged into `.claude/settings.json` triggers the warning to remove it.
 - Refusal, before backup, of colliding files outside the manifest, of
   modifications detected by hash, of dangerous paths and of
   symbolic links, even those internal to the project.
@@ -224,7 +227,10 @@ harness entries and no longer enforce the retired runner's convention.
 - An edited generated file, a deleted one, and a stale file left from a
   previous manifest are each reported, with `update` as the fix.
 - A preserved file and a released path are skipped.
-- A project without a manifest reports nothing.
+- The render uses the project's overrides and `docs/skills/`, so a
+  committed copy of them passes.
+- A project without a manifest reports nothing; an invalid manifest is
+  reported as one issue instead of crashing the linter.
 
 ### 13. Safe `init`
 

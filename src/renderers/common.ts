@@ -142,7 +142,7 @@ export function buildUmbrellaBody(extras: UmbrellaExtras): string {
     "",
     "Run `npx @vaubaan/harness lint` before you commit; CI runs the same linters on every pull request. Fix what it reports with the skill it suggests.",
     "",
-    "The files the harness generates (`AGENTS.md`, `CLAUDE.md`, the `.claude/`, `.codex/`, `.agents/` and `.opencode/` folders, `.harness-manifest.json`) are committed. Never edit them by hand: change their source in `docs/` or `.harness-overrides/`, run `npx @vaubaan/harness update .`, and commit the result. The linter fails when a generated file no longer matches its render.",
+    "The files the harness generates (`AGENTS.md`, `CLAUDE.md`, the `.claude/`, `.agents/` and `.opencode/` folders, `.harness-manifest.json`) are committed. Never edit them by hand: change their source in `docs/` or `.harness-overrides/`, run `npx @vaubaan/harness update .`, and commit the result. The linter fails when a generated file no longer matches its render.",
   ];
   if (skillLines.length > 0) {
     sections.push("", "## Doc-skills", "", skillLines.join("\n"));

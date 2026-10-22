@@ -1098,8 +1098,7 @@ are detailed in
 A dedicated operation updates a known installation to the harness
 version chosen by the caller. It neither looks for nor downloads a
 more recent version. It recognizes older installations and
-keeps the engines, the hooks preference, the project skills and
-the applicable overrides.
+keeps the engines, the project skills and the applicable overrides.
 
 The update preserves the project's own configuration files and
 hooks. It renews only the harness elements and migrates
@@ -1231,6 +1230,10 @@ verdict is `needs-human` because of the known gaps.
 
 ## 15. Initial cutover plan (historical)
 
+> Historical record of the v1 cutover. The agents, the Stop hook, the
+> `--engine` flag and the count of 13 linters it mentions were replaced
+> in 2.0; see §16.1 for the decisions in force.
+
 The initial launch was greenfield, with no migration or dual-write.
 Now-existing installations follow the `update` contract of
 §13.1. Historical sequence:
@@ -1247,7 +1250,7 @@ Now-existing installations follow the `update` contract of
      `workflow-writer`, `readme-writer`, `drift-detector`;
    - **commands** (`commands/`) mirroring the exposed doc-skills;
    - **templates** (`templates/`) for the 7 required files;
-   - **linters** (`linters/`): the 13 linters of §10.2.
+   - **linters** (`linters/`): the 13 linters of §10.2 (15 in 2.0).
 6. **The `coding-agent-harness` repo itself (dogfooding)**: we apply
    the harness to ourselves. A `vaubaan harness init .
    --engine claude-code` run drops the umbrella AGENTS.md + the 4 subagents
@@ -1321,6 +1324,12 @@ No feature flag. No coexistence period.
 - **Harness versioning** = package version tag. The project pins the
   package as a dev dependency so that CI and local renders agree on
   `lint:generated-fresh`.
+
+Standing decisions also in force, not restated above:
+[github-actions-ci](../decisions/github-actions-ci.md),
+[linters-mechanical-vs-skills](../decisions/linters-mechanical-vs-skills.md),
+[capabilities-matrix-with-degradation](../decisions/capabilities-matrix-with-degradation.md),
+[yaml-frontmatter-zod-strict](../decisions/yaml-frontmatter-zod-strict.md).
 
 ### 16.2 Still-open questions
 

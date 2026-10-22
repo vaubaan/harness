@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { DisableYamlSchema } from "../loader.js";
 import type { Engine, RenderedFile } from "../types.js";
@@ -8,6 +8,7 @@ import { VERSION } from "../version.js";
 import { RELEASED_PATHS, assertManagedPaths } from "./managed-paths.js";
 import { MANIFEST_FILENAME, MANIFEST_VERSION, type Manifest, hashContent } from "./manifest.js";
 import { planInit } from "./plan-render.js";
+import { pruneEmptyDirs } from "./uninstall.js";
 import { readUpdateInstallation } from "./update-manifest.js";
 import { applyUpdateTransaction } from "./update-transaction.js";
 
@@ -203,11 +204,9 @@ export function planUpdate(args: UpdateArgs): UpdatePlan {
 export function updateCommand(args: UpdateArgs): UpdateResult {
   const plan = planUpdate(args);
   if (args.dryRun || plan.result.upToDate) return plan.result;
-  const { backupDir } = applyUpdateTransaction(
-    resolve(args.targetDir),
-    plan.writes,
-    plan.removals,
-    args.backupDir,
-  );
+  const root = resolve(args.targetDir);
+  const { backupDir } = applyUpdateTransaction(root, plan.writes, plan.removals, args.backupDir);
+  // Removing an engine's last file leaves its folders empty; prune them like init does.
+  pruneEmptyDirs(root, new Set(plan.removals.map((path) => dirname(join(root, path)))));
   return { ...plan.result, backupDir };
 }

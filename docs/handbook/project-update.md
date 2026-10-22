@@ -142,8 +142,10 @@ For every generated file:
   backed up before mutation. No unlisted content is adopted by
   inference from its name.
 - A file the manifest lists and the new render no longer produces is
-  removed, if unchanged. This is how a 1.x installation loses its
-  persona files and its OpenCode Stop plugin on the first `update`.
+  removed, if unchanged; edited since, it is reported as a conflict and
+  the run stops before any write (`--preserve` hands it to the
+  project). This is how a 1.x installation loses its persona files and
+  its OpenCode Stop plugin on the first `update`.
 
 The v6 manifest records `harnessVersion`, `fileHashes` (SHA-256),
 `preservedFiles` and the overrides parent used. Preserved files

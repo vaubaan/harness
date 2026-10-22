@@ -139,11 +139,16 @@ program
     "--pillar <pillar>",
     "filter by pillar (spec, decisions, handbook, tests, workflow, quality)",
   )
+  .option("--only <ids>", "comma-separated linter ids to run (e.g. lint:cross-links)")
   .option("--format <fmt>", "text | json", "text")
   .option("--cwd <dir>", "repo root", ".")
   .action((opts: Record<string, string | undefined>) => {
     const repoRoot = resolve(opts.cwd ?? ".");
-    const lintOpts = opts.pillar ? { pillar: opts.pillar } : {};
+    const only = parseList(opts.only);
+    const lintOpts = {
+      ...(opts.pillar ? { pillar: opts.pillar } : {}),
+      ...(only && only.length > 0 ? { only } : {}),
+    };
     const report = runLinters(repoRoot, lintOpts);
     if (opts.format === "json") {
       process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);

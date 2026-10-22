@@ -56,9 +56,9 @@ README is *a doc pillar* in its own right, outside `docs/`.
 
 ## Criteria
 
-- **Concrete 1-line pitch**. "Vaubaan — coding agent harness for
-  multi-engine doc-driven development" rather than "A tool for
-  modern development".
+- **Concrete 1-line pitch**. "Project context as code: one source of
+  truth under `docs/`, rendered for every coding agent, linted in CI"
+  rather than "A tool for modern development".
 - **Executable quick start**. Someone who clones the repo must be able
   to copy-paste the commands and get something that works.
 - **Valid links**. The targets of all links exist (the

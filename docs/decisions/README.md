@@ -39,15 +39,15 @@ Rejected alternatives) — validated by `lint:decision-schema`
 - [Removal of CAR couplings](./retire-coding-agent-runner-coupling.md) — `.car/` is no longer required, the CAR end-of-turn log is removed and the unimplemented supervisor plan is archived (1.1.1).
 - [Migrating existing installations](./project-update-migrations.md) — `update` command, settings preserved, preview, private backup and rollback; file provenance in the v6 manifest (1.1.0).
 - [Release of the 1.0.1 patch](./release-safety-patch-1-0-1.md) — PR #51, go basis and tag-based publication after CI validation.
-- [Safe lifecycle for project artifacts](./safe-project-artifact-lifecycle.md) — upfront path validation and persona preservation during lint continuations (1.0.1). Its ownership of OpenCode MCP entries was removed in 2.0.
-- [Multi-engine pivot format](./multi-engine-pivot-format.md) — a single `*.skill.md` / `*.cmd.md` / `*.agent.md` source rendered by 3 per-engine renderers.
+- [Safe lifecycle for project artifacts](./safe-project-artifact-lifecycle.md) — upfront path validation before any mutation (1.0.1); its persona preservation went with the Stop hook. Its ownership of OpenCode MCP entries was removed in 2.0.
+- [Multi-engine pivot format](./multi-engine-pivot-format.md) — a single `*.skill.md` / `*.cmd.md` source rendered by 3 per-engine renderers (the `*.agent.md` format was removed in 2.0).
 - [TypeScript / Node stack](./typescript-node-stack.md) — strict TypeScript, Node ≥20, ESM, build via `tsup`.
 - [YAML frontmatter + strict Zod](./yaml-frontmatter-zod-strict.md) — `.strict()` validation that rejects any unknown field, to avoid silent drift.
 - [TOML for opencode](./toml-for-opencode.md) — *superseded by [engine-native-layouts-1-0](./engine-native-layouts-1-0.md)* (2026-09-20). The opencode renderer emits TOML (`+++`); claude-code and codex-cli stay on YAML (`---`).
 - [Capabilities matrix + degradation](./capabilities-matrix-with-degradation.md) — two structures (`CAPABILITIES_MATRIX` + `DEGRADED_CAPABILITIES`) and three rendering policies (skip / degraded / full).
 - [`CLAUDE.md` stub](./claude-md-stub-back-compat.md) — *superseded by [engine-native-layouts-1-0](./engine-native-layouts-1-0.md)* (2026-09-20). claude-code emits `AGENTS.md` + `CLAUDE.md` (redirect stub); the other two engines only emit `AGENTS.md`.
-- [Mechanical linters vs `doc-audit` skill](./linters-mechanical-vs-skills.md) — 13 TypeScript linters for CI gates, an LLM-driven skill for semantic judgment.
-- [Content under `src/`](./content-under-src.md) — Markdown sources (`agents/`, `skills/`, `commands/`, `templates/`) under `src/`, copied to `dist/` at build time.
+- [Mechanical linters vs `doc-audit` skill](./linters-mechanical-vs-skills.md) — TypeScript linters as CI gates (15 in 2.0), an LLM-driven skill for semantic judgment.
+- [Content under `src/`](./content-under-src.md) — Markdown sources (`skills/`, `commands/`, `templates/`) under `src/`, copied to `dist/` at build time.
 - [MCP rendering opt-in](./mcp-rendering-opt-in.md) — *superseded by [no-mcp-no-code-merge](./no-mcp-no-code-merge.md)* (2026-10-22). Opt-in `--with-mcp=context7`; one MCP file rendered per engine in its native convention; `coding` + `planning` personas redirected to `resolve-library-id` + `get-library-docs`.
 - [Self-healing `/harness-lint` loop via cross-engine Stop hooks](./stop-hook-lint-loop.md) — *superseded by [lint-in-ci-and-pre-commit](./lint-in-ci-and-pre-commit.md)* (2026-10-22). In-session Stop hook that injects `/harness-lint` at the end of every dirty agent turn; 3 portable anti-loop layers; hook schemas documented but not smoke-tested against the live CLIs (accepted area of uncertainty).
 - [Supervisor support design in the harness](./supervisor-harness-design.md) — historical proposal withdrawn on 2026-09-20 after CAR was abandoned; schemas, linters and `./supervisor` export proposed but never implemented.

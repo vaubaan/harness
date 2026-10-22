@@ -4,6 +4,11 @@
 **Status:** accepted
 **Author:** Vaubaan core
 
+> **Amended (2026-10-22)** by
+> [no-personas-no-code-judgment](./no-personas-no-code-judgment.md): the
+> `*.agent.md` pivot format and `renderAgents` are gone. The pivot now
+> covers `*.skill.md` and `*.cmd.md`; the per-engine renderers stand.
+
 ## Context
 
 The harness targets three coding agent engines — `claude-code`,

@@ -59,9 +59,9 @@ This writes, for each engine:
 ```
 AGENTS.md                 # how to work in this project (all engines)
 CLAUDE.md                 # imports AGENTS.md (Claude Code)
-.claude/                  # skills, commands
-.codex/  .agents/skills/  # skills
-.opencode/                # skills, commands
+.claude/                  # skills, commands (Claude Code)
+.agents/skills/           # skills (Codex)
+.opencode/                # skills, commands (OpenCode)
 .harness-manifest.json    # what was written, for update/uninstall
 ```
 
@@ -187,7 +187,7 @@ You don't have to write all the docs on day one.
 | `init <dir> --engines=<list>` | Render the harness into a project. Re-run it to change engines. |
 | `update [dir]` | Re-render with the installed version, keeping your engines. `--dry-run --json` previews. |
 | `uninstall <dir>` | Remove what `init` wrote, leaving your own files in place. |
-| `lint` | Run the linters. `--format json`, `--pillar <name>`. |
+| `lint` | Run the linters. `--format json`, `--pillar <name>`, `--only <ids>`. |
 | `check <dir>` | Quick layout check: doc folders and `.gitignore`. |
 | `render --engines=<list> --out <dir>` | Preview the render somewhere harmless. |
 

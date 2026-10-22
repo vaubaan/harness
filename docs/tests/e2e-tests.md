@@ -1,7 +1,7 @@
 ---
 tracks:
   - src/cli/**/*.ts
-  - dist/cli/index.js
+  - tsup.config.ts
 last_reviewed: 2026-10-22
 ---
 

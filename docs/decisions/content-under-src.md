@@ -4,6 +4,11 @@
 **Status:** accepted
 **Author:** Vaubaan core
 
+> **Amended (2026-10-22)** by
+> [no-personas-no-code-judgment](./no-personas-no-code-judgment.md):
+> `src/agents/` no longer exists; the copied content is `skills/`,
+> `commands/` and `templates/`.
+
 ## Context
 
 The `@vaubaan/harness` package contains two kinds of sources:
