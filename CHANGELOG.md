@@ -5,7 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-Next release: **2.0.0**, breaking. The harness narrows to one job: keep a project's context in `docs/`, render it for the engines the project uses, lint it in CI. Decisions of 2026-10-22: [no MCP, no code merge](docs/decisions/no-mcp-no-code-merge.md), [lint in CI and pre-commit](docs/decisions/lint-in-ci-and-pre-commit.md), [generated files committed](docs/decisions/generated-files-committed.md), [engine choice mandatory](docs/decisions/engine-choice-mandatory.md), [no personas, no code judgment](docs/decisions/no-personas-no-code-judgment.md), [decisions as current state](docs/decisions/decisions-as-current-state.md).
+## [2.0.0] — 2026-10-22
+
+Breaking. The harness narrows to one job: keep a project's context in `docs/`, render it for the engines the project uses, lint it in CI. Decisions of 2026-10-22: [no MCP, no code merge](docs/decisions/no-mcp-no-code-merge.md), [lint in CI and pre-commit](docs/decisions/lint-in-ci-and-pre-commit.md), [generated files committed](docs/decisions/generated-files-committed.md), [engine choice mandatory](docs/decisions/engine-choice-mandatory.md), [no personas, no code judgment](docs/decisions/no-personas-no-code-judgment.md), [decisions as current state](docs/decisions/decisions-as-current-state.md).
 
 ### Removed
 - The four agent personas (`coding`, `review`, `merge`, `planning`), the `*.agent.md` pivot format and the `.<engine>/agents/` output. The harness imposes one working rule, doc-first, and asks the team to write its workflow in `docs/workflow/`.
