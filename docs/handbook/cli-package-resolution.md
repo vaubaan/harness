@@ -9,6 +9,7 @@ tracks:
   - src/cli/manifest.ts
   - src/loader.ts
   - scripts/copy-content.mjs
+  - src/templates/*.tmpl
   - tsup.config.ts
   - package.json
 last_reviewed: 2026-10-22

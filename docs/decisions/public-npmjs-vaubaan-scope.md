@@ -18,10 +18,6 @@ The GitHub organization `sbw-vaubaan` has been renamed `vaubaan`. The
 [spec](../spec/coding-agent-harness.md) already refers to the package as
 `@vaubaan/harness`.
 
-The package name is also written into the Stop hooks rendered in
-projects (`npx -y <package> stop-hook --engine <engine>`). The only
-existing installations belong to the maintainer.
-
 The open-source release starts from a new repository
 `vaubaan/harness` with no history; the old one is archived
 as `vaubaan/coding-agent-harness-old`.
@@ -32,17 +28,14 @@ as `vaubaan/coding-agent-harness-old`.
   npmjs registry, with `access: public`. GitHub Packages is no longer used.
 - The CLI keeps the name `vaubaan-harness`, and reports stay under
   `.vaubaan/`: the brand does not change, only the npm scope does.
-- Rendered Stop hooks call `npx -y @vaubaan/harness stop-hook ...`.
-- No migration of old hooks is provided: the mechanisms of
-  [project-update-migrations](./project-update-migrations.md) remain
-  unchanged, and an existing `@sbw-vaubaan/harness` command is treated
-  like any command outside the current render.
+- No migration of `@sbw-vaubaan/harness` installations is provided:
+  [project-update-migrations](./project-update-migrations.md) applies
+  unchanged; the only existing installations belonged to the
+  maintainer.
 
 ## Consequences
 
 - Installation without authentication: `npx -y @vaubaan/harness init`.
-- An earlier installation keeps a Stop hook pointing to the old package;
-  it is reinstalled (`uninstall` then `init`) or fixed by hand.
 - `.npmrc` no longer points to GitHub Packages. Publishing on npmjs
   uses trusted publishing (OIDC) from the `publish.yml` workflow: no npm
   token is stored in the repository. The first version is published by
@@ -66,8 +59,15 @@ and inconsistent with the spec, which already names `@vaubaan/harness`.
 available names would have forced a rename of the brand, the CLI and
 `.vaubaan/`, with a broader migration, for an uncertain gain.
 
-### Migrate old hooks in `update`
+### Migrate old installations in `update`
 
-Recognizing the old commands would add permanent code and tests for
-the maintainer's installations alone, which a reinstall is enough to
-fix.
+Recognizing the old package name would add permanent code and tests
+for the maintainer's installations alone, which a reinstall is enough
+to fix.
+
+## History
+
+- 2026-10-14: decided (1.3.0); the rendered Stop hooks then called
+  `npx -y @vaubaan/harness stop-hook`.
+- 2026-10-22, c45b319: the Stop hook removed; the package name only
+  appears in `AGENTS.md` and in the lint commands.

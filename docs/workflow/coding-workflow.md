@@ -34,7 +34,7 @@ No runtime environment variants at this stage — this is a published npm packag
 
 - Feature branch pushed → PR opened against `main`.
 - Green CI required (typecheck + lint + tests + build + `lint:harness`).
-- The husky pre-commit hook (`.husky/pre-commit`) runs the same `npm run ci` locally: what fails there fails in CI.
+- The husky pre-commit hook (`.husky/pre-commit`, installed by the `prepare` script on `npm ci`) runs the same `npm run ci` locally: what fails there fails in CI.
 - At least one human review.
 - Squash merge by default.
 
@@ -73,8 +73,9 @@ to install. See
 
 1. Green CI on `main`.
 2. **Resync README.md** — check that the sections (install, usage, features, scripts) reflect the current state of the code. Run the `readme-writer` skill if needed.
-3. Bump version + tag.
-4. Wait for the `publish` workflow to succeed, including its check of
+3. **Regenerate and commit the generated files**: `npm run build && node dist/cli/index.js update .`; `lint:generated-fresh` gates the release.
+4. Bump version + tag.
+5. Wait for the `publish` workflow to succeed, including its check of
    the published version and of the `latest` dist-tag.
 
 The bump prepares `package.json`, the lockfile and the versions exposed

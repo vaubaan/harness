@@ -3,17 +3,15 @@ title: No agent personas, no code-quality judgment in the harness
 status: accepted
 date: 2026-10-22
 author: Vaubaan core
-supersedes: multi-agent-multi-engine-default
 ---
 
 # No agent personas, no code-quality judgment in the harness
 
 ## Context
 
-The harness shipped four agent personas (`coding`, `review`, `merge`,
-`planning`), rendered as native subagents in each engine
-([multi-agent-multi-engine-default](./multi-agent-multi-engine-default.md)),
-and one code-quality skill, `clean-code-guardian` with its `/clean-code`
+Until 2.0 the harness shipped four agent personas (`coding`, `review`,
+`merge`, `planning`), rendered as native subagents in each engine, and
+one code-quality skill, `clean-code-guardian` with its `/clean-code`
 command, read against the optional `docs/quality/` pillar
 ([quality-optional-pillar](./quality-optional-pillar.md)).
 
@@ -49,20 +47,23 @@ things did not fit.
    the repository and rendered like the built-in ones
    ([project-skills-seventh-pillar](./project-skills-seventh-pillar.md)).
 
+Several engines can still be rendered side by side; the choice is
+explicit ([engine-choice-mandatory](./engine-choice-mandatory.md)).
+
 ## Consequences
 
-- The package ships 8 doc skills and 8 commands instead of 9 and 9, and
-  no agent files. Existing `.<engine>/agents/` files are removed as
-  stale on the next `init` or `update`.
+- The package ships 8 doc skills and 8 commands, and no agent files.
+  Existing `.<engine>/agents/` files are removed as stale on the next
+  `init` or `update`.
 - The `review` persona's rule "run `doc-audit` and `drift` before any
   verdict" is no longer enforced by the harness. A team that wants it
   writes it in `docs/workflow/`, where the workflow template proposes
   it as a default.
 - `docs/quality/code-quality.md` loses its reader skill. Agents read
-  the file directly; the handbook and the template are updated.
+  the file directly.
 - A project that invoked `/clean-code` keeps the skill by copying it to
   `docs/skills/` before updating.
-- This is a breaking change, shipped in 2.0.
+- Breaking change, shipped in 2.0.
 
 ## Rejected alternatives
 
@@ -82,3 +83,17 @@ it in `docs/skills/`.
 
 The pillar does not need a reader skill: `AGENTS.md` already tells the
 agent to read the file before writing or auditing code.
+
+### Scope an install to one persona (`--agent`)
+
+Tried in v0.1 and rejected on 2026-05-21: the harness is static
+configuration, choosing a persona was a runtime matter.
+
+## History
+
+- 2026-05-22: `init` always rendered the four personas for every
+  requested engine, with no `--agent` flag (decision
+  `multi-agent-multi-engine-default`).
+- 2026-09-20: personas no longer listed their skills and commands; the
+  engines discover them natively.
+- 2026-10-22, c45b319: personas and `clean-code-guardian` removed.

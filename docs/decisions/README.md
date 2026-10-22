@@ -1,58 +1,49 @@
-# Decisions (ADRs)
+# Decisions
 
-Architecture Decision Records for the `@vaubaan/harness` project. Each ADR
+Architecture decisions of the `@vaubaan/harness` project. Each file
 contains the 4 required sections (Context, Decision, Consequences,
-Rejected alternatives) — validated by `lint:decision-schema`
+Rejected alternatives), validated by `lint:decision-schema`
 (see [spec §10.2](../spec/coding-agent-harness.md)).
 
-## Naming convention
+## Convention
 
-**No numbering.** Each ADR is a `<slug>.md` file (kebab-case) — no numeric prefix. This is deliberate:
+**A decision file is a current state**
+([decisions-as-current-state](./decisions-as-current-state.md)):
 
-- **No implicit precedence logic** between ADRs. If order matters (rare), it is read from the frontmatter date or from an explicit field (`supersedes:` / `superseded_by:`), not from the file name.
-- **Easy evolution**: adding, superseding, archiving without renumbering or breaking links.
-- **The slug is the identity** — it survives mechanical renames.
+- One file per topic, `<slug>.md` in kebab-case, no numbering. The slug
+  is the identity.
+- The four sections describe the position in force. When the position
+  changes, the file is rewritten.
+- A `## History` section lists the reversals, one line each: date,
+  commit when known, one sentence. Anything longer is in git.
+- A superseded file is deleted; its one-line summary moves into the
+  History of its successor, and links are repointed.
+- Each decision references at least one other decision or the spec; an
+  orphan is flagged by `lint:orphan-decisions`. No decision carries
+  `tracks:` (`lint:adr-no-tracks`).
+- The French section titles are still accepted by the linter.
 
-## Format
+## Decisions in force
 
-- Frontmatter or free-form header, but the 4 required sections are
-  mandatory with their exact English titles (`Context`, `Decision`,
-  `Consequences`, `Rejected alternatives`). The linter still accepts the
-  French titles for backward compatibility.
-- Each ADR references at least one other ADR or the spec — an
-  orphan ADR is flagged by `lint:orphan-decisions`.
-- Status: `proposed` / `accepted` / `superseded`. A superseded ADR
-  stays in the repo and points to its successor (`superseded_by: <slug>`).
-
-## v1 index
-
+- [A decision file is a current state](./decisions-as-current-state.md) — one file per topic, rewritten on reversal, a History line per change; superseded files deleted (2.0.0).
 - [No agent personas, no code-quality judgment](./no-personas-no-code-judgment.md) — the four personas, the `*.agent.md` pivot and `clean-code-guardian` are removed; one working rule in `AGENTS.md`, the team's workflow in `docs/workflow/`, its own personas in `docs/skills/` (2.0.0).
 - [The engine choice is mandatory](./engine-choice-mandatory.md) — `--engines` required on `init` and `render`, no default to all three; `update` keeps the manifest's engines (2.0.0).
 - [Generated files are committed](./generated-files-committed.md) — `AGENTS.md`, the engine folders and the manifest are versioned; `lint:generated-fresh` fails on a stale or edited copy; `lint:gitignore-harness` requires only `.harness-overrides/` and `.vaubaan/` and forbids ignoring generated paths (2.0.0).
-- [Lint in CI and pre-commit, no Stop hook](./lint-in-ci-and-pre-commit.md) — the engine Stop hook is removed; lint runs in CI, in a git pre-commit hook and on demand; `stop-hook` stays a hidden no-op until 3.0 (2.0.0).
+- [Lint in CI and pre-commit, no Stop hook](./lint-in-ci-and-pre-commit.md) — no engine hook; lint runs in CI, in a git pre-commit hook and on demand; `stop-hook` stays a hidden no-op until 3.0 (2.0.0).
 - [No MCP rendering, no code-driven merge](./no-mcp-no-code-merge.md) — `--with-mcp` and the MCP files are gone; the harness never merges a file it did not write; files 1.x edited are released to the project (2.0.0).
-- [`init` never overwrites what it does not own](./safe-init.md) — `init` shares the `update` planner: conflicts listed before any write, `--preserve`, transaction with backup; `uninstall` keeps edited files (1.4.0). Its entry-level merge was removed in 2.0.
-- [One OpenCode Stop-hook plugin for V1 and V2](./opencode-v1-v2-stop-hook-plugin.md) — *superseded by [lint-in-ci-and-pre-commit](./lint-in-ci-and-pre-commit.md)* (2026-10-22). A single default export with `server()` (1.x) and `setup()` (2.x); verified against OpenCode 1.14.50 and 2.0.29 (1.3.2).
+- [`init` never overwrites what it does not own](./safe-init.md) — `init` shares the `update` planner: conflicts listed before any write, `--preserve`, transaction with backup; `uninstall` keeps edited files (1.4.0).
 - [English as the canonical language](./english-canonical-language.md) — docs, rendered content and templates in English; linters take English ADR and quality headings and still accept the French ones (1.3.0).
-- [Public release under `@vaubaan/harness`](./public-npmjs-vaubaan-scope.md) — public package on npmjs, GitHub Packages dropped, CLI and `.vaubaan/` unchanged, no migration of old hooks (1.3.0).
-- [Optional pillar `docs/quality/`](./quality-optional-pillar.md) — a required file `code-quality.md` (mechanical checks, project rules, accepted deviations), checked by `lint:quality-schema` when it exists; read directly by agents since `clean-code-guardian` left in 2.0.
-- [Removal of CAR couplings](./retire-coding-agent-runner-coupling.md) — `.car/` is no longer required, the CAR end-of-turn log is removed and the unimplemented supervisor plan is archived (1.1.1).
-- [Migrating existing installations](./project-update-migrations.md) — `update` command, settings preserved, preview, private backup and rollback; file provenance in the v6 manifest (1.1.0).
-- [Release of the 1.0.1 patch](./release-safety-patch-1-0-1.md) — PR #51, go basis and tag-based publication after CI validation.
-- [Safe lifecycle for project artifacts](./safe-project-artifact-lifecycle.md) — upfront path validation before any mutation (1.0.1); its persona preservation went with the Stop hook. Its ownership of OpenCode MCP entries was removed in 2.0.
-- [Multi-engine pivot format](./multi-engine-pivot-format.md) — a single `*.skill.md` / `*.cmd.md` source rendered by 3 per-engine renderers (the `*.agent.md` format was removed in 2.0).
+- [Public release under `@vaubaan/harness`](./public-npmjs-vaubaan-scope.md) — public package on npmjs, GitHub Packages dropped, CLI and `.vaubaan/` unchanged (1.3.0).
+- [Optional pillar `docs/quality/`](./quality-optional-pillar.md) — a required file `code-quality.md` (mechanical checks, project rules, accepted deviations), checked by `lint:quality-schema` when it exists, read directly by agents.
+- [The harness is standalone](./retire-coding-agent-runner-coupling.md) — no runtime coupling, no `.car/`, no end-of-turn signal, no supervisor (1.1.1).
+- [Updating a project](./project-update-migrations.md) — `update` command, engines and overrides kept, preview, private backup and rollback, fingerprints in the v6 manifest, released paths (1.1.0).
+- [Every path is validated before mutation](./safe-project-artifact-lifecycle.md) — relative, contained, non-symbolic paths checked for the whole batch before the first write or delete (1.0.1).
+- [Each renderer emits exactly what its engine reads](./engine-native-layouts-1-0.md) — Codex skills under `.agents/skills/`, OpenCode in YAML, no Codex commands, `CLAUDE.md` as the `@AGENTS.md` import (1.0.0).
+- [Project skills as optional seventh pillar](./project-skills-seventh-pillar.md) — `docs/skills/*.skill.md` rendered alongside the built-in skills; merge order stock, project, overrides.
+- [GitHub Actions CI on PRs and `main`](./github-actions-ci.md) — `ci.yml` runs `npm run ci` on every PR and push to `main`; the only mechanical gate, with the husky pre-commit as a local convenience.
+- [Multi-engine pivot format](./multi-engine-pivot-format.md) — a single `*.skill.md` / `*.cmd.md` source rendered by 3 per-engine renderers.
 - [TypeScript / Node stack](./typescript-node-stack.md) — strict TypeScript, Node ≥20, ESM, build via `tsup`.
 - [YAML frontmatter + strict Zod](./yaml-frontmatter-zod-strict.md) — `.strict()` validation that rejects any unknown field, to avoid silent drift.
-- [TOML for opencode](./toml-for-opencode.md) — *superseded by [engine-native-layouts-1-0](./engine-native-layouts-1-0.md)* (2026-09-20). The opencode renderer emits TOML (`+++`); claude-code and codex-cli stay on YAML (`---`).
-- [Capabilities matrix + degradation](./capabilities-matrix-with-degradation.md) — two structures (`CAPABILITIES_MATRIX` + `DEGRADED_CAPABILITIES`) and three rendering policies (skip / degraded / full).
-- [`CLAUDE.md` stub](./claude-md-stub-back-compat.md) — *superseded by [engine-native-layouts-1-0](./engine-native-layouts-1-0.md)* (2026-09-20). claude-code emits `AGENTS.md` + `CLAUDE.md` (redirect stub); the other two engines only emit `AGENTS.md`.
-- [Mechanical linters vs `doc-audit` skill](./linters-mechanical-vs-skills.md) — TypeScript linters as CI gates (15 in 2.0), an LLM-driven skill for semantic judgment.
+- [Capabilities matrix + degradation](./capabilities-matrix-with-degradation.md) — `CAPABILITIES_MATRIX` + `DEGRADED_CAPABILITIES` and three rendering policies (skip / degraded / full).
+- [Mechanical linters and the `doc-audit` skill](./linters-mechanical-vs-skills.md) — TypeScript linters as CI gates (15 in 2.0), an LLM-driven skill for semantic judgment.
 - [Content under `src/`](./content-under-src.md) — Markdown sources (`skills/`, `commands/`, `templates/`) under `src/`, copied to `dist/` at build time.
-- [MCP rendering opt-in](./mcp-rendering-opt-in.md) — *superseded by [no-mcp-no-code-merge](./no-mcp-no-code-merge.md)* (2026-10-22). Opt-in `--with-mcp=context7`; one MCP file rendered per engine in its native convention; `coding` + `planning` personas redirected to `resolve-library-id` + `get-library-docs`.
-- [Self-healing `/harness-lint` loop via cross-engine Stop hooks](./stop-hook-lint-loop.md) — *superseded by [lint-in-ci-and-pre-commit](./lint-in-ci-and-pre-commit.md)* (2026-10-22). In-session Stop hook that injects `/harness-lint` at the end of every dirty agent turn; 3 portable anti-loop layers; hook schemas documented but not smoke-tested against the live CLIs (accepted area of uncertainty).
-- [Supervisor support design in the harness](./supervisor-harness-design.md) — historical proposal withdrawn on 2026-09-20 after CAR was abandoned; schemas, linters and `./supervisor` export proposed but never implemented.
-- [GitHub Actions CI on PRs and `main`](./github-actions-ci.md) — `ci.yml` workflow running `npm run ci` on every PR and push to `main`; a technical gate replacing human discipline; the only mechanical gate since 2.0.
-- [Multi-agent and multi-engine by default](./multi-agent-multi-engine-default.md) — *superseded by [no-personas-no-code-judgment](./no-personas-no-code-judgment.md) and [engine-choice-mandatory](./engine-choice-mandatory.md)* (2026-10-22). All agents rendered side by side at init, all engines enabled by default.
-- [Stack-aware render + lint](./stack-aware-render-and-lint.md) — *superseded by [stop-hook-lint-loop](./stop-hook-lint-loop.md)* (2026-06-01).
-- [Merge PR#1 — formatReportText tests](./test-format-report-text-merge.md) — validation of the squash merge of PR#1 adding 10 unit tests for formatReportText.
-- [Verified native layouts per engine (1.0.0)](./engine-native-layouts-1-0.md) — each renderer emits exactly what its engine's docs say it reads (Codex skills under `.agents/skills/`, OpenCode in YAML); `CLAUDE.md` becomes the `@AGENTS.md` import. Agents and hooks are no longer rendered since 2.0.

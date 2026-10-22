@@ -9,10 +9,9 @@ author: Vaubaan core
 
 ## Context
 
-[multi-agent-multi-engine-default](./multi-agent-multi-engine-default.md)
-made `--engines` optional on `init`: without it, the harness rendered
-for Claude Code, Codex and OpenCode at once. The README claimed this
-"costs nothing".
+From 0.2 to 1.4, `--engines` was optional on `init`: without it, the
+harness rendered for Claude Code, Codex and OpenCode at once. The
+README claimed this "costs nothing".
 
 In practice a developer who uses one engine received three folders,
 several `.gitignore` lines, a Codex hook to approve and an OpenCode
@@ -21,8 +20,10 @@ now committed ([generated-files-committed](./generated-files-committed.md)),
 that clutter would also land in the repository and in every pull
 request that touches the harness.
 
-The decision that rejected "a single `--engine`" was about allowing
-several engines, not about defaulting to all of them.
+The 2026 decision that rejected "a single `--engine`" was about
+allowing several engines, not about defaulting to all of them
+([no-personas-no-code-judgment](./no-personas-no-code-judgment.md)
+keeps that part).
 
 ## Decision
 
@@ -61,3 +62,9 @@ short and leaves no doubt.
 Heuristic, machine-dependent, and wrong for a repository shared by
 people with different tools. The choice belongs to the project, not to
 the machine `init` happens to run on.
+
+## History
+
+- 2026-05-22: `--engines` optional, all three engines by default
+  (decision `multi-agent-multi-engine-default`).
+- 2026-10-22, c45b319: `--engines` required.

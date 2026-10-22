@@ -18,10 +18,6 @@
 > current render by a linter (see §3.3). The harness imposes one working
 > rule, doc-first; the team's own workflow is written in
 > `docs/workflow/`, not supplied by the harness.
->
-> **v2 lineage.** This spec replaces a previous codebase
-> (**Vaubaan v2**, unpublished). From-scratch rewrite — no shared
-> code, no migration, no compat. The spec is self-contained.
 
 ## 0. Vocabulary
 
@@ -601,7 +597,7 @@ project/
   document them separately.
 - The `workflow/` pillar contains only one required file in v1
   (`coding-workflow.md`). Possible future extensions
-  (`release-workflow.md`, `incident-workflow.md`, …) — OQ §16.2.
+  (`release-workflow.md`, `incident-workflow.md`, …) — OQ §15.2.
 
 ### 9.1.1 No numbering for `decisions/` and `handbook/`
 
@@ -783,72 +779,9 @@ Output: a Markdown report under `.vaubaan/reports/doc-audit.md`
 (creates the folder if absent) in the target directory, or at a path
 passed as argument. Format:
 
-```markdown
-# Doc Audit Report — <project> @ <commit>
-
-## Spec coverage (3/5 covered)
-
-- ✅ coding-agent-harness.md
-- ✅ renderer-pipeline.md
-- ⚠️ overrides.md (NEW — verify completeness)
-- ❌ web-ui (missing)
-- ❌ legacy-migration (missing)
-
-## Explicit decisions (12 ADRs, 3 implicit detected)
-
-- ADRs OK: all `docs/decisions/*.md` files have the 4 required
-  sections.
-- Implicit suspects (no ADR found):
-  - commit abc123 "switched from gray-matter to a custom YAML reader"
-  - commit def456 "removed plugin-host system"
-  - commit ghi789 "RendererTable → RendererRegistry rename"
-
-## Handbook freshness (2/5 fresh, 3 stale)
-
-- ✅ docs/handbook/renderer-pipeline.md (1 commit since last edit)
-- ⚠️ docs/handbook/overrides-loading.md (12 commits drift — review)
-- ❌ docs/handbook/legacy-services.md (refers to deleted code)
-- ...
-
-## Tests coverage (1/2 cardinal files present)
-
-- ✅ docs/tests/integration-tests.md
-- ❌ docs/tests/e2e-tests.md (MISSING — required)
-- Specs without a test plan:
-  - ⚠️ coding-agent-harness.md (no scenario references it)
-  - ⚠️ web-ui.md §6.7 component-registry (export not covered)
-
-## README (root)
-
-- ✅ README.md present
-- ⚠️ "Quick start" section missing
-- ⚠️ no link to docs/workflow/coding-workflow.md
-
-## Workflow
-
-- ✅ docs/workflow/coding-workflow.md present
-- ⚠️ "Release" section missing
-- ⚠️ tracks: [.github/workflows/ci.yml] but the file has diverged by 18 commits since last edit
-
-## Cross-link consistency
-
-- Orphan spec: docs/spec/coding-agent-harness.md (no decision/handbook yet — expected for new spec)
-- Orphan decision: docs/decisions/legacy-store.md (no longer referenced anywhere — candidate for archival)
-
-## Pillar boundaries (anti-drift)
-
-- ⚠️ docs/spec/web-ui.md mentions "React + Tailwind" — tech stack,
-  should be an ADR (`stack-frontend.md`).
-- ⚠️ docs/decisions/renderer-tables.md has no
-  "Rejected alternatives" section — it is a decision note, not an ADR.
-- ✅ No user-facing content detected in handbook/.
-
-## Recommendations
-
-1. Write docs/handbook/legacy-services.md or archive the file.
-2. Turn the 3 detected implicit decisions into ADRs (see /decision).
-3. Refresh docs/handbook/overrides-loading.md vs the current code.
-```
+The report follows the "Expected output" skeleton of the skill
+(`src/skills/doc-audit.skill.md`): one section per pillar with ✅ / ⚠️ /
+❌ items, then cross-links, pillar boundaries and recommendations.
 
 Global verdict: `done` if zero `❌`, otherwise `needs-human`. The report
 serves as the verdict's justification for the orchestrating tool or
@@ -1228,45 +1161,9 @@ The `doc-audit` E2E on this repo itself is an integration test: it
 must always pass (in the sense of "producing a report"), even if the
 verdict is `needs-human` because of the known gaps.
 
-## 15. Initial cutover plan (historical)
+## 15. Decisions in force & open questions
 
-> Historical record of the v1 cutover. The agents, the Stop hook, the
-> `--engine` flag and the count of 13 linters it mentions were replaced
-> in 2.0; see §16.1 for the decisions in force.
-
-The initial launch was greenfield, with no migration or dual-write.
-Now-existing installations follow the `update` contract of
-§13.1. Historical sequence:
-
-1. **Spec OK** (this document, validated).
-2. **Branch `agent/coding-agent-harness-greenfield`** from `staging`.
-3. **New package** `@vaubaan/harness` — sources §3.1 (tech stack: see ADR [typescript-node-stack](../decisions/typescript-node-stack.md)).
-4. **Companion CLI** `vaubaan harness *` (bin `vaubaan-harness`,
-   or integrated into the existing `vaubaan` binary if present).
-5. **v1 content shipped** in `@vaubaan/harness/`:
-   - **agents** (`agents/`): `coding`, `review`, `merge`, `planning`;
-   - **doc-skills** (`skills/`): `doc-audit`, `spec-writer`,
-     `decision-record-writer`, `handbook-writer`, `test-plan-writer`,
-     `workflow-writer`, `readme-writer`, `drift-detector`;
-   - **commands** (`commands/`) mirroring the exposed doc-skills;
-   - **templates** (`templates/`) for the 7 required files;
-   - **linters** (`linters/`): the 13 linters of §10.2 (15 in 2.0).
-6. **The `coding-agent-harness` repo itself (dogfooding)**: we apply
-   the harness to ourselves. A `vaubaan harness init .
-   --engine claude-code` run drops the umbrella AGENTS.md + the 4 subagents
-   + skills + commands; the called agent (depending on the session) runs
-   `doc-audit`, finds the gaps (handbook + tests missing), fills them
-   via the writers — and only then tackles its task. `docs/spec/` and
-   `docs/decisions/` already exist. A GitHub Actions workflow
-   runs `vaubaan harness lint` on each PR (becomes blocking
-   once the gaps are filled).
-7. **E2E green** before merging into `staging`.
-
-No feature flag. No coexistence period.
-
-## 16. v1 decisions & open questions
-
-### 16.1 v1 decisions
+### 15.1 Decisions in force
 
 - **Name**: the harness, published as `@vaubaan/harness`.
 - **Standalone.** The harness is a package + CLI, with no dependency
@@ -1331,7 +1228,7 @@ Standing decisions also in force, not restated above:
 [capabilities-matrix-with-degradation](../decisions/capabilities-matrix-with-degradation.md),
 [yaml-frontmatter-zod-strict](../decisions/yaml-frontmatter-zod-strict.md).
 
-### 16.2 Still-open questions
+### 15.2 Still-open questions
 
 - **OQ — Skill signing.** Should the `.skill.md` files be signed (cosign /
   sigstore) to prevent a supply-chain compromise of

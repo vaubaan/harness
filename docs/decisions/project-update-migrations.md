@@ -7,136 +7,92 @@ author: Vaubaan core
 
 # Updating a project from its existing installation
 
-> **Amended (2026-10-22)** by
-> [no-mcp-no-code-merge](./no-mcp-no-code-merge.md): `update` no longer
-> merges hooks or MCP entries, migrates the legacy OpenCode MCP file, or
-> records entry ownership. Files 1.x edited are released to the project.
-> Preview, backup, rollback and fingerprints stand.
-
 ## Context
 
-1.0.1 protects deletions and the OpenCode configuration, but does not
-provide a full migration of installations already in place.
-The local inventory includes v2 manifests, custom hooks
-outside the manifest, project MCPs and an installation that disabled
-hooks. Re-running `init` with its default values is not enough to
-preserve these choices. Migrating a fleet also requires a preview
-and a rollback after a write error.
+Re-running `init` with its defaults was not enough to move an
+installation to a new version while keeping its choices: the engines,
+the preserved files, the overrides folder. Migrating several projects
+also requires a preview, and a rollback after a write error.
 
 This decision complements
-[safe-project-artifact-lifecycle](./safe-project-artifact-lifecycle.md).
-It adds an explicit update path; the layout choices
-of [1.0.0](./engine-native-layouts-1-0.md) are unchanged.
+[safe-project-artifact-lifecycle](./safe-project-artifact-lifecycle.md)
+and shares its planner with [safe-init](./safe-init.md).
 
 ## Decision
 
-The CLI exposes `update <target-dir>`. It uses the contents of the
-package version currently running, with no download or
-lookup of the latest version during the update. An existing manifest
-is required. Manifest versions 1 to 5 are recognized
-for migration; the new installation is recorded as v6.
+The CLI exposes `update [target-dir]`. It uses the contents of the
+package version currently running, with no download or lookup of a
+newer version. An existing manifest is required; versions 1 to 5 are
+recognized and the result is recorded as v6.
 
-The target defaults to `.`. `--json` exposes the structured result,
-`--backup-dir` picks an exact new folder for the backup and
-`--overrides-dir` designates the parent of the `.harness-overrides` directory.
-`--preserve` explicitly removes the requested paths from generation
-and from the harness's ownership; these choices persist in
-`preservedFiles` in the v6 manifest. This option applies to generated
-artifacts; the manifest and shared configurations are excluded from it.
-
-`update` keeps the recorded engines and Stop hooks preference.
-When this preference is missing from an old manifest, it is
-inferred from the hook artifacts declared in the manifest rather than from the
-defaults of a new installation. Project skills and local
-overrides take part in rendering; an explicit overrides directory can
-be provided. Existing MCP configurations are kept, even
-if they were not listed in the manifest.
-
-Native hooks are corrected only for the harness's exact commands
-whose provenance is known, without removing other hooks or
-settings. A pre-existing entry outside the manifest is not adopted.
-The old OpenCode MCP listed in the manifest is migrated to the
-native configuration conservatively:
-no user entry with the same name is replaced and the provenance
-of additions remains tracked. This migration procedure does not
-implicitly extend the destructive rules of a plain `init`.
-
-Planning checks paths and collisions before writing.
-A destination outside the manifest that already contains user content
-is not overwritten as if it were a generated file. Shared configuration
-files follow their specific merge rules. Symbolic
-links under the target remain rejected; converting an old
-link-based setup is a separate, explicit migration.
-
-`--dry-run` produces the plan without any write, including no backup
-folder. Applying first creates a durable, private
-backup of the data that will be touched, then applies the plan. An
-apply error triggers restoration of the previous contents and modes;
-the backup is kept for inspection and resumption.
-
-The v6 manifest records the package version and the fingerprints of
-generated files in order to detect local modifications during a
-subsequent update. A differing fingerprint raises an error
-before mutation if the content does not already match the new rendering;
-customized content must be carried by an override or placed
-explicitly out of ownership with `--preserve`.
-Old manifests do not have these fingerprints:
-their files declared as managed can be regenerated with a warning
-and a prior backup. Detected conflicts are spelled out in
-the plan before mutation.
+- `--dry-run` produces the plan without any write, including no backup
+  folder. `--json` exposes the structured result.
+- `--backup-dir` picks an exact new folder for the backup;
+  `--overrides-dir` designates the parent of `.harness-overrides/`.
+- `--preserve` removes the requested generated paths from generation
+  and from the harness's ownership; the choice persists in
+  `preservedFiles`.
+- `update` keeps the recorded engines. Project skills and local
+  overrides take part in rendering.
+- Files 1.x wrote or edited outside the rendered set (MCP files,
+  engine settings) are released: dropped from the manifest with a
+  warning, left in place
+  ([no-mcp-no-code-merge](./no-mcp-no-code-merge.md)).
+- Planning checks paths and collisions before writing. A destination
+  outside the manifest that already contains user content is a
+  conflict, never overwritten. Symbolic links under the target are
+  rejected.
+- Applying first creates a durable, private backup of the data that
+  will be touched, then applies the plan. An apply error restores the
+  previous contents and modes; the backup is kept.
+- The v6 manifest records the package version and the fingerprints of
+  generated files. A differing fingerprint raises an error before
+  mutation unless the content already matches the new rendering; old
+  manifests without fingerprints get their managed files regenerated
+  with a warning and a prior backup.
 
 ## Consequences
 
-**Positive:**
-
-- The same command is used to migrate old installations and to
-  apply subsequent versions without redefining the project's settings.
-- The plan makes it possible to inspect changes before they are applied.
-- The project's own hooks and MCPs are not treated as generated
-  files whose entire content the harness owns.
-- v6 provenance improves the detection of local modifications.
-
-**Constraints:**
-
-- Backups consume space and may contain sensitive
-  configurations; their directory must stay private and must
-  not be committed.
-- Old manifests do not allow each local change to be attributed with certainty:
-  the warning and the backup make this
-  limitation explicit.
-- The transaction is not a lock against another process modifying
-  the project at the same time; a restoration error is reported with
-  the path of the retained backup.
-- Updating an npm dependency or a wrapper pin remains an
-  action separate from updating the project's artifacts.
+- The same command migrates old installations and applies later
+  versions without redefining the project's settings, and the result
+  is committed like any generated file.
+- Backups may contain sensitive configuration; their directory stays
+  private and uncommitted.
+- The transaction is not a lock against another process modifying the
+  project at the same time; a restoration error is reported with the
+  path of the retained backup.
+- Updating the npm pin remains a separate action.
 
 ## Rejected alternatives
 
 ### Only recommend `uninstall` then `init`
 
-This sequence loses settings not passed to the new command,
-does not handle old manifests and provides no rollback
-between the two operations.
+Loses settings not passed to the new command, does not handle old
+manifests and provides no rollback between the two operations.
 
 ### Automatically download the latest version
 
-The result would depend on the network and on the state of the registry. The caller
-explicitly chooses the package version that runs the migration.
+The result would depend on the network and the registry. The caller
+chooses the package version that runs the migration.
 
 ### Overwrite, then back up only on error
 
-The original bytes would already be lost. The backup therefore precedes
-the first mutation and remains available after the operation.
+The original bytes would already be lost. The backup precedes the first
+mutation.
 
 ### Accept legacy symbolic links
 
-This would weaken the destination validation introduced in 1.0.1.
-Link-based installations are converted explicitly,
-keeping their targets, before the normal update.
+It would weaken the destination validation of 1.0.1. Link-based
+installations are converted explicitly before the normal update.
+
+## History
+
+- 2026-09-20: decided (1.1.0), with entry-level merge of hooks and
+  MCP entries and a hook-preference field in the manifest.
+- 2026-10-22, 8a92564 and c45b319: merge, hook preference and entry
+  ownership removed; released paths introduced.
 
 ## References
 
 - [Update contract](../spec/coding-agent-harness.md#updating-an-existing-installation)
-- [Integration plan](../tests/integration-tests.md)
-- [File lifecycle](../handbook/uninstall.md)
 - [Update implementation](../handbook/project-update.md)
