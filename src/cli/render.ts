@@ -1,7 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { loadHarness } from "../loader.js";
-import { resolveMcpIds } from "../mcp.js";
 import { render as renderHarness } from "../render.js";
 import { ENGINES, type Engine } from "../types.js";
 
@@ -9,7 +8,6 @@ export interface RenderArgs {
   engines?: ReadonlyArray<string>;
   outDir: string;
   packageDir: string;
-  mcpServers?: ReadonlyArray<string>;
   withStopHook?: boolean;
 }
 
@@ -29,11 +27,9 @@ export function renderCommand(args: RenderArgs): RenderCommandResult {
         })
       : [...ENGINES];
   const harness = loadHarness(args.packageDir);
-  const mcpServers = args.mcpServers ? resolveMcpIds(args.mcpServers) : undefined;
   const output = renderHarness({
     harness,
     engines: engineList,
-    mcpServers,
     withStopHook: args.withStopHook !== false,
   });
   const filesWritten: string[] = [];

@@ -53,7 +53,7 @@ The result is a `ParsedFile<T>` (`src/parser/common.ts:6-10`): `{ meta, body, so
 
 `render(input: RenderInput): RenderOutput` (`src/render.ts`) composes
 the pipeline. `RenderInput` takes
-`{ harness, engines, overrides?, projectSkills?, mcpServers?, withStopHook? }` — **no**
+`{ harness, engines, overrides?, projectSkills?, hasQualityDoc?, withStopHook? }` — **no**
 per-agent selection: all the harness personas are rendered, for
 each requested engine. See the ADR
 [multi-agent-multi-engine-default](../decisions/multi-agent-multi-engine-default.md)
@@ -74,7 +74,7 @@ for the why.
      below (`.toml` for Codex, `.md` for the other two).
    - Remember which skills/cmds were actually exposed (on at
      least one engine) for the umbrella.
-   - Render the requested MCP servers and the hooks, enabled by default.
+   - Render the Stop hook, enabled by default.
 4. **Emit the root files**:
    - Engine-neutral `AGENTS.md`: **how we work** (project map
      + doc-first principle) followed by the exposed skills/commands
@@ -96,7 +96,8 @@ on the 3 engines produces about fifty files (the umbrella +
 Selected by `getRenderer(engine)` (`src/renderers/index.ts:13-15`) from
 the `RENDERERS` record. All implement the `Renderer` interface
 (`src/renderers/common.ts`): `renderSkill`, `renderCmd`, `renderAgents`,
-`renderMcp`, `renderStopHook`.
+`renderStopHook`. No MCP configuration is rendered
+([decision](../decisions/no-mcp-no-code-merge.md)).
 
 ### Native paths
 
@@ -211,8 +212,7 @@ configurations in `src/cli/init.ts` (see the
 - **A cmd disappears?** Codex renders none. On the other engines,
   check that the target skill (`invokes_skill`) was actually kept.
 - **Broken frontmatter in the output?** All three engines use
-  `yamlFrontmatter`. The TOML helpers are only used for Codex agents and
-  MCP configurations.
+  `yamlFrontmatter`. The TOML helpers are only used for Codex agents.
 
 ## Pitfalls
 

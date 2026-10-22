@@ -6,22 +6,23 @@ tracks:
   - src/cli/uninstall.ts
   - src/cli/manifest.ts
   - src/cli/managed-paths.ts
-  - src/cli/opencode-config.ts
-  - src/cli/update-config.ts
+  - src/cli/hook-configs.ts
   - src/cli/index.ts
   - tests/integration/uninstall.test.ts
-  - tests/integration/opencode-config.test.ts
   - tests/integration/init-safe.test.ts
-last_reviewed: 2026-10-14
+  - tests/integration/legacy-migration.test.ts
+last_reviewed: 2026-10-22
 ---
 
 # Init and uninstall — lifecycle of managed files
 
 `vaubaan-harness init <target-dir>` refreshes the rendering and removes
 old managed files that are no longer needed. `uninstall <target-dir>` removes
-the files owned by the harness. Custom files outside the manifest
-and shared OpenCode settings are preserved according to the rules
-below. Decision: [safe lifecycle](../decisions/safe-project-artifact-lifecycle.md).
+the files owned by the harness. Files outside the manifest, and files
+the project edited since the harness wrote them, are preserved according
+to the rules below. Decisions: [safe lifecycle](../decisions/safe-project-artifact-lifecycle.md),
+[safe init](../decisions/safe-init.md),
+[no MCP, no code merge](../decisions/no-mcp-no-code-merge.md).
 To update an existing installation while keeping its choices
 and with a backup, use [the `update` command](./project-update.md).
 
@@ -33,9 +34,11 @@ and with a backup, use [the `update` command](./project-update.md).
 before any mutation. Paths must be relative, belong to native or legacy
 managed locations, and contain no `..`, no `.`, no
 empty segment, no backslash, no null byte. POSIX and
-Windows absolute paths are refused. `AGENTS.md`, `CLAUDE.md`, the known
-configuration files and the engines' content subdirectories
-make up the list of allowed locations.
+Windows absolute paths are refused. `AGENTS.md`, `CLAUDE.md`, the
+manifest, the two Stop hook files and the engines' content
+subdirectories make up the list of allowed locations. `.mcp.json`,
+`.codex/config.toml`, `.opencode/opencode.json` and `.opencode/mcp.json`
+are not managed locations any more.
 
 Each existing component under the root is inspected with `lstatSync`.
 A symbolic link, even internal or dangling, is refused, including on
@@ -45,27 +48,24 @@ directory and the final destination a regular file, if it exists.
 
 ### Installation and reinstallation
 
-Since 1.4.0, `initCommand` (`src/cli/init.ts`) shares the planner of
-`update`, `planInstallation` (`src/cli/update.ts`). It differs only in
-where the settings come from: engines, MCP servers and the Stop hook come
-from the options; preserved files, entry ownership and the overrides
-folder come from the previous manifest, if any. Decision:
-[safe init](../decisions/safe-init.md).
+`initCommand` (`src/cli/init.ts`) shares the planner of `update`,
+`planInstallation` (`src/cli/update.ts`). It differs only in where the
+settings come from: engines and the Stop hook come from the options;
+preserved files and the overrides folder come from the previous
+manifest, if any.
 
-1. The rendering (`planInit`, `src/cli/plan-render.ts`) is split into
-   generated files and shared configurations.
-2. A generated path that already holds a file outside the manifest, or a
+1. Paths 1.x edited entry by entry are dropped from the manifest with a
+   warning and never touched again (`RELEASED_PATHS`,
+   `src/cli/hook-configs.ts`).
+2. The rendering (`planInit`, `src/cli/plan-render.ts`) gives the
+   agents, skills, commands and umbrella; the Stop hook of each hook
+   engine is rendered separately.
+3. A generated path that already holds a file outside the manifest, or a
    managed file whose content no longer matches its recorded hash, is a
    conflict. All conflicts are reported in one error, before any write;
    `--preserve <path>` leaves a file to the project.
-3. Shared configurations are merged entry by entry: Stop hooks in
-   `.claude/settings.json` and `.codex/hooks.json` (`planUpdateConfigs`),
-   MCP servers in `.opencode/opencode.json` and `.mcp.json`
-   (`planOpenCodeConfig`, `planClaudeMcpConfig`). The manifest records the
-   owned entries in `hookConfigs`, `opencodeConfig` and `mcpConfig`.
-4. `.codex/config.toml` is written only if absent, or created by the
-   harness and unchanged. Otherwise it is left alone and a warning prints
-   the `[mcp_servers.<id>]` block to add.
+4. The two Stop hook files follow their own rule, without merge: see
+   [Stop hook files](#stop-hook-files).
 5. A `.harness-overrides/` folder in the project is loaded by default.
 6. Writes and removals go through `applyUpdateTransaction`, with a
    backup and rollback. The backup is kept, and its path printed, only
@@ -74,67 +74,36 @@ folder come from the previous manifest, if any. Decision:
 
 Re-running `init` with the same options writes nothing.
 
+### Stop hook files
+
+`.claude/settings.json` and `.codex/hooks.json` are shared with the
+project. `planHookConfigs` (`src/cli/hook-configs.ts`) writes one only
+when it is absent or when the manifest records it unchanged. An
+existing file the harness does not own stays byte-for-byte as it is,
+leaves the manifest, and a warning either prints the Stop hook block to
+add or, when the file already contains `@vaubaan/harness stop-hook`,
+says the file already runs the hook and stays the project's. No JSON is
+parsed. Details and the removal rule:
+[the update handbook](./project-update.md#stop-hook-files).
+
 ### Uninstallation
 
 `uninstallCommand` (`src/cli/uninstall.ts`):
 
 1. Validates the manifest path then reads it. If it is absent, returns
    a warning without mutation.
-2. Validates all the paths and prepares the removal of only those
-   OpenCode and `.mcp.json` entries and shared hooks whose ownership is
-   recorded.
-3. Calls `removeRenderedFiles` on the managed files. A generated file
-   whose content no longer matches its recorded hash is kept, with a
+2. Sets aside the released paths, with a warning each, and validates
+   the remaining managed files.
+3. Calls `removeRenderedFiles` on them. A generated file whose content
+   no longer matches its recorded hash is kept, with a
    `kept modified harness file` warning. A file already absent produces
    a warning, then cleanup continues. Directories that become empty are
    pruned up to the target directory.
-4. Writes the remaining shared configuration if needed, then deletes
-   the manifest.
+4. Deletes the manifest.
 
-The result exposes `{ filesRemoved, dirsPruned, warnings }`. The
-shared configuration can be modified without appearing in
-`filesRemoved`, since it stays in the project.
-
-### Shared OpenCode configuration
-
-`planOpenCodeConfig` (`src/cli/opencode-config.ts`) prepares the changes
-to `.opencode/opencode.json` before writing. A document affected by
-an installation or a removal with ownership must be a JSON object,
-with an `mcp` object if present; an invalid shape is rejected.
-
-`init --with-mcp=context7` only adds an absent entry. An
-existing entry stays unchanged, even if it differs from the
-renderer's; a warning reports this difference. The other servers,
-agents, permissions and settings are kept.
-
-Since manifest v5, this shared file is excluded from `files[]`. The
-`opencodeConfig` field contains `createdFile`, `addedMcp`, `addedSchema` and
-`entries` (exact values of the added servers). A pre-existing entry,
-even one identical to the rendering, is not claimed by the harness.
-
-When the MCP option is removed or during an `uninstall`, each recorded
-entry is deleted only if it still matches its
-installed value (`isDeepStrictEqual`). A modified entry stays, with
-a warning. The empty `mcp` container and the default `$schema` are
-removed only if they were added by the harness; a modified
-schema stays. The file itself is deleted only if it was
-created by the harness and becomes empty. A re-init with no change does not
-needlessly rewrite this document.
-
-### Shared hooks after `update`
-
-The `update` command records ownership of the Claude and
-Codex Stop entries under `hookConfigs`, without owning their entire JSON file.
-`planHookConfigCleanup` (`src/cli/update-config.ts`) prepares their removal
-before any generated file is deleted. An entry is removed only
-if the command and its group's metadata still match
-the snapshot. Modified commands, other hooks and user
-settings remain. A container or file that becomes empty
-is removed only if it was created by the harness.
-
-This mechanism concerns ownership recorded by `update`; `init`
-still renders its hooks as files. For migration and preservation
-details, see [the update handbook](./project-update.md#shared-mcp-and-hooks).
+The result exposes `{ filesRemoved, dirsPruned, warnings }`. A Stop
+hook file is removed under the same rule as any generated file:
+listed in the manifest and unchanged.
 
 ## Safeguards
 
@@ -166,11 +135,11 @@ details, see [the update handbook](./project-update.md#shared-mcp-and-hooks).
 4. **`init → uninstall → init` cycle** — the 2nd installation produces
    exactly the same list of files as the 1st.
 
-`tests/integration/opencode-config.test.ts` covers preservation of
-pre-existing settings and servers, name collisions, re-init,
-MCP removal, user modifications after installation and
-the conservative migration of the v4 configuration. The atomic
-path checks are tested next to the CLI modules.
+`tests/integration/init-safe.test.ts` covers the Stop hook files
+(existing, already hooked, created then edited, preserved, disabled) and
+the release of files 1.x edited. `tests/integration/legacy-migration.test.ts`
+replays the real 0.9.0 manifest. The atomic path checks are tested next
+to the CLI modules.
 
 ## Pitfalls
 
@@ -180,13 +149,12 @@ path checks are tested next to the CLI modules.
   longer harness content, it is your file).
 - **Manifest version**. `src/cli/manifest.ts` writes v6 and accepts
   v4, v5 and v6 when reading. v6 also records the package version
-  and the fingerprints used by `update`. An OpenCode configuration listed in a
-  v4 manifest without detailed ownership is kept with a warning, including at
-  uninstall. Entries already present are not adopted
-  during a re-init. An invalid manifest or one with an unsupported
-  version makes the operation fail before mutation; inspect and
-  repair the manifest before rerunning. For a valid v1 to
-  v3 manifest, use `update`, which carries the legacy migration.
+  and the fingerprints used by `update`. The 1.x entry ownership fields
+  are dropped on read; what they covered is now the project's. An
+  invalid manifest or one with an unsupported version makes the
+  operation fail before mutation; inspect and repair the manifest
+  before rerunning. For a valid v1 to v3 manifest, use `update`, which
+  carries the legacy migration.
 - **No `--force`**. Deliberate: if something is off, read the
   manifest, understand, act. A bypass flag would become a foot-gun.
 

@@ -7,6 +7,12 @@ author: Vaubaan core
 
 # Updating a project from its existing installation
 
+> **Amended (2026-10-22)** by
+> [no-mcp-no-code-merge](./no-mcp-no-code-merge.md): `update` no longer
+> merges hooks or MCP entries, migrates the legacy OpenCode MCP file, or
+> records entry ownership. Files 1.x edited are released to the project.
+> Preview, backup, rollback and fingerprints stand.
+
 ## Context
 
 1.0.1 protects deletions and the OpenCode configuration, but does not

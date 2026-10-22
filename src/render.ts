@@ -1,4 +1,3 @@
-import { MCP_SERVERS, type McpServerId } from "./mcp.js";
 import type { Agent } from "./parser/agent.js";
 import type { Cmd } from "./parser/cmd.js";
 import type { Skill } from "./parser/skill.js";
@@ -24,7 +23,6 @@ export interface RenderInput {
   projectSkills?: ReadonlyArray<Skill>;
   /** True when the target project ships `docs/quality/code-quality.md` (optional pillar). */
   hasQualityDoc?: boolean;
-  mcpServers?: ReadonlyArray<McpServerId>;
   /**
    * When true (default), each engine's renderer emits a Stop-hook config
    * that calls `vaubaan-harness stop-hook --engine <engine>` and injects
@@ -141,13 +139,6 @@ export function render(input: RenderInput): RenderOutput {
     const agentsResult = renderer.renderAgents(harness.agents);
     warnings.push(...agentsResult.warnings);
     files.push(...agentsResult.files);
-
-    if (input.mcpServers && input.mcpServers.length > 0) {
-      const specs = input.mcpServers.map((id) => MCP_SERVERS[id]);
-      const mcpResult = renderer.renderMcp(specs);
-      warnings.push(...mcpResult.warnings);
-      files.push(...mcpResult.files);
-    }
 
     if (input.withStopHook !== false) {
       const hookResult = renderer.renderStopHook();

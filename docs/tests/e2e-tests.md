@@ -65,11 +65,11 @@ and no model invocation in `npm test`.
 
 | Engine / version | Check | Result and limits |
 |---|---|---|
-| OpenCode 1.14.50 | `agent list`, `mcp list`, `debug skill` | The four personas, context7 from `.opencode/opencode.json` and the skills under `.agents/skills/` are discovered. |
+| OpenCode 1.14.50 | `agent list`, `debug skill` | The four personas and the skills under `.agents/skills/` are discovered. The context7 check of 2026-09-20 no longer applies: MCP rendering was removed in 2.0. |
 | OpenCode and SDK 1.14.50 | 1.0.1 plugin, real `messages` / `prompt` APIs | For `review` and `planning`, the agent passed then stored stays the current persona; simulated lint result and `noReply: true`, with no model call. |
 | Codex 0.154.0 | `debug prompt-input` | The umbrella and the project skills enter the prompt. |
 | Codex 0.154.0 | Persisted session, spawn of the `coding` type | Child role `coding`, instructions identical to the rendered TOML, response `CUSTOM_CODING_AGENT_OK`. |
-| Codex 0.154.0 | Effective configuration, `mcp list --json`, session tools | context7 loaded in a trusted project; tools visible in the session, no functional call made. |
+| Codex 0.154.0 | Effective configuration in a trusted project | Project layer loaded. The context7 check of 2026-09-20 no longer applies: MCP rendering was removed in 2.0. |
 | Codex 0.154.0 | Same configuration in an untrusted project | Project layer disabled with an explicit approval-required diagnostic. |
 
 The [findings and evidence](../research/2026-09-20-conformite-engines-verifiee.md#codex-cross-check-in-a-live-session)

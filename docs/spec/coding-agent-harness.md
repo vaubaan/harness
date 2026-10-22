@@ -920,7 +920,7 @@ vaubaan harness lint --fix                 # auto-fix when possible (rare)
 | `lint:spec-has-content`         | spec                     | `docs/spec/` contains at least one `.md` file (warns if the directory exists but is empty).                                                              | warning       |
 | `lint:cross-links`              | all                      | All Markdown links `[...](docs/...)` resolve to an existing file.                                                                                        | error         |
 | `lint:orphan-decisions`         | decisions                | Each ADR is referenced by at least one other doc file.                                                                                                   | warning       |
-| `lint:gitignore-harness`        | repo root                | `.gitignore` excludes every generated or runtime path (overrides, manifest, `.harness/`, engine folders, `AGENTS.md`, `CLAUDE.md`, `.mcp.json`, `.vaubaan/`). | error         |
+| `lint:gitignore-harness`        | repo root                | `.gitignore` excludes every generated or runtime path (overrides, manifest, `.harness/`, engine folders, `AGENTS.md`, `CLAUDE.md`, `.vaubaan/`). | error         |
 | `lint:quality-schema`           | quality (optional)       | If `docs/quality/` exists: `code-quality.md` exists and contains the 3 required sections (regex headers). No effect if the directory is absent.           | error         |
 
 **Text output** (human, default):
@@ -1095,10 +1095,11 @@ requiring cleanup, and keeps the choices recorded by previous runs
 path already holding a file the harness did not write, or a generated
 file edited since, stops the command before any write and is reported;
 the operator moves the content or keeps the file with `--preserve`.
-Shared configurations (`.claude/settings.json`, `.codex/hooks.json`,
-`.mcp.json`, `.opencode/opencode.json`) are merged entry by entry; an
-existing `.codex/config.toml` is left untouched and the block to add is
-printed. Decision: [safe init](../decisions/safe-init.md).
+The harness never merges a file: an existing `.claude/settings.json` or
+`.codex/hooks.json` it did not write is left untouched and the Stop hook
+block to add is printed. No MCP configuration is rendered. Decisions:
+[safe init](../decisions/safe-init.md),
+[no MCP, no code merge](../decisions/no-mcp-no-code-merge.md).
 
 **Preserving the project during an update or a removal:**
 
@@ -1106,12 +1107,11 @@ printed. Decision: [safe init](../decisions/safe-init.md).
   harness's ownership of them is established. The full set of destinations is
   validated before any deletion; an unsafe external or indirect
   destination makes the operation fail with no partial deletion.
-- For OpenCode, the shared configuration keeps the project's
-  settings: only missing entries are added. An entry added
-  by the harness can only be updated or removed if it has not
-  been touched since its installation. Pre-existing entries are
-  never replaced. Without sufficient proof of ownership,
-  preservation prevails. This merge does not extend to the other engines.
+- A file the harness did not write, or that changed since it wrote
+  it, is never replaced or removed. Without sufficient proof of
+  ownership, preservation prevails. Files 1.x edited entry by entry
+  (`.mcp.json`, `.codex/config.toml`, `.opencode/opencode.json`) are
+  released to the project.
 - An automatic continuation of the documentation check keeps the
   session's persona. If that persona cannot be determined,
   no other persona is implicitly chosen.
@@ -1128,11 +1128,12 @@ more recent version. It recognizes older installations and
 keeps the engines, the hooks preference, the project skills and
 the applicable overrides.
 
-The update preserves the project's own MCP configurations and
+The update preserves the project's own configuration files and
 hooks. It renews only the harness elements and migrates
-locations that have become obsolete without overwriting a conflicting user
-entry. An unknown destination that already contains a file is treated
-as a conflict, except under the explicit rules for shared configurations.
+locations that have become obsolete without overwriting a user
+file. An unknown destination that already contains a file is treated
+as a conflict, except for the Stop hook files, which are left to the
+project with a warning.
 
 The preview modifies no file. Before applying, the
 destinations and conflicts are checked, then a private backup is

@@ -37,8 +37,8 @@ The other doc pillars live elsewhere:
 - [Overrides loading](./overrides-loading.md) — semantics of
   `.harness-overrides/`, stock + add - disable merge, end-to-end example.
 - [File lifecycle](./uninstall.md) — path validation,
-  cleanup on re-init and uninstall, ownership of MCP entries
-  in the shared OpenCode configuration.
+  cleanup on re-init and uninstall, hook files left to the project
+  when it owns them.
 - [Updating a project](./project-update.md) — manifest migrations,
   preview, settings preservation, backup and rollback.
 - [Stop hooks](./stop-hook.md) — lint decision, retry state,

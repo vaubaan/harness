@@ -7,6 +7,12 @@ author: Vaubaan core
 
 # Preserve the project during the harness lifecycle
 
+> **Amended (2026-10-22)** by
+> [no-mcp-no-code-merge](./no-mcp-no-code-merge.md): the OpenCode
+> configuration is no longer a shared document the harness edits; the
+> entry ownership described below was removed. Path validation and
+> persona preservation stand.
+
 ## Context
 
 The cross-check of 1.0.0 confirmed the Codex layouts, but revealed

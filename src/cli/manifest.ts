@@ -5,12 +5,13 @@ import { z } from "zod";
 import type { Engine } from "../types.js";
 import { VERSION } from "../version.js";
 import { assertManagedPaths } from "./managed-paths.js";
-import { type OpenCodeConfigOwnership, OpenCodeConfigOwnershipSchema } from "./opencode-config.js";
-import { type HookConfigsOwnership, HookConfigsOwnershipSchema } from "./update-config.js";
 
 export const MANIFEST_FILENAME = ".harness-manifest.json";
 export const MANIFEST_VERSION = "6";
 
+// Entry ownership fields written by 1.x (`hookConfigs`, `opencodeConfig`,
+// `mcpConfig`) are unknown keys here and dropped on read: the harness no
+// longer merges shared files (docs/decisions/no-mcp-no-code-merge.md).
 const ManifestSchema = z.object({
   version: z.enum(["4", "5", MANIFEST_VERSION]),
   engines: z.array(z.string()),
@@ -18,10 +19,6 @@ const ManifestSchema = z.object({
   files: z.array(z.string()),
   stopHookInstalled: z.boolean().optional(),
   stopHookEngines: z.array(z.string()).optional(),
-  opencodeConfig: OpenCodeConfigOwnershipSchema.optional(),
-  /** Entries the harness added to `.mcp.json` (Claude Code). */
-  mcpConfig: OpenCodeConfigOwnershipSchema.optional(),
-  hookConfigs: HookConfigsOwnershipSchema.optional(),
   harnessVersion: z.string().optional(),
   overridesDir: z.string().optional(),
   fileHashes: z.record(z.string().regex(/^[a-f0-9]{64}$/)).optional(),
@@ -33,8 +30,6 @@ export type Manifest = z.infer<typeof ManifestSchema>;
 export interface WriteManifestExtras {
   stopHookInstalled?: boolean;
   stopHookEngines?: ReadonlyArray<Engine>;
-  opencodeConfig?: OpenCodeConfigOwnership;
-  hookConfigs?: HookConfigsOwnership;
   overridesDir?: string;
   preservedFiles?: string[];
 }
@@ -64,8 +59,6 @@ export function writeManifest(
     ),
     ...(extras.overridesDir ? { overridesDir: extras.overridesDir } : {}),
     ...(extras.preservedFiles ? { preservedFiles: extras.preservedFiles } : {}),
-    ...(extras.hookConfigs ? { hookConfigs: extras.hookConfigs } : {}),
-    ...(extras.opencodeConfig ? { opencodeConfig: extras.opencodeConfig } : {}),
     ...(extras.stopHookInstalled !== undefined
       ? { stopHookInstalled: extras.stopHookInstalled }
       : {}),

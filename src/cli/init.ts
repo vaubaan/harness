@@ -5,7 +5,6 @@ import { assertManagedPaths } from "./managed-paths.js";
 import { MANIFEST_FILENAME, MANIFEST_VERSION, type Manifest, readManifest } from "./manifest.js";
 import { planInit, resolveEngineList } from "./plan-render.js";
 import { pruneEmptyDirs } from "./uninstall.js";
-import { SHARED_CONFIG_PATHS } from "./update-config.js";
 import { applyUpdateTransaction } from "./update-transaction.js";
 import { planInstallation } from "./update.js";
 
@@ -21,7 +20,6 @@ export interface InitArgs {
    * via `import.meta.url`), so programmatic callers usually omit it.
    */
   packageDir?: string;
-  mcpServers?: ReadonlyArray<string>;
   /**
    * Stop-hook installation. Default `true`. When enabled, each engine
    * receives a hook config that calls `vaubaan-harness stop-hook
@@ -39,7 +37,7 @@ export interface InitArgs {
 }
 
 export interface InitResult {
-  /** Generated files the harness owns after this run, plus shared configurations it edited. */
+  /** Generated files the harness owns after this run. */
   filesWritten: string[];
   /** Files a previous `init` rendered that this one no longer does (layout change, engine dropped). */
   staleFilesRemoved: string[];
@@ -74,9 +72,9 @@ function emptyManifest(engines: ReadonlyArray<Engine>): Manifest {
 
 /**
  * Installs or re-renders the harness. Shares the planner of `update`: files
- * the harness does not own are never overwritten or deleted, shared
- * configurations are merged entry by entry, and changes are applied in one
- * transaction (see docs/decisions/safe-init.md).
+ * the harness does not own are never overwritten, merged or deleted, and
+ * changes are applied in one transaction (see docs/decisions/safe-init.md
+ * and docs/decisions/no-mcp-no-code-merge.md).
  */
 export function initCommand(args: InitArgs): InitResult {
   const root = resolve(args.targetDir);
@@ -95,7 +93,6 @@ export function initCommand(args: InitArgs): InitResult {
       sourceVersion: previous.version,
       engines,
       hookEngines: stopHookInstalled ? engines : [],
-      mcpServers: args.mcpServers ?? [],
     },
   );
   const touchedExisting = [...plan.writes.map((file) => file.path), ...plan.removals].some(
@@ -111,11 +108,8 @@ export function initCommand(args: InitArgs): InitResult {
     // Dropping an engine leaves its folders empty; remove them like uninstall does.
     pruneEmptyDirs(root, new Set(plan.removals.map((path) => dirname(join(root, path)))));
   }
-  const sharedWritten = plan.writes
-    .map((file) => file.path)
-    .filter((path) => SHARED_CONFIG_PATHS.includes(path) && !plan.owned.includes(path));
   return {
-    filesWritten: [...plan.owned, ...sharedWritten],
+    filesWritten: plan.owned,
     staleFilesRemoved: plan.removals,
     warnings: plan.warnings,
     stopHookInstalled,

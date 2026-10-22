@@ -4,13 +4,9 @@ import { basename, dirname, isAbsolute, join, resolve, win32 } from "node:path";
 const MANAGED_FILES = new Set([
   "AGENTS.md",
   "CLAUDE.md",
-  ".mcp.json",
   ".harness-manifest.json",
   ".claude/settings.json",
-  ".codex/config.toml",
   ".codex/hooks.json",
-  ".opencode/opencode.json",
-  ".opencode/mcp.json",
 ]);
 
 // Includes legacy layouts so upgrades can remove their generated artifacts.

@@ -1,4 +1,3 @@
-import type { McpServerSpec } from "../mcp.js";
 import type { Agent } from "../parser/agent.js";
 import type { Cmd } from "../parser/cmd.js";
 import type { Skill } from "../parser/skill.js";
@@ -56,17 +55,6 @@ export const claudeCodeRenderer: Renderer = {
       files.push({ path: `${BASE}/agents/${agent.meta.id}.md`, content });
     }
     return { files, warnings: [] };
-  },
-  renderMcp(servers: ReadonlyArray<McpServerSpec>): RenderResult {
-    if (servers.length === 0) return { files: [], warnings: [] };
-    const mcpServers: Record<string, Record<string, unknown>> = {};
-    for (const s of servers) {
-      const entry: Record<string, unknown> = { command: s.command, args: [...s.args] };
-      if (s.env) entry.env = s.env;
-      mcpServers[s.id] = entry;
-    }
-    const content = `${JSON.stringify({ mcpServers }, null, 2)}\n`;
-    return { files: [{ path: ".mcp.json", content }], warnings: [] };
   },
   renderStopHook(): RenderResult {
     const settings = {

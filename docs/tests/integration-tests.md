@@ -114,26 +114,28 @@ link, or when the manifest is invalid. Validation of a whole
 batch of writes precedes writing the first file. Unit checks
 of paths and of `uninstall` complete this coverage.
 
-### 6. Shared OpenCode configuration
+### 6. Stop hook files the project may own
 
-> Covers: [file lifecycle](../handbook/uninstall.md#shared-opencode-configuration).
+> Covers: [file lifecycle](../handbook/uninstall.md#stop-hook-files)
+> and [no MCP, no code merge](../decisions/no-mcp-no-code-merge.md).
 
-`tests/integration/opencode-config.test.ts` exercises:
+`tests/integration/init-safe.test.ts` exercises, for
+`.claude/settings.json`:
 
-- Installing, re-initializing and removing context7 while keeping the
-  project's model, permissions and other MCP servers.
-- Pre-existing `context7` entry, identical or different: no
-  overwrite and no ownership taken.
-- Removing the MCP option and uninstalling a file created by the
-  harness; settings added later by the user are kept.
-- Managed entry edited after installation, already-empty `mcp` object and
-  custom schema: user values preserved.
-- User file deleted then recreated by the harness: its new
-  ownership allows its later removal if it remains unchanged.
-- v4 manifest containing a shared configuration: kept without
-  adopting existing entries, then a v6 manifest is written.
-- Invalid JSON configuration: re-init and uninstall fail
-  before modifying the manifest, the personas or the invalid document.
+- Existing file without the harness command: left byte-for-byte, the
+  Stop hook block to add is printed, no backup copy, `uninstall` keeps
+  it.
+- Existing file that already runs the harness command, as 1.x merged
+  it: reported as the project's, not asked for again.
+- Absent file: written and recorded with a hash; re-rendered while
+  unchanged; released with a warning once edited, then kept by
+  `uninstall`.
+- `--preserve` accepted on a hook file.
+- Hook disabled: a file the harness wrote is removed, an edited one is
+  kept with a warning.
+- Files 1.x edited entry by entry (`.mcp.json`, `.codex/config.toml`)
+  listed in a manifest with 1.x ownership fields: released with a
+  warning, left in place by `init` and `uninstall`.
 
 ### 7. Migrating the 0.9.0 layout
 
@@ -144,11 +146,11 @@ of paths and of `uninstall` complete this coverage.
 produced by 0.9.0, kept in
 `tests/fixtures/legacy-0.9/manifest.json`. The old files are
 materialized with fixture content, then `init` renders the three
-engines with context7. The test checks the removal of the old Markdown
-agents and Codex skills/commands, of the old OpenCode skill
-plugins and of `.opencode/mcp.json`. It checks the new paths,
-the preservation of a custom plugin and of native OpenCode settings, then
-the move to the current manifest with ownership of only the added entry.
+engines. The test checks the removal of the old Markdown agents and
+Codex skills/commands and of the old OpenCode skill plugins. It checks
+the new paths, the preservation of a custom plugin, and that
+`.opencode/mcp.json` and `.opencode/opencode.json` are left byte-for-byte
+and leave the manifest with a warning.
 
 ### 8. Updating an existing installation
 
@@ -161,8 +163,8 @@ the move to the current manifest with ownership of only the added entry.
   skills; engines kept without implicitly enabling hooks.
 - Preview with no write and no backup, apply then idempotent second
   invocation, and backup into an explicit directory.
-- Byte-for-byte preservation of MCP and private settings when
-  hooks are disabled; preservation of a partial hook selection.
+- Byte-for-byte preservation of the project's own configuration files
+  when hooks are disabled; preservation of a partial hook selection.
 - Refusal, before backup, of colliding files outside the manifest, of
   modifications detected by hash, of dangerous paths and of
   symbolic links, even those internal to the project.
@@ -179,14 +181,6 @@ the move to the current manifest with ownership of only the added entry.
 These contracts are tested at module level, with real temporary
 files, and complement the command scenarios:
 
-- `src/cli/update-config.test.ts`: native MCP unchanged, migration of
-  only the managed legacy MCP with priority to native names, previous
-  ownership kept, legacy document outside the manifest left intact.
-  Fix of the flat Codex hook, custom commands and events
-  kept, hooks outside the manifest not adopted, removal of only the unchanged
-  entries, user modifications and deletions respected.
-  Invalid and symbolic configurations are rejected; uninstall
-  preserves private settings and validates before removal.
 - `src/cli/update-transaction.test.ts`: backup of bytes, modes and
   hashes before mutation, private permissions, unique default
   directory, ordered writes, restoration after injected errors,
@@ -239,8 +233,8 @@ manual check, recorded in
 
 `lint:gitignore-harness` (`src/linters/linters.test.ts`) and `check`
 (`src/cli/check.test.ts`) read one shared list, which includes
-`.harness/` and `.mcp.json`: a complete `.gitignore` passes, and each
-missing entry is reported.
+`.harness/`: a complete `.gitignore` passes, and each missing entry is
+reported. `.mcp.json` is no longer required.
 
 ### 13. Safe `init`
 
@@ -252,26 +246,19 @@ missing entry is reported.
 - Hand-written `AGENTS.md` and `CLAUDE.md`: one error lists both, nothing
   is written. With `--preserve AGENTS.md`, the file is kept, recorded and
   survives `uninstall`.
-- Existing `.claude/settings.json` with permissions and a user hook: the
-  Stop hook is merged, a backup is made, and `uninstall` restores the
-  original object.
-- Existing `.mcp.json` with a user server: `context7` is added and owned
-  alone; `uninstall` restores the original.
-- User `.codex/config.toml`: untouched, the block to add is printed, and
-  `uninstall` keeps it. A `.codex/config.toml` created by the harness is
-  removed when MCP is dropped.
+- Stop hook files: see section 6.
 - `.harness-overrides/` in the project is loaded by default.
 - Re-running `init` with the same options writes nothing and keeps no
   backup; a generated file edited since stops the run.
-- `init` after `update --preserve` keeps the preserved file and the user
-  hook.
+- `init` after `update --preserve` keeps the preserved file and an
+  edited hook file.
 - Duplicate engines are collapsed; an empty selection is refused.
-- `uninstall` keeps an edited generated file with a warning, and removes
-  a hook file that a pre-1.4 `init` wrote whole, after an `update`.
+- `uninstall` keeps an edited generated file with a warning, removes a
+  hook file it wrote and keeps one it did not.
 
 ## Known gaps
 - The engine CLIs are not launched by the integration suite.
-  The manual results, including the TOML spawn and the trusted Codex MCP,
-  are in the [E2E plan](./e2e-tests.md).
+  The manual results, including the TOML spawn, are in the
+  [E2E plan](./e2e-tests.md).
 - No integration test yet on `vaubaan-harness lint` invoked via subprocess (only direct tests of internal functions).
 - No test on `.harness-overrides/` overrides loaded from a real worktree.

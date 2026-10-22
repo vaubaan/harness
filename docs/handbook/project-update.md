@@ -2,8 +2,7 @@
 tracks:
   - src/cli/update.ts
   - src/cli/update-manifest.ts
-  - src/cli/update-config.ts
-  - src/cli/update-config.test.ts
+  - src/cli/hook-configs.ts
   - src/cli/update-transaction.ts
   - src/cli/update-transaction.test.ts
   - src/cli/manifest.ts
@@ -14,7 +13,8 @@ tracks:
   - src/index.ts
   - src/version.ts
   - tests/integration/update.test.ts
-last_reviewed: 2026-10-14
+  - tests/integration/init-safe.test.ts
+last_reviewed: 2026-10-22
 ---
 
 # Updating a project
@@ -22,7 +22,8 @@ last_reviewed: 2026-10-14
 `vaubaan-harness update` migrates an existing installation with the
 contents of the running package. The contract is described in the
 [spec](../spec/coding-agent-harness.md#updating-an-existing-installation),
-and the decision in [project-update-migrations](../decisions/project-update-migrations.md).
+and the decisions in [project-update-migrations](../decisions/project-update-migrations.md)
+and [no-mcp-no-code-merge](../decisions/no-mcp-no-code-merge.md).
 This command does not install an npm package and does not launch the engines.
 
 ## Invocation and result
@@ -55,7 +56,6 @@ preparation.
 `UpdateResult` (`src/cli/update.ts`) exposes `version`,
 `fromManifestVersion`, `dryRun`, `upToDate`, `filesToWrite`,
 `filesToRemove`, `warnings` and, after applying, `backupDir`.
-The lists give paths, not the content of configurations.
 A plan that is already up to date writes nothing and creates no backup.
 
 The API is exported from the package root:
@@ -78,6 +78,8 @@ the CLI JSON summary is limited to `UpdateResult`.
 
 - v1: an `engine` field; v2 and v3: a non-empty `engines` array.
 - v4, v5 and v6: read through the current schema of `src/cli/manifest.ts`.
+  The entry ownership fields 1.x wrote (`hookConfigs`, `opencodeConfig`,
+  `mcpConfig`) are unknown keys and dropped.
 - Unknown versions, unknown engines and invalid documents: error
   before mutation. A target without a manifest is a job for `init`.
 
@@ -95,20 +97,26 @@ must belong to the installation's engines.
 ## File preparation and conflicts
 
 `planUpdate` in `src/cli/update.ts` reads the installation, then calls
-`planInstallation`, the planner it shares with `init` since 1.4.0
-([safe init](../decisions/safe-init.md)). `update` passes the engines,
-Stop-hook engines and MCP state recorded in the manifest; `init` passes
-its options. The planner reuses `planInit` (`src/cli/plan-render.ts`)
-for the agents, skills, commands and project skills, with hooks handled
-separately. It then prepares the shared configurations and removes
-the paths handed over to the user via `preservedFiles` or
+`planInstallation`, the planner it shares with `init`
+([safe init](../decisions/safe-init.md)). `update` passes the engines
+and Stop-hook engines recorded in the manifest; `init` passes its
+options. The planner reuses `planInit` (`src/cli/plan-render.ts`) for
+the agents, skills, commands and project skills, renders the Stop hook
+of each hook engine (`renderStopHooks`, `src/cli/hook-configs.ts`), and
+removes the paths handed over to the user via `preservedFiles` or
 `--preserve`.
+
+Before anything else, paths 1.x used to edit entry by entry
+(`RELEASED_PATHS`: `.mcp.json`, `.codex/config.toml`,
+`.opencode/opencode.json`, `.opencode/mcp.json`) are dropped from the
+manifest's file list with a `no longer managed by the harness, left in
+place` warning. They are never written, removed or validated again.
 
 `assertManagedPaths` validates the old references, the destinations
 and the removals. Symbolic links under the target are refused, even
 if their target is internal; `--preserve` does not bypass this rule.
 
-For a generated file outside shared configuration:
+For a generated file other than a Stop hook file:
 
 - An existing file outside the manifest blocks generation, even if its
   name matches the new layout. Move it deliberately after
@@ -128,52 +136,35 @@ no longer appear in the list of generated artifacts. The manifest is
 the plan's last write. Unchanged files and deletions
 already in effect are omitted from the applied batch.
 
-`--preserve` concerns generated artifacts, for example `AGENTS.md`.
-The manifest and shared configurations are not allowed
-values: these follow the per-entry ownership rules below.
+`--preserve` concerns generated artifacts, Stop hook files included,
+for example `AGENTS.md` or `.claude/settings.json`. The manifest is
+not an allowed value.
 
-## Shared MCP and hooks
+## Stop hook files
 
-`planUpdateConfigs` (`src/cli/update-config.ts`) handles settings
-separately from generated files. `update` leaves `.mcp.json` and
-`.codex/config.toml` byte-for-byte identical and does not add a new MCP
-server simply because an engine is installed; MCP servers are chosen by
-`init --with-mcp`. The recorded `mcpConfig` ownership of `.mcp.json` is
-carried over. A `.mcp.json` that an `init` before 1.4.0 listed as a whole
-harness file, unchanged since, is converted to entry ownership.
+`.claude/settings.json` and `.codex/hooks.json` are the one place each
+engine reads its Stop hook from, and a project often owns them already.
+`planHookConfigs` (`src/cli/hook-configs.ts`) decides per file, and
+never merges:
 
-A hook file that an `init` before 1.4.0 listed as a whole harness file
-is treated as created by the harness when its entries are first
-recorded, so `uninstall` removes it when nothing else is left in it.
+- The file is absent, or the manifest lists it with a hash that still
+  matches: it is written and owned, like any generated file.
+- The file exists and is not ours: it is left byte-for-byte untouched
+  and leaves the manifest. If its content already contains
+  `@vaubaan/harness stop-hook` (`STOP_HOOK_MARKER`), as after a 1.x
+  merge or a manual addition, the warning says it already runs the
+  Stop hook and stays the project's. Otherwise the warning prints the
+  rendered block to add, and the agent or the human adds it.
+- The hook is disabled or the engine dropped: a file the harness wrote
+  and that is unchanged is removed; an edited one is kept with a
+  `kept modified` warning.
 
-If the old `.opencode/mcp.json` is listed in the manifest and exists,
-its servers absent from `.opencode/opencode.json` are added in the native
-format; a native entry with the same name takes priority. Existing native
-settings are kept. Only the additions are recorded in
-`opencodeConfig`, then the old managed file is removed. A
-legacy file outside the manifest stays intact and is not migrated. When there is no
-migration, the native file stays unchanged.
+`checkArtifactConflicts` skips these two paths, since the decision is
+already made; a hook file is never a blocking conflict.
 
-For Claude and Codex, the plan keeps the user's events, commands and other
-settings in `.claude/settings.json` and `.codex/hooks.json`.
-It recognizes the exact command `npx -y @vaubaan/harness stop-hook
---engine <claude|codex>`: an old flat Codex entry, in a
-managed file, becomes a native `hooks: [...]` group. An existing command
-outside the manifest is neither adopted, nor corrected, nor duplicated.
-When a hook is enabled and absent, a native entry is added.
-
-`hookConfigs` records the ownership of each entry and the metadata
-of its group, as well as the containers and files created. The shared JSON
-files leave `files[]`. During a later update,
-an owned entry that the user then modified or deleted is
-not automatically restored; a warning explains why it was kept.
-`uninstall` removes only the entries still identical to the snapshot,
-and removes empty containers or files only if it created them.
-The OpenCode Stop plugin remains an ordinary generated file, protected by
-its fingerprint.
-
-The JSON files concerned are parsed and validated during preparation. An
-invalid shape therefore stops the operation before backup or mutation.
+The OpenCode Stop plugin (`.opencode/plugins/harness-stop-hook.ts`) is an
+ordinary generated file in a harness-owned folder, protected by its
+fingerprint like the others.
 
 ## Backup and restore on error
 
@@ -191,11 +182,9 @@ An incomplete backup makes the operation fail without modifying the
 project. These copies may contain sensitive configurations and
 stay out of the repository.
 
-The manifest, which may contain snapshots of private configuration
-entries, is always written as 0600, by `init` as well as by `update`.
-During `update`, new shared configuration files are
-also created as 0600; pre-existing configurations keep
-their mode. A rollback restores each file's original mode,
+The manifest is always written as 0600, by `init` as well as by
+`update`. New Stop hook files are also created as 0600; pre-existing
+files keep their mode. A rollback restores each file's original mode,
 including the manifest's.
 
 Applying removes the old files then writes the new ones,
@@ -219,6 +208,10 @@ snapshot and the backed-up files before a targeted retry.
   the v1 to v3 migrations.
 - **Modified file**: move the customization into the overrides,
   or use for example `--preserve AGENTS.md` to stop generating it.
+- **`left .claude/settings.json unchanged`**: the file is the project's;
+  add the printed Stop hook block to it, or run with `--no-stop-hook`.
+- **`no longer managed by the harness`**: a file 1.x edited is now
+  yours; nothing to do, the warning appears once.
 - **Symbolic link**: explicitly convert the link while respecting
   its target; link targets are never deleted automatically.
 - **External override missing**: provide its real parent or restore the

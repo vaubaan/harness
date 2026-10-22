@@ -74,12 +74,10 @@ describe("initCommand integration — multi-engine harness", () => {
     const manifest = readManifest(sandbox);
     expect(manifest).not.toBeNull();
     expect(manifest?.engines.sort()).toEqual(["claude-code", "codex-cli"]);
-    // Shared hook configurations are owned entry by entry, not as whole files.
-    const shared = [".claude/settings.json", ".codex/hooks.json"];
-    expect(manifest?.files.sort()).toEqual(
-      result.filesWritten.filter((path) => !shared.includes(path)).sort(),
-    );
-    expect(Object.keys(manifest?.hookConfigs ?? {}).sort()).toEqual(shared);
+    // Hook files the harness created are ordinary generated files.
+    expect(manifest?.files.sort()).toEqual([...result.filesWritten].sort());
+    expect(manifest?.files).toContain(".claude/settings.json");
+    expect(manifest?.files).toContain(".codex/hooks.json");
   });
 
   it("installs stop-hook configs by default and records it in the manifest", () => {

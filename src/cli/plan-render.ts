@@ -2,7 +2,6 @@ import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadHarness, loadOverrides, loadProjectSkills } from "../loader.js";
-import { resolveMcpIds } from "../mcp.js";
 import { type RenderOutput, render } from "../render.js";
 import { ENGINES, type Engine } from "../types.js";
 
@@ -14,7 +13,6 @@ export interface RenderPlanArgs {
   engines?: ReadonlyArray<string>;
   overridesDir?: string;
   packageDir?: string;
-  mcpServers?: ReadonlyArray<string>;
   withStopHook?: boolean;
 }
 
@@ -56,7 +54,6 @@ export function planInit(args: RenderPlanArgs): {
   const overrides = args.overridesDir ? loadOverrides(args.overridesDir) : undefined;
   const projectSkills = loadProjectSkills(args.targetDir);
   const hasQualityDoc = existsSync(join(args.targetDir, QUALITY_DOC_PATH));
-  const mcpServers = args.mcpServers ? resolveMcpIds(args.mcpServers) : undefined;
   const stopHookInstalled = args.withStopHook !== false;
   const output = render({
     harness,
@@ -64,7 +61,6 @@ export function planInit(args: RenderPlanArgs): {
     overrides,
     projectSkills,
     hasQualityDoc,
-    mcpServers,
     withStopHook: stopHookInstalled,
   });
   return { engines, output, stopHookInstalled };

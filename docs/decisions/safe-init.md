@@ -7,6 +7,12 @@ author: Vaubaan core
 
 # `init` never overwrites what it does not own
 
+> **Amended (2026-10-22)** by
+> [no-mcp-no-code-merge](./no-mcp-no-code-merge.md): rules 2 and 3 below
+> (entry-level merge of shared configurations, printed `.codex/config.toml`
+> block) no longer apply. A shared file the harness did not write is left
+> untouched; the Stop hook block to add is printed. Rules 1, 4 and 5 stand.
+
 ## Context
 
 Until 1.3.2, `init` wrote every rendered file unconditionally. The debug

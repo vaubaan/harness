@@ -95,7 +95,7 @@ describe("project update", () => {
     expect(readFileSync(join(root, MANIFEST_FILENAME))).toEqual(once);
   });
 
-  it("keeps private MCP and settings byte-identical when hooks are disabled", () => {
+  it("leaves the project's own configuration files byte-identical when hooks are disabled", () => {
     legacy("4", { stopHookInstalled: false });
     const files = {
       ".codex/config.toml": '# private settings\nmodel = "my-model"\n',

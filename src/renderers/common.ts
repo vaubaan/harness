@@ -1,5 +1,4 @@
 import { stringify as yamlStringify } from "yaml";
-import type { McpServerSpec } from "../mcp.js";
 import type { Agent } from "../parser/agent.js";
 import type { Cmd } from "../parser/cmd.js";
 import type { Skill } from "../parser/skill.js";
@@ -28,7 +27,6 @@ export interface Renderer {
   renderSkill(skill: Skill): RenderResult;
   renderCmd(cmd: Cmd): RenderResult;
   renderAgents(agents: ReadonlyArray<Agent>): RenderResult;
-  renderMcp(servers: ReadonlyArray<McpServerSpec>): RenderResult;
   renderStopHook(): RenderResult;
 }
 
@@ -97,15 +95,6 @@ export function tomlMultilineString(s: string): string {
 
 export function tomlQuoteString(s: string): string {
   return tomlValue(s);
-}
-
-export function tomlInlineArray(items: ReadonlyArray<unknown>): string {
-  return tomlValue([...items]);
-}
-
-export function tomlInlineTable(table: Record<string, string>): string {
-  const entries = Object.entries(table).map(([k, v]) => `${k} = ${tomlValue(v)}`);
-  return `{ ${entries.join(", ")} }`;
 }
 
 export function frontmatterDataForSkill(skill: Skill): Record<string, unknown> {

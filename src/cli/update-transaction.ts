@@ -19,15 +19,7 @@ import type { RenderedFile } from "../types.js";
 import { assertManagedPaths } from "./managed-paths.js";
 
 const MANIFEST_PATH = ".harness-manifest.json";
-const PRIVATE_FILES = new Set([
-  MANIFEST_PATH,
-  ".mcp.json",
-  ".codex/config.toml",
-  ".codex/hooks.json",
-  ".claude/settings.json",
-  ".opencode/opencode.json",
-  ".opencode/mcp.json",
-]);
+const PRIVATE_FILES = new Set([MANIFEST_PATH, ".codex/hooks.json", ".claude/settings.json"]);
 
 type SnapshotEntry =
   | { path: string; exists: false }

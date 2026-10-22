@@ -109,7 +109,7 @@ The final report is a versioned `LintReport` (`version: 1`,
 `REQUIRED_GITIGNORE_ENTRIES`: `.harness-overrides/`,
 `.harness-manifest.json`, `.harness/` (Stop hook retry state),
 `.claude/`, `.codex/`, `.opencode/`, `.agents/`, `.vaubaan/`,
-`AGENTS.md`, `CLAUDE.md` and `.mcp.json`. A directory entry without a
+`AGENTS.md` and `CLAUDE.md`. A directory entry without a
 trailing slash is also accepted. The `check` layout check
 (`src/cli/check.ts`) reuses the same list, and also checks the
 documentation pillars.

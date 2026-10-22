@@ -1,4 +1,3 @@
-import type { McpServerSpec } from "../mcp.js";
 import type { Agent } from "../parser/agent.js";
 import type { Cmd } from "../parser/cmd.js";
 import type { Skill } from "../parser/skill.js";
@@ -11,8 +10,6 @@ import {
   checkSkillCapabilities,
   frontmatterDataForSkill,
   isSkillEngineAllowed,
-  tomlInlineArray,
-  tomlInlineTable,
   tomlMultilineString,
   tomlQuoteString,
   yamlFrontmatter,
@@ -58,21 +55,6 @@ export const codexCliRenderer: Renderer = {
       files.push({ path: `${BASE}/agents/${agent.meta.id}.toml`, content });
     }
     return { files, warnings: [] };
-  },
-  renderMcp(servers: ReadonlyArray<McpServerSpec>): RenderResult {
-    if (servers.length === 0) return { files: [], warnings: [] };
-    const blocks: string[] = [];
-    for (const s of servers) {
-      const lines = [
-        `[mcp_servers.${s.id}]`,
-        `command = ${tomlQuoteString(s.command)}`,
-        `args = ${tomlInlineArray([...s.args])}`,
-      ];
-      if (s.env) lines.push(`env = ${tomlInlineTable(s.env)}`);
-      blocks.push(lines.join("\n"));
-    }
-    const content = `${blocks.join("\n\n")}\n`;
-    return { files: [{ path: `${BASE}/config.toml`, content }], warnings: [] };
   },
   renderStopHook(): RenderResult {
     const hooks = {

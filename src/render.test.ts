@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { resolveMcpIds } from "./mcp.js";
 import { parseAgent } from "./parser/agent.js";
 import { parseCmd } from "./parser/cmd.js";
 import { parseSkill } from "./parser/skill.js";
@@ -194,24 +193,12 @@ describe("render — multi-engine, multi-agent harness", () => {
     expect(agentPaths.sort()).toEqual([".opencode/agents/coding.md", ".opencode/agents/review.md"]);
   });
 
-  it("does not emit MCP files when mcpServers is omitted (opt-in)", () => {
+  it("never emits an MCP or engine settings file beyond the Stop hook", () => {
     const out = render({ harness, engines: ["claude-code", "codex-cli", "opencode"] });
     const paths = out.files.map((f) => f.path);
     expect(paths).not.toContain(".mcp.json");
     expect(paths).not.toContain(".codex/config.toml");
     expect(paths).not.toContain(".opencode/opencode.json");
-  });
-
-  it("emits MCP config per engine when mcpServers: [context7] is set", () => {
-    const out = render({
-      harness,
-      engines: ["claude-code", "codex-cli", "opencode"],
-      mcpServers: ["context7"],
-    });
-    const paths = out.files.map((f) => f.path);
-    expect(paths).toContain(".mcp.json");
-    expect(paths).toContain(".codex/config.toml");
-    expect(paths).toContain(".opencode/opencode.json");
   });
 });
 
@@ -316,11 +303,5 @@ describe("render with projectSkills", () => {
     });
     const umbrella = out.files.find((f) => f.path === "AGENTS.md");
     expect(umbrella?.content).not.toMatch(/docs\/skills/);
-  });
-});
-
-describe("resolveMcpIds", () => {
-  it("resolveMcpIds throws on unknown server id", () => {
-    expect(() => resolveMcpIds(["unknown-server"])).toThrow("unknown MCP server: unknown-server");
   });
 });

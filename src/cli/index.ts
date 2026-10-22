@@ -50,10 +50,6 @@ program
   .option("--overrides-dir <dir>", "directory containing .harness-overrides/")
   .option("--package-dir <dir>", "override harness package directory (for dev/test)")
   .option(
-    "--with-mcp <list>",
-    "comma-separated MCP servers to render config for (context7) — opt-in",
-  )
-  .option(
     "--no-stop-hook",
     "skip rendering the Stop-hook configs that run lint at end of each agent turn",
   )
@@ -62,14 +58,11 @@ program
   .action((targetDir: string, opts: Record<string, string | boolean | undefined>) => {
     const packageDir = (opts.packageDir as string | undefined) ?? resolvePackageDir();
     const engines = parseList(opts.engines as string | undefined);
-    const withMcpRaw = opts.withMcp as string | undefined;
-    const mcpServers = withMcpRaw ? withMcpRaw.split(",").map((s) => s.trim()) : undefined;
     const result = initCommand({
       targetDir,
       engines,
       overridesDir: opts.overridesDir as string | undefined,
       packageDir,
-      mcpServers,
       withStopHook: opts.stopHook !== false,
       preserveFiles: parseList(opts.preserve as string | undefined),
       backupDir: opts.backupDir as string | undefined,
@@ -181,21 +174,14 @@ program
   )
   .requiredOption("--out <dir>", "output directory")
   .option("--package-dir <dir>", "override harness package directory")
-  .option(
-    "--with-mcp <list>",
-    "comma-separated MCP servers to render config for (context7) — opt-in",
-  )
   .option("--no-stop-hook", "skip rendering the Stop-hook configs")
   .action((opts: Record<string, string | boolean | undefined>) => {
     const packageDir = (opts.packageDir as string | undefined) ?? resolvePackageDir();
     const engines = parseList(opts.engines as string | undefined);
-    const withMcpRaw = opts.withMcp as string | undefined;
-    const mcpServers = withMcpRaw ? withMcpRaw.split(",").map((s) => s.trim()) : undefined;
     const result = renderCommand({
       engines,
       outDir: opts.out as string,
       packageDir,
-      mcpServers,
       withStopHook: opts.stopHook !== false,
     });
     process.stdout.write(`rendered ${result.filesWritten.length} files to ${opts.out}\n`);

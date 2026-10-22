@@ -43,6 +43,8 @@ CLAUDE.md                 # imports AGENTS.md for Claude Code
 .harness-manifest.json    # what was written, for update/uninstall
 ```
 
+The harness writes `.claude/settings.json` and `.codex/hooks.json` only when they do not exist. If you already have one, `init` leaves it alone and prints the Stop hook block to add.
+
 All of these are **generated and gitignored**. What you commit is your `docs/` folder. Add these entries to `.gitignore`:
 
 ```gitignore
@@ -53,7 +55,6 @@ CLAUDE.md
 .codex/
 .agents/
 .opencode/
-.mcp.json
 .harness-manifest.json
 .harness-overrides/
 # Stop hook retry state and skill reports
@@ -72,7 +73,7 @@ Then open your agent and ask it to fill the gaps:
 ```
 
 > [!NOTE]
-> `init` never overwrites a file it did not write. If you already have a hand-written `AGENTS.md` or `CLAUDE.md`, it stops and lists them: move their content into `docs/`, or keep them as yours with `--preserve AGENTS.md`. Existing `.claude/settings.json`, `.mcp.json` and `.opencode/opencode.json` are merged entry by entry, with a backup.
+> `init` never overwrites a file it did not write. If you already have a hand-written `AGENTS.md` or `CLAUDE.md`, it stops and lists them: move their content into `docs/`, or keep them as yours with `--preserve AGENTS.md`. It never merges a file: an existing `.claude/settings.json` or `.codex/hooks.json` is left untouched, and the Stop hook block to add is printed.
 
 ## How it works
 
@@ -173,7 +174,6 @@ Every file has a template and a writer skill, so you rarely start from a blank p
 | Slash commands | ✓ | — invoke skills by name | ✓ |
 | Stop hook | `.claude/settings.json` | `.codex/hooks.json` | plugin (1.x and 2.x) |
 | Hook runs after | workspace trust | project trust **and** hook approval (`/hooks`) | — |
-| MCP (opt-in) | `.mcp.json` | `.codex/config.toml` | `.opencode/opencode.json` |
 
 Only use one engine? `--engines=claude-code` (or `codex-cli`, `opencode`, comma-separated).
 
@@ -209,7 +209,7 @@ jobs:
 
 | Command | What it does |
 |---|---|
-| `init <dir>` | Render the harness into a project. Re-run it to change engines (`--engines`), MCP servers (`--with-mcp`) or the Stop hook (`--no-stop-hook`). |
+| `init <dir>` | Render the harness into a project. Re-run it to change engines (`--engines`) or the Stop hook (`--no-stop-hook`). |
 | `update [dir]` | Re-render with the installed version, keeping your settings. `--dry-run --json` previews. |
 | `uninstall <dir>` | Remove what `init` wrote, leaving your own files in place. |
 | `lint` | Run the linters. |
@@ -255,13 +255,6 @@ Overrides are personal and disposable. Skills meant for the whole team go in `do
 </details>
 
 <details>
-<summary><b>MCP servers</b></summary>
-
-None by default. `init . --with-mcp=context7` adds [Context7](https://github.com/upstash/context7) (library documentation) to each engine's MCP config. Codex only loads project config in a trusted project.
-
-</details>
-
-<details>
 <summary><b>Updating</b></summary>
 
 ```bash
@@ -270,7 +263,7 @@ npx @vaubaan/harness update . --dry-run --json   # preview
 npx @vaubaan/harness update .
 ```
 
-`update` keeps your engines, hook preference, MCP entries and hook edits. Generated files you modified are reported instead of overwritten: move the change to `.harness-overrides/`, or keep the file as yours with `--preserve AGENTS.md`. A backup is written outside the project before any change. Details: [updating a project](./docs/handbook/project-update.md).
+`update` keeps your engines and hook preference, and never touches a configuration file it did not write. Generated files you modified are reported instead of overwritten: move the change to `.harness-overrides/`, or keep the file as yours with `--preserve AGENTS.md`. A backup is written outside the project before any change. Details: [updating a project](./docs/handbook/project-update.md).
 
 </details>
 

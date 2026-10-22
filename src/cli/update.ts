@@ -5,21 +5,18 @@ import { DisableYamlSchema } from "../loader.js";
 import type { Engine, RenderedFile } from "../types.js";
 import { parseYAML } from "../util/yaml.js";
 import { VERSION } from "../version.js";
+import {
+  HOOK_CONFIG_PATHS,
+  RELEASED_PATHS,
+  isHookConfig,
+  planHookConfigs,
+  renderStopHooks,
+} from "./hook-configs.js";
 import { assertManagedPaths } from "./managed-paths.js";
 import { MANIFEST_FILENAME, MANIFEST_VERSION, type Manifest, hashContent } from "./manifest.js";
-import {
-  CLAUDE_MCP_PATH,
-  OPENCODE_CONFIG_PATH,
-  type OpenCodeConfigOwnership,
-  planClaudeMcpConfig,
-  planOpenCodeConfig,
-} from "./opencode-config.js";
 import { planInit } from "./plan-render.js";
-import { SHARED_CONFIG_PATHS, planUpdateConfigs } from "./update-config.js";
 import { readUpdateInstallation } from "./update-manifest.js";
 import { applyUpdateTransaction } from "./update-transaction.js";
-
-const CODEX_CONFIG_PATH = ".codex/config.toml";
 
 export interface UpdateArgs {
   targetDir: string;
@@ -56,19 +53,6 @@ export interface InstallationSettings {
   sourceVersion: string;
   engines: Engine[];
   hookEngines: Engine[];
-  /** MCP servers to install. Undefined keeps the MCP state recorded by a previous run. */
-  mcpServers?: ReadonlyArray<string>;
-}
-
-interface McpPlan {
-  writes: RenderedFile[];
-  removals: string[];
-  owned: string[];
-  /** False when the OpenCode file was left to the legacy migration of this run. */
-  plannedOpenCode: boolean;
-  opencodeConfig?: OpenCodeConfigOwnership;
-  mcpConfig?: OpenCodeConfigOwnership;
-  warnings: string[];
 }
 
 function currentContent(root: string, path: string): string | undefined {
@@ -93,7 +77,8 @@ function checkArtifactConflicts(
   const desired = new Map(writes.map((file) => [file.path, file.content]));
   const conflicts: string[] = [];
   for (const path of [...desired.keys(), ...removals]) {
-    if (SHARED_CONFIG_PATHS.includes(path)) continue;
+    // Hook files are decided by planHookConfigs: left alone when not ours.
+    if (isHookConfig(path)) continue;
     const content = currentContent(root, path);
     if (content === undefined || content === desired.get(path)) continue;
     if (!previous.files.includes(path)) {
@@ -110,75 +95,14 @@ function checkArtifactConflicts(
   }
 }
 
-/** Before 1.4.0, `init` recorded `.mcp.json` as a whole harness file. */
-function legacyMcpOwnership(root: string, previous: Manifest): OpenCodeConfigOwnership | undefined {
-  if (!ownedUnchanged(root, previous, CLAUDE_MCP_PATH)) return undefined;
-  try {
-    const servers = JSON.parse(currentContent(root, CLAUDE_MCP_PATH) ?? "").mcpServers;
-    if (!servers || typeof servers !== "object" || Array.isArray(servers)) return undefined;
-    return { createdFile: true, addedMcp: true, addedSchema: false, entries: servers };
-  } catch {
-    return undefined;
+/** Files 1.x edited entry by entry leave the manifest and stay in place. */
+function releaseLegacyPaths(previous: Manifest, warnings: string[]): Manifest {
+  const released = previous.files.filter((path) => RELEASED_PATHS.includes(path));
+  for (const path of released) {
+    warnings.push(`no longer managed by the harness, left in place: ${path}`);
   }
-}
-
-function planMcp(
-  root: string,
-  settings: InstallationSettings,
-  rendered: ReadonlyArray<RenderedFile>,
-  pendingWrites: ReadonlyArray<RenderedFile>,
-): McpPlan {
-  const { previous } = settings;
-  const plan: McpPlan = {
-    writes: [],
-    removals: [],
-    owned: [],
-    plannedOpenCode: false,
-    warnings: [],
-  };
-  const claudeOwnership = previous.mcpConfig ?? legacyMcpOwnership(root, previous);
-  const codexOwned = ownedUnchanged(root, previous, CODEX_CONFIG_PATH);
-  if (settings.mcpServers === undefined) {
-    // update keeps the MCP servers recorded by the last init.
-    if (codexOwned) plan.owned.push(CODEX_CONFIG_PATH);
-    plan.mcpConfig = claudeOwnership;
-    return plan;
-  }
-  const desired = (path: string) => rendered.find((file) => file.path === path);
-  // A legacy `.opencode/mcp.json` migrated in this run already wrote the file.
-  if (!pendingWrites.some((file) => file.path === OPENCODE_CONFIG_PATH)) {
-    plan.plannedOpenCode = true;
-    if (previous.files.includes(OPENCODE_CONFIG_PATH) && !previous.opencodeConfig) {
-      plan.warnings.push(`preserved legacy shared configuration: ${OPENCODE_CONFIG_PATH}`);
-    }
-    const opencode = planOpenCodeConfig(
-      root,
-      desired(OPENCODE_CONFIG_PATH),
-      previous.opencodeConfig,
-    );
-    if (opencode.write) plan.writes.push(opencode.write);
-    if (opencode.remove) plan.removals.push(OPENCODE_CONFIG_PATH);
-    plan.opencodeConfig = opencode.ownership;
-    plan.warnings.push(...opencode.warnings);
-  }
-  const claude = planClaudeMcpConfig(root, desired(CLAUDE_MCP_PATH), claudeOwnership);
-  if (claude.write) plan.writes.push(claude.write);
-  if (claude.remove) plan.removals.push(CLAUDE_MCP_PATH);
-  plan.mcpConfig = claude.ownership;
-  plan.warnings.push(...claude.warnings);
-  const codex = desired(CODEX_CONFIG_PATH);
-  const codexExists = existsSync(join(root, CODEX_CONFIG_PATH));
-  if (codex && (!codexExists || codexOwned)) {
-    plan.writes.push(codex);
-    plan.owned.push(CODEX_CONFIG_PATH);
-  } else if (codex) {
-    plan.warnings.push(
-      `left ${CODEX_CONFIG_PATH} unchanged; add this block to it to enable MCP in Codex:\n${codex.content.trimEnd()}`,
-    );
-  } else if (codexOwned) {
-    plan.removals.push(CODEX_CONFIG_PATH);
-  }
-  return plan;
+  if (released.length === 0) return previous;
+  return { ...previous, files: previous.files.filter((path) => !released.includes(path)) };
 }
 
 /** All reads and validation precede backup creation and project mutations. */
@@ -187,18 +111,15 @@ export function planInstallation(
   settings: InstallationSettings,
 ): Omit<UpdatePlan, "result"> & { manifest: Manifest; warnings: string[] } {
   const root = resolve(args.targetDir);
-  const { previous, engines, hookEngines } = settings;
+  const { engines, hookEngines } = settings;
+  const warnings: string[] = [];
+  const previous = releaseLegacyPaths(settings.previous, warnings);
   const preserved = [
     ...new Set([...(previous.preservedFiles ?? []), ...(args.preserveFiles ?? [])]),
   ].sort();
   if (preserved.includes(MANIFEST_FILENAME))
     throw new Error("cannot preserve the harness manifest");
-  if (preserved.some((path) => SHARED_CONFIG_PATHS.includes(path))) {
-    throw new Error(
-      "--preserve applies to generated artifacts; shared configurations use entry-level preservation",
-    );
-  }
-  assertManagedPaths(root, [...previous.files, ...preserved, ...SHARED_CONFIG_PATHS]);
+  assertManagedPaths(root, [...previous.files, ...preserved, ...HOOK_CONFIG_PATHS]);
   const requestedOverrides = args.overridesDir ?? previous.overridesDir;
   const overridesDir = args.overridesDir
     ? resolve(args.overridesDir)
@@ -222,29 +143,29 @@ export function planInstallation(
     packageDir: args.packageDir,
     engines,
     overridesDir: hasOverrides ? overridesDir : undefined,
-    mcpServers: settings.mcpServers,
     withStopHook: false,
   });
-  const generated = rendered.output.files.filter(
-    (file) => !SHARED_CONFIG_PATHS.includes(file.path),
+  const hooks = renderStopHooks(hookEngines);
+  const generated = [
+    ...rendered.output.files,
+    ...hooks.files.filter((file) => !isHookConfig(file.path)),
+  ];
+  const hookPlan = planHookConfigs(
+    root,
+    hooks.files.filter((file) => isHookConfig(file.path)),
+    previous.files,
+    (path) => ownedUnchanged(root, previous, path),
   );
-  const config = planUpdateConfigs(root, previous, hookEngines);
-  const mcp = planMcp(root, settings, rendered.output.files, config.writes);
-  const output = [...generated, ...config.writes, ...mcp.writes].filter(
+  const output = [...generated, ...hookPlan.writes].filter(
     (file) => !preserved.includes(file.path),
   );
-  const owned = [
-    ...new Set([...generated.map((file) => file.path), ...config.ownedFiles, ...mcp.owned]),
-  ]
+  const owned = [...new Set([...generated.map((file) => file.path), ...hookPlan.owned])]
     .filter((file) => !preserved.includes(file))
     .sort();
   const removals = [
     ...new Set([
-      ...previous.files.filter(
-        (file) => !owned.includes(file) && !SHARED_CONFIG_PATHS.includes(file),
-      ),
-      ...config.removals,
-      ...mcp.removals,
+      ...previous.files.filter((file) => !owned.includes(file) && !isHookConfig(file)),
+      ...hookPlan.removals,
     ]),
   ].filter((file) => !preserved.includes(file));
   assertManagedPaths(root, [...output.map((file) => file.path), ...removals]);
@@ -257,7 +178,6 @@ export function planInstallation(
       return [path, hashContent(content)];
     }),
   );
-  const opencodeConfig = mcp.plannedOpenCode ? mcp.opencodeConfig : config.opencodeConfig;
   const manifest: Manifest = {
     version: MANIFEST_VERSION,
     harnessVersion: VERSION,
@@ -269,17 +189,14 @@ export function planInstallation(
     stopHookEngines: [...hookEngines].sort(),
     ...(hasOverrides ? { overridesDir: overridesDir === root ? "." : overridesDir } : {}),
     ...(preserved.length ? { preservedFiles: preserved } : {}),
-    ...(opencodeConfig ? { opencodeConfig } : {}),
-    ...(mcp.mcpConfig ? { mcpConfig: mcp.mcpConfig } : {}),
-    ...(config.hookConfigs ? { hookConfigs: config.hookConfigs } : {}),
   };
   const writes = output.filter((file) => currentContent(root, file.path) !== file.content);
   const existingRemovals = removals.filter((path) => existsSync(join(root, path)));
-  if (writes.length || existingRemovals.length || !isDeepStrictEqual(previous, manifest)) {
+  if (writes.length || existingRemovals.length || !isDeepStrictEqual(settings.previous, manifest)) {
     manifest.renderedAt = new Date().toISOString();
     writes.push({ path: MANIFEST_FILENAME, content: `${JSON.stringify(manifest, null, 2)}\n` });
   }
-  const warnings = [...rendered.output.warnings, ...config.warnings, ...mcp.warnings];
+  warnings.push(...rendered.output.warnings, ...hooks.warnings, ...hookPlan.warnings);
   if (preserved.length) warnings.push(`preserved user-owned artifacts: ${preserved.join(", ")}`);
   return { writes, removals: existingRemovals, owned, manifest, warnings };
 }

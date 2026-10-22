@@ -73,7 +73,7 @@ tracks: [package.json]
   );
   write(
     ".gitignore",
-    ".harness-overrides/\n.harness-manifest.json\n.harness/\n.claude/\n.codex/\n.opencode/\n.agents/\n.vaubaan/\nAGENTS.md\nCLAUDE.md\n.mcp.json\n",
+    ".harness-overrides/\n.harness-manifest.json\n.harness/\n.claude/\n.codex/\n.opencode/\n.agents/\n.vaubaan/\nAGENTS.md\nCLAUDE.md\n",
   );
 }
 

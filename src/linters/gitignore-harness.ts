@@ -13,7 +13,6 @@ export const REQUIRED_GITIGNORE_ENTRIES: ReadonlyArray<string> = [
   ".vaubaan/",
   "AGENTS.md",
   "CLAUDE.md",
-  ".mcp.json",
 ];
 
 export const gitignoreHarness: Linter = {

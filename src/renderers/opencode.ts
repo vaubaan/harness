@@ -1,4 +1,3 @@
-import type { McpServerSpec } from "../mcp.js";
 import type { Agent } from "../parser/agent.js";
 import type { Cmd } from "../parser/cmd.js";
 import type { Skill } from "../parser/skill.js";
@@ -57,22 +56,6 @@ export const opencodeRenderer: Renderer = {
       files.push({ path: `${BASE}/agents/${agent.meta.id}.md`, content: `${fm}\n${body}` });
     }
     return { files, warnings: [] };
-  },
-  renderMcp(servers: ReadonlyArray<McpServerSpec>): RenderResult {
-    if (servers.length === 0) return { files: [], warnings: [] };
-    const mcp: Record<string, Record<string, unknown>> = {};
-    for (const s of servers) {
-      const entry: Record<string, unknown> = {
-        type: "local",
-        command: [s.command, ...s.args],
-        enabled: true,
-      };
-      if (s.env) entry.environment = s.env;
-      mcp[s.id] = entry;
-    }
-    const config = { $schema: "https://opencode.ai/config.json", mcp };
-    const content = `${JSON.stringify(config, null, 2)}\n`;
-    return { files: [{ path: `${BASE}/opencode.json`, content }], warnings: [] };
   },
   renderStopHook(): RenderResult {
     const content = `import { spawnSync } from "node:child_process";

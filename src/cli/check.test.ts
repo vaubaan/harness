@@ -15,7 +15,6 @@ const REQUIRED_GITIGNORE_ENTRIES = [
   ".vaubaan/",
   "AGENTS.md",
   "CLAUDE.md",
-  ".mcp.json",
 ];
 
 const REQUIRED_DIRS = [

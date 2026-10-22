@@ -1,8 +1,12 @@
 # MCP servers: opt-in rendering, one file per engine
 
 **Date:** 2026-05-31
-**Status:** accepted
+**Status:** superseded by [no-mcp-no-code-merge](./no-mcp-no-code-merge.md) (2026-10-22)
 **Author:** Vaubaan core
+
+> **Superseded (2026-10-22)**: the harness no longer renders any MCP
+> configuration. An MCP server is a tool the project chooses, not
+> information the harness maintains. The text below is kept as history.
 
 > **1.0.0 update (2026-09-20)**: opencode's MCP file is
 > `.opencode/opencode.json` (not `.opencode/mcp.json`, which is never read) —

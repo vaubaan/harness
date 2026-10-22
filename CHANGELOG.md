@@ -5,6 +5,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Removed
+- MCP rendering: `--with-mcp`, the context7 registry and the `.mcp.json`, `.codex/config.toml` and `.opencode/opencode.json` outputs. An MCP server is the project's choice, not harness content. See [the decision](docs/decisions/no-mcp-no-code-merge.md).
+- Code-driven merge of shared configuration files. `init` and `update` write `.claude/settings.json` and `.codex/hooks.json` only when absent or still unchanged since the harness wrote them; otherwise the file is left untouched and the Stop hook block to add is printed. Entry ownership (`hookConfigs`, `opencodeConfig`, `mcpConfig`) is no longer recorded.
+- `.mcp.json` is no longer required in `.gitignore` by `lint:gitignore-harness` and `check`.
+
+### Changed
+- Hook files the harness created are ordinary generated files: listed in the manifest with a hash, re-rendered while unchanged, released to the project once edited, removed by `uninstall` only when unchanged.
+- `--preserve` accepts hook files.
+
+### Migration
+Breaking, ships in 2.0.0. `.mcp.json`, `.codex/config.toml`, `.opencode/opencode.json` and `.opencode/mcp.json` leave the manifest on the next `init` or `update`, with a warning, and stay in place as the project's files; the MCP entries 1.x added remain yours. A Stop hook entry 1.x merged into your `.claude/settings.json` or `.codex/hooks.json` is detected and left as yours. Projects that relied on `--with-mcp=context7` add context7 to their own engine configuration.
+
 ## [1.4.0] — 2026-10-14
 
 ### Changed
