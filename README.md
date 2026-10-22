@@ -45,6 +45,148 @@ Think of it as a **context database with pointers**. Each pillar stores one kind
 
 **Checks, with zero tokens.** Fifteen mechanical linters run in CI and in your pre-commit hook. No engine hook, no injected turn, no loop. The agent sees a failed command and fixes it.
 
+## What it looks like
+
+A harnessed project, here a small invoicing service. Everything under `docs/` is yours and committed; the rest is rendered by the harness and committed too.
+
+```
+acme-billing/
+├── README.md
+├── AGENTS.md                      # rendered: the one rule, the map, the checks
+├── CLAUDE.md                      # rendered: @AGENTS.md
+├── .claude/  .agents/  .opencode/ # rendered: skills and commands per engine
+├── .harness-manifest.json         # rendered: what the harness owns
+└── docs/
+    ├── spec/invoicing.md
+    ├── decisions/postgres-over-sqlite.md
+    ├── handbook/invoice-pipeline.md
+    ├── tests/integration-tests.md
+    ├── tests/e2e-tests.md
+    ├── workflow/coding-workflow.md
+    ├── quality/code-quality.md    # optional
+    └── skills/tax-rules.skill.md  # optional
+```
+
+Each file says what the code cannot, and points to the code for the rest.
+
+**`docs/spec/invoicing.md`**: intent and vocabulary, no technology, each requirement realized by something.
+
+```markdown
+---
+status: draft
+---
+# Invoicing — spec
+
+## 0. Vocabulary
+- **Invoice**: a frozen statement of amounts due, never edited after issue.
+- **Draft**: an invoice before issue; the only editable state.
+
+## 1. Vision
+1. A draft becomes an invoice in one irreversible step. → `src/invoicing/issue.ts`
+2. An issued invoice can be voided, never deleted. → `src/invoicing/void.ts`
+
+## 2. Out of scope
+- Payment collection. Another subsystem.
+
+## N. Open questions
+- Multi-currency: not before a customer asks.
+```
+
+**`docs/decisions/postgres-over-sqlite.md`**: the why, the rejected options, the history. Current state, not a diary.
+
+```markdown
+# Postgres over SQLite for the invoice store
+
+## Context
+Invoices must survive concurrent issue from two workers.
+
+## Decision
+One Postgres database. Embodied by `docker-compose.yml` (service `db`)
+and `src/db/client.ts`. Introduced in commit `4f1c2ab`.
+
+## Consequences
+Local setup needs Docker. Migrations live in `db/migrations/`.
+
+## Rejected alternatives
+| SQLite | single-writer lock under two workers |
+
+## History
+- 2026-03-02 `9a0b7e1`: started on SQLite for speed of setup.
+- 2026-06-14 `4f1c2ab`: moved to Postgres after the first lost write.
+```
+
+**`docs/handbook/invoice-pipeline.md`**: the map, declared with `tracks:` so the linter notices when the code moves.
+
+```markdown
+---
+tracks:
+  - src/invoicing/**/*.ts
+  - db/migrations/*.sql
+last_reviewed: 2026-10-22
+---
+# Invoice pipeline
+
+Entry point: `src/invoicing/issue.ts#issueInvoice`. It freezes the
+draft, writes the row, emits `invoice.issued`.
+
+Invariant the code assumes: a draft is only ever edited by its owner;
+enforced in `src/invoicing/guards.ts#assertOwner`, not in the database.
+
+Gotcha: `void.ts` keeps the row and flips `status`; reports must filter
+on it (`src/reports/monthly.ts`).
+```
+
+**`docs/tests/integration-tests.md`**: which scenarios matter, and the test that holds each one.
+
+```markdown
+---
+tracks: [tests/integration/**/*.test.ts]
+---
+| Scenario | Test |
+|---|---|
+| Issuing a draft twice fails the second time | `tests/integration/issue.test.ts` › "is irreversible" |
+| Voiding keeps the invoice visible in reports | `tests/integration/void.test.ts` › "stays in monthly report" |
+| Two workers issue the same draft | *open*: no test yet |
+```
+
+**`docs/workflow/coding-workflow.md`**: what lives outside the repo, and pointers to what lives in it.
+
+```markdown
+---
+tracks: [.github/workflows/*.yml, package.json, .husky/pre-commit]
+---
+## CI pipeline
+`ci.yml`: typecheck, test, `vaubaan-harness lint`. Required to merge.
+## PR process
+Trunk-based, squash merge, one approval; branch protection set in GitHub.
+## Release
+Tag `v*` triggers `publish.yml`. Secrets live in the GitHub environment `prod`.
+## Languages
+Docs and code in English. Domain vocabulary in spec §0, French-speaking team.
+```
+
+**`docs/quality/code-quality.md`** (optional): the rules a tool cannot check, and the deviations you accept.
+
+```markdown
+## Mechanical checks
+biome (`biome.json`), tsc strict (`tsconfig.json`).
+## Project rules
+No business logic in route handlers; it lives in `src/invoicing/`.
+## Accepted deviations
+`any` allowed in `src/legacy/csv-import.ts` until it is rewritten.
+```
+
+**`docs/skills/tax-rules.skill.md`** (optional): know-how the agent loads, rendered like the built-in skills.
+
+```markdown
+---
+id: tax-rules
+description: How VAT rates are chosen and where they live.
+---
+Rates are in `config/vat.json`, keyed by country. Never hardcode a rate;
+add a key and a fixture in `tests/fixtures/vat/`.
+```
+
 ## Quick start
 
 Requires Node.js 20 or later. Pick the engines you actually use.
