@@ -1,16 +1,30 @@
 # @vaubaan/harness
 
-**Project context as code.**
+<p align="center">
+  <strong>Project context as code.</strong><br>
+  A context database for your project, kept in the repo, rendered for your coding agents, linted in CI.
+</p>
 
-A context database for your project, kept in the repo. A few Markdown files hold what the code cannot say and point to the code and configs for everything else. Rendered into the native layout of Claude Code, Codex or OpenCode, and linted in CI so context and code never drift apart.
-
-[![npm](https://img.shields.io/npm/v/@vaubaan/harness)](https://www.npmjs.com/package/@vaubaan/harness)
-[![CI](https://github.com/vaubaan/harness/actions/workflows/ci.yml/badge.svg)](https://github.com/vaubaan/harness/actions/workflows/ci.yml)
-[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](./LICENSE)
+<p align="center">
+  <a href="https://www.npmjs.com/package/@vaubaan/harness"><img src="https://img.shields.io/npm/v/@vaubaan/harness" alt="npm"></a>
+  <a href="https://github.com/vaubaan/harness/actions/workflows/ci.yml"><img src="https://github.com/vaubaan/harness/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License: Apache-2.0"></a>
+</p>
 
 ```bash
 npx -y @vaubaan/harness init . --engines=claude-code
 ```
+
+A few Markdown files hold what the code cannot say and point to the code and configs for everything else. The harness renders them into the native layout of Claude Code, Codex or OpenCode, and lints them so context and code never drift apart.
+
+- **One context, every engine.** Eight skills, one per pillar plus an audit and a drift detector, each with a slash command. Written once for Claude Code, Codex and OpenCode.
+- **Pointers that stay true.** Handbooks and test plans declare the files they describe in a `tracks:` field. When that code moves and the doc does not, the linter says so.
+- **Checks with zero tokens.** Fifteen mechanical linters run in CI and in your pre-commit hook. No engine hook, no injected turn, no loop. The agent sees a failed command and fixes it.
+
+**Contents:**
+[The problem](#the-problem) · [A context database with pointers](#a-context-database-with-pointers) · [What it looks like](#what-it-looks-like) · [Quick start](#quick-start) ·
+[How it works](#how-it-works) · [What is included](#what-is-included) · [Adopting it on an existing project](#adopting-it-on-an-existing-project) · [Commands](#commands) ·
+[Configuration](#configuration) · [FAQ](#faq) · [Where this is going](#where-this-is-going) · [Documentation](#documentation)
 
 ---
 
@@ -20,30 +34,27 @@ A coding agent is fast and knows nothing about your project. So you repeat the s
 
 The context of a project is real information: what you want, why it is built this way, how it actually works today, what "done" means, how you ship. It deserves a home, a shape, and a check.
 
-## What the harness does
+## A context database with pointers
 
-It does one thing. It keeps your project's context in a small, fixed set of Markdown files, gives every agent the same entry point into it, and refuses to let it go stale.
+The harness does one thing. It keeps your project's context in a small, fixed set of Markdown files, gives every agent the same entry point into it, and refuses to let it go stale.
 
-Think of it as a **context database with pointers**. Each pillar stores one kind of information the code cannot carry, and links to the code or config that carries the rest. Nothing is written twice: if a paragraph could be deleted without losing anything that is not in the files it points to, it does not belong in the doc.
+Each pillar stores one kind of information the code cannot carry, and links to the code or config that carries the rest. Nothing is written twice: if a paragraph could be deleted without losing anything that is not in the files it points to, it does not belong in the doc.
 
-| Pillar | What the doc says (the code cannot) | What it points to in the repo |
-|---|---|---|
-| `README.md` | What this is, how to run it. | `package.json` scripts, the quick start. |
-| `docs/spec/` | What we want, for whom, what we refuse to do. Vocabulary. Tech-agnostic. | The modules and entry points that realize each requirement. A requirement with no pointer is a todo or dead. |
-| `docs/decisions/` | Why it is built this way, what was rejected, what changed since. | The config files and commits that embody the decision: `tsconfig.json`, `ci.yml`, a sha. |
-| `docs/handbook/` | The map: where to look, the invariants the code assumes, the gotchas. | The files it describes, declared in `tracks:`. A map, not a retelling. |
-| `docs/tests/` | Which scenarios matter, what "done" means. | The test that implements each scenario. A scenario with no test is an acceptance criterion still open. |
-| `docs/workflow/` | What lives outside the repo: approvals, protections, secrets, languages. | `ci.yml`, build scripts, pre-commit hook. |
-| `docs/quality/` | Optional. The code rules this team holds, and the deviations it accepts. | The linter and formatter configs that enforce the mechanical part. |
-| `docs/skills/` | Optional. Domain know-how the agent should load. | Whatever the skill needs. |
+| Pillar            | What the doc says (the code cannot)                                        | What it points to in the repo                                                                              |
+| ----------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `README.md`       | What this is, how to run it.                                               | `package.json` scripts, the quick start.                                                                   |
+| `docs/spec/`      | What we want, for whom, what we refuse to do. Vocabulary. Tech-agnostic.   | The modules and entry points that realize each requirement. A requirement with no pointer is a todo or dead. |
+| `docs/decisions/` | Why it is built this way, what was rejected, what changed since.           | The config files and commits that embody the decision: `tsconfig.json`, `ci.yml`, a sha.                  |
+| `docs/handbook/`  | The map: where to look, the invariants the code assumes, the gotchas.      | The files it describes, declared in `tracks:`. A map, not a retelling.                                     |
+| `docs/tests/`     | Which scenarios matter, what "done" means.                                 | The test that implements each scenario. A scenario with no test is an acceptance criterion still open.     |
+| `docs/workflow/`  | What lives outside the repo: approvals, protections, secrets, languages.   | `ci.yml`, build scripts, pre-commit hook.                                                                  |
+| `docs/quality/`   | Optional. The code rules this team holds, and the deviations it accepts.   | The linter and formatter configs that enforce the mechanical part.                                         |
+| `docs/skills/`    | Optional. Domain know-how the agent should load.                           | Whatever the skill needs.                                                                                  |
 
-**One rule.** The only working rule the harness imposes, written into `AGENTS.md` for every engine: **understand the context, fill the gaps, code, update the context, commit.** How your team organizes itself around that, branches, review, release, is yours. You write it in `docs/workflow/` and the agents follow it. The harness ships no roles, no personas, no phases.
-
-**Pointers stay true.** Handbooks and test plans declare the files they describe in a `tracks:` field. When that code moves and the doc does not, the linter says so. Decisions are current state, rewritten when you change your mind, with a one-line history per reversal; git holds the rest.
-
-**Skills, in your engine's format.** Eight skills, one per pillar plus an audit and a drift detector, each with a slash command. They are written once and rendered where each engine looks for them.
-
-**Checks, with zero tokens.** Fifteen mechanical linters run in CI and in your pre-commit hook. No engine hook, no injected turn, no loop. The agent sees a failed command and fixes it.
+> [!IMPORTANT]
+> **One rule.** The only working rule the harness imposes, written into `AGENTS.md` for every engine: **understand the context, fill the gaps, code, update the context, commit.**
+>
+> How your team organizes itself around that, branches, review, release, is yours. You write it in `docs/workflow/` and the agents follow it. The harness ships no roles, no personas, no phases.
 
 ## What it looks like
 
@@ -92,7 +103,7 @@ status: draft
 - Multi-currency: not before a customer asks.
 ```
 
-**`docs/decisions/postgres-over-sqlite.md`**: the why, the rejected options, the history. Current state, not a diary.
+**`docs/decisions/postgres-over-sqlite.md`**: the why, the rejected options, the history. Current state, rewritten when you change your mind, with a one-line history per reversal; git holds the rest.
 
 ```markdown
 # Postgres over SQLite for the invoice store
@@ -191,6 +202,8 @@ add a key and a fixture in `tests/fixtures/vat/`.
 
 Requires Node.js 20 or later. Pick the engines you actually use.
 
+**1. Render the harness into your project.**
+
 ```bash
 npx -y @vaubaan/harness init . --engines=claude-code
 # or: --engines=claude-code,codex-cli,opencode
@@ -207,14 +220,14 @@ CLAUDE.md                 # imports AGENTS.md (Claude Code)
 .harness-manifest.json    # what was written, for update/uninstall
 ```
 
-**Commit all of it.** Generated files are part of the repo, so a fresh clone has the whole context without installing anything. The linter checks they still match the render. Only two paths are gitignored:
+**2. Commit all of it**, generated files included ([why](#faq)). Only two paths are gitignored:
 
 ```gitignore
 .harness-overrides/   # your local, disposable overrides
 .vaubaan/             # skill reports
 ```
 
-Then wire the linter where it blocks:
+**3. Wire the linter where it blocks.**
 
 ```bash
 npm i -D @vaubaan/harness
@@ -237,7 +250,7 @@ jobs:
       - run: npx vaubaan-harness lint
 ```
 
-Finally, open your agent and let it fill the gaps:
+**4. Open your agent and let it fill the gaps.**
 
 ```
 /doc-audit      # what is missing or stale
@@ -246,7 +259,7 @@ Finally, open your agent and let it fill the gaps:
 ```
 
 > [!NOTE]
-> `init` never overwrites a file it did not write. A hand-written `AGENTS.md` or `CLAUDE.md` stops it with a list: move the content into `docs/`, or keep the file as yours with `--preserve AGENTS.md`. It never merges a configuration file either, and it never touches `.claude/settings.json`, `.codex/hooks.json` or any MCP configuration.
+> Already have a hand-written `AGENTS.md` or `CLAUDE.md`? `init` never overwrites a file it did not write. See [adopting it on an existing project](#adopting-it-on-an-existing-project).
 
 ## How it works
 
@@ -265,51 +278,55 @@ Finally, open your agent and let it fill the gaps:
 ```
 
 1. **Your docs are the context.** A small, fixed layout under `docs/`. Every file has a template and a writer skill, so you rarely start from a blank page.
-2. **The harness renders one pivot format into each engine's layout.** Skills and commands land where Claude Code, Codex and OpenCode look for them. `AGENTS.md` is the shared entry point; `CLAUDE.md` just imports it.
+2. **One pivot format, rendered per engine.** Skills and commands land where Claude Code, Codex and OpenCode look for them. `AGENTS.md` is the shared entry point; `CLAUDE.md` just imports it.
 3. **Linters keep context and code in sync.** They run before each commit and on every pull request. The semantic part, contradictions, stale prose, missing pieces, is a skill the agent runs: `/doc-audit`.
 
-## What's included
+## What is included
+
+### Skills
 
 **8 skills**, each with a slash command. A skill never says *when* to do something. It says *how* to write or check one pillar.
 
-| Command | Skill | What it does |
-|---|---|---|
-| `/doc-audit` | `doc-audit` | Audits completeness and freshness of every pillar. |
-| `/drift` | `drift-detector` | Finds where docs no longer match the code. |
-| `/spec` | `spec-writer` | Writes a tech-agnostic spec, progressively: three questions to start, one section at a time after. |
-| `/decision` | `decision-record-writer` | Writes an ADR, spotting implicit decisions in your diff. |
-| `/handbook` | `handbook-writer` | Documents how a feature is actually implemented. |
-| `/test-plan` | `test-plan-writer` | Keeps integration and e2e test plans up to date. |
-| `/workflow` | `workflow-writer` | Documents CI, environments, PR process, branches, release, languages. |
-| `/readme` | `readme-writer` | Keeps the README in sync with the code. |
+| Command       | Skill                    | What it does                                                                                   |
+| ------------- | ------------------------ | ---------------------------------------------------------------------------------------------- |
+| `/doc-audit`  | `doc-audit`              | Audits completeness and freshness of every pillar.                                             |
+| `/drift`      | `drift-detector`         | Finds where docs no longer match the code.                                                     |
+| `/spec`       | `spec-writer`            | Writes a tech-agnostic spec, progressively: three questions to start, one section at a time after. |
+| `/decision`   | `decision-record-writer` | Writes an ADR, spotting implicit decisions in your diff.                                       |
+| `/handbook`   | `handbook-writer`        | Documents how a feature is actually implemented.                                               |
+| `/test-plan`  | `test-plan-writer`       | Keeps integration and e2e test plans up to date.                                               |
+| `/workflow`   | `workflow-writer`        | Documents CI, environments, PR process, branches, release, languages.                          |
+| `/readme`     | `readme-writer`          | Keeps the README in sync with the code.                                                        |
+
+### Linters
 
 **15 linters**, fast enough to run on every commit.
 
 <details>
 <summary>See the list</summary>
 
-| Linter | Checks |
-|---|---|
-| `readme-presence`, `readme-sections` | `README.md` exists and has a title and a quick start. |
-| `doc-layout`, `cardinal-files` | The `docs/` folders and required files exist. |
-| `spec-has-content`, `spec-tech-agnostic` | Specs exist and don't name frameworks or vendors. |
-| `decision-schema` | Each ADR has its four sections. |
-| `adr-no-tracks`, `orphan-decisions` | ADRs carry no `tracks:` and are referenced somewhere. |
-| `frontmatter-tracks`, `tracks-drift` | Tracked paths exist; docs aren't older than the code they track. |
-| `cross-links` | Links between docs resolve. |
-| `gitignore-harness` | Overrides and reports are ignored; generated files are not. |
-| `generated-fresh` | Committed generated files match the current render. |
-| `quality-schema` | `docs/quality/code-quality.md` has its sections, if you use it. |
+| Linter                               | Checks                                                              |
+| ------------------------------------ | ------------------------------------------------------------------- |
+| `readme-presence`, `readme-sections` | `README.md` exists and has a title and a quick start.               |
+| `doc-layout`, `cardinal-files`       | The `docs/` folders and required files exist.                       |
+| `spec-has-content`, `spec-tech-agnostic` | Specs exist and don't name frameworks or vendors.               |
+| `decision-schema`                    | Each ADR has its four sections.                                     |
+| `adr-no-tracks`, `orphan-decisions`  | ADRs carry no `tracks:` and are referenced somewhere.               |
+| `frontmatter-tracks`, `tracks-drift` | Tracked paths exist; docs aren't older than the code they track.    |
+| `cross-links`                        | Links between docs resolve.                                         |
+| `gitignore-harness`                  | Overrides and reports are ignored; generated files are not.         |
+| `generated-fresh`                    | Committed generated files match the current render.                 |
+| `quality-schema`                     | `docs/quality/code-quality.md` has its sections, if you use it.     |
 
 </details>
 
-## Engine support
+### Engines
 
-| | Claude Code | Codex | OpenCode |
-|---|---|---|---|
-| Entry point | `CLAUDE.md` → `AGENTS.md` | `AGENTS.md` | `AGENTS.md` |
-| Skills | `.claude/skills/` | `.agents/skills/` | reuses the above |
-| Slash commands | ✓ | invoke skills by name | ✓ |
+|                | Claude Code               | Codex                  | OpenCode         |
+| -------------- | ------------------------- | ---------------------- | ---------------- |
+| Entry point    | `CLAUDE.md` → `AGENTS.md` | `AGENTS.md`            | `AGENTS.md`      |
+| Skills         | `.claude/skills/`         | `.agents/skills/`      | reuses the above |
+| Slash commands | ✓                         | invoke skills by name  | ✓                |
 
 You name your engines; nothing is rendered for a tool you don't use. Add one later with `init . --engines=...` again.
 
@@ -317,21 +334,21 @@ You name your engines; nothing is rendered for a tool you don't use. Add one lat
 
 You don't have to write all the docs on day one.
 
-- **See where you stand:** `npx @vaubaan/harness lint` lists what's missing, with the skill that fixes each item.
-- **Let the agent do the first pass:** `/doc-audit`, then `/spec`, `/handbook` and `/decision` on the parts you touch. `/spec` starts with three questions; the rest fills in over time.
-- **Keep what you had:** your own skills, settings and hooks are never touched. A hand-written `AGENTS.md` is listed, not overwritten.
-- **Back out anytime:** `npx @vaubaan/harness uninstall .` removes what `init` wrote. Your own files are left in place.
+- **See where you stand.** `npx @vaubaan/harness lint` lists what's missing, with the skill that fixes each item.
+- **Let the agent do the first pass.** `/doc-audit`, then `/spec`, `/handbook` and `/decision` on the parts you touch. The rest fills in over time.
+- **Keep what you had.** Your own skills, settings and hooks are never touched. A hand-written `AGENTS.md` or `CLAUDE.md` stops `init` with a list: move the content into `docs/`, or keep the file as yours with `--preserve AGENTS.md`. It never merges a configuration file either, and it never touches `.claude/settings.json`, `.codex/hooks.json` or any MCP configuration.
+- **Back out anytime.** `npx @vaubaan/harness uninstall .` removes what `init` wrote. Your own files are left in place.
 
 ## Commands
 
-| Command | What it does |
-|---|---|
-| `init <dir> --engines=<list>` | Render the harness into a project. Re-run it to change engines. |
-| `update [dir]` | Re-render with the installed version, keeping your engines. `--dry-run --json` previews. |
-| `uninstall <dir>` | Remove what `init` wrote, leaving your own files in place. |
-| `lint` | Run the linters. `--format json`, `--pillar <name>`, `--only <ids>`. |
-| `check <dir>` | Quick layout check: doc folders and `.gitignore`. |
-| `render --engines=<list> --out <dir>` | Preview the render somewhere harmless. |
+| Command                               | What it does                                                                                 |
+| ------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `init <dir> --engines=<list>`         | Render the harness into a project. Re-run it to change engines.                              |
+| `update [dir]`                        | Re-render with the installed version, keeping your engines. `--dry-run --json` previews.     |
+| `uninstall <dir>`                     | Remove what `init` wrote, leaving your own files in place.                                   |
+| `lint`                                | Run the linters. `--format json`, `--pillar <name>`, `--only <ids>`.                         |
+| `check <dir>`                         | Quick layout check: doc folders and `.gitignore`.                                            |
+| `render --engines=<list> --out <dir>` | Preview the render somewhere harmless.                                                       |
 
 Run them with `npx @vaubaan/harness <command>`. Install the package in the project (`npm i -D @vaubaan/harness`) so CI, pre-commit and your teammates render with the same version.
 
