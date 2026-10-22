@@ -2,7 +2,7 @@
 
 **Project context as code.**
 
-Everything a coding agent and a teammate need to know about your project, kept in the repo, kept true. One source of truth under `docs/`, rendered into the native layout of Claude Code, Codex or OpenCode, and linted in CI so code and context never drift apart.
+A context database for your project, kept in the repo. A few Markdown files hold what the code cannot say and point to the code and configs for everything else. Rendered into the native layout of Claude Code, Codex or OpenCode, and linted in CI so context and code never drift apart.
 
 [![npm](https://img.shields.io/npm/v/@vaubaan/harness)](https://www.npmjs.com/package/@vaubaan/harness)
 [![CI](https://github.com/vaubaan/harness/actions/workflows/ci.yml/badge.svg)](https://github.com/vaubaan/harness/actions/workflows/ci.yml)
@@ -24,22 +24,22 @@ The context of a project is real information: what you want, why it is built thi
 
 It does one thing. It keeps your project's context in a small, fixed set of Markdown files, gives every agent the same entry point into it, and refuses to let it go stale.
 
-**A schema.** Each file answers one question the code cannot answer.
+Think of it as a **context database with pointers**. Each pillar stores one kind of information the code cannot carry, and links to the code or config that carries the rest. Nothing is written twice: if a paragraph could be deleted without losing anything that is not in the files it points to, it does not belong in the doc.
 
-| File | The question it answers |
-|---|---|
-| `README.md` | What is this, how do I run it. |
-| `docs/spec/<subsystem>.md` | What do we want, for whom, and what do we refuse to do. Tech-agnostic. |
-| `docs/decisions/<slug>.md` | Why is it built this way, what did we reject. |
-| `docs/handbook/<feature>.md` | Where do I look to understand how it works today. A map, not a retelling. |
-| `docs/tests/*.md` | Which scenarios matter, what does "done" mean. |
-| `docs/workflow/coding-workflow.md` | How do we ship: CI, branches, review, release, languages. |
-| `docs/quality/code-quality.md` | Optional. The code rules this team holds, and the deviations it accepts. |
-| `docs/skills/*.skill.md` | Optional. Domain know-how the agent should load. |
+| Pillar | What the doc says (the code cannot) | What it points to in the repo |
+|---|---|---|
+| `README.md` | What this is, how to run it. | `package.json` scripts, the quick start. |
+| `docs/spec/` | What we want, for whom, what we refuse to do. Vocabulary. Tech-agnostic. | The modules and entry points that realize each requirement. A requirement with no pointer is a todo or dead. |
+| `docs/decisions/` | Why it is built this way, what was rejected, what changed since. | The config files and commits that embody the decision: `tsconfig.json`, `ci.yml`, a sha. |
+| `docs/handbook/` | The map: where to look, the invariants the code assumes, the gotchas. | The files it describes, declared in `tracks:`. A map, not a retelling. |
+| `docs/tests/` | Which scenarios matter, what "done" means. | The test that implements each scenario. A scenario with no test is an acceptance criterion still open. |
+| `docs/workflow/` | What lives outside the repo: approvals, protections, secrets, languages. | `ci.yml`, build scripts, pre-commit hook. |
+| `docs/quality/` | Optional. The code rules this team holds, and the deviations it accepts. | The linter and formatter configs that enforce the mechanical part. |
+| `docs/skills/` | Optional. Domain know-how the agent should load. | Whatever the skill needs. |
 
 **One rule.** The only working rule the harness imposes, written into `AGENTS.md` for every engine: **understand the context, fill the gaps, code, update the context, commit.** How your team organizes itself around that, branches, review, release, is yours. You write it in `docs/workflow/` and the agents follow it. The harness ships no roles, no personas, no phases.
 
-**Pointers, not paraphrase.** A context file states what the code cannot state and points to the code for the rest. Handbooks and test plans declare the files they describe in a `tracks:` field. When that code moves and the doc does not, the linter says so.
+**Pointers stay true.** Handbooks and test plans declare the files they describe in a `tracks:` field. When that code moves and the doc does not, the linter says so. Decisions are current state, rewritten when you change your mind, with a one-line history per reversal; git holds the rest.
 
 **Skills, in your engine's format.** Eight skills, one per pillar plus an audit and a drift detector, each with a slash command. They are written once and rendered where each engine looks for them.
 
