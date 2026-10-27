@@ -60,8 +60,8 @@ the doc content still matches reality.
          exists → drift.
        - The handbook describes a 3-step flow, the code now has 5 →
          drift.
-       - The test plan lists 12 scenarios, the test file contains 8 →
-         drift.
+       - The test plan describes a fixture / setup that no longer
+         exists in the test infrastructure → drift.
        - The workflow doc says "the `lint` job runs on PR", `ci.yml`
          no longer contains this job → drift.
      - **Syntactic consistency**: do the mentioned signatures /
@@ -122,8 +122,8 @@ lie about their own scope._
 
 ### docs/tests/integration-tests.md
 
-- ❌ Scenario "auth flow with magic link" — test file
-  `tests/integration/magic-link.int.test.ts` deleted.
+- ❌ Describes a `resetDb()` fixture — `tests/fixtures/db.ts`
+  deleted.
 
 ## Soft drift (M items)
 
@@ -149,8 +149,7 @@ lie about their own scope._
 ## Recommendations
 
 1. `/handbook <name>` to update <handbook>.
-2. `/test-plan integration` to remove/fix the "magic link"
-   scenario.
+2. `/test-plan integration` to fix the fixture description.
 3. `/workflow` to resync `coding-workflow.md` vs `ci.yml`.
 4. Write an ADR for change <X> if it was a decision (see
    `/decision`).

@@ -116,9 +116,9 @@ export function buildUmbrellaBody(extras: UmbrellaExtras): string {
     "",
     "- `README.md` — pitch, quick start, scripts. Entry point.",
     "- `docs/spec/<subsystem>.md` — *what* and *why* (tech-agnostic).",
-    "- `docs/handbook/<feature>.md` — *how it actually works* today.",
+    "- `docs/handbook/<feature>.md` — what the code does not say: entry points, traps, settings outside the repo, manual procedures.",
     "- `docs/decisions/<slug>.md` — ADRs: structural choices and rejected alternatives.",
-    "- `docs/tests/integration-tests.md` & `e2e-tests.md` — core scenarios.",
+    "- `docs/tests/integration-tests.md` & `e2e-tests.md` — test scope, stack, conventions, known gaps.",
     "- `docs/workflow/coding-workflow.md` — CI, branches, PR, release. How this team works: follow it.",
     ...(extras.hasProjectSkills
       ? ["- `docs/skills/*.skill.md` — the project's domain skills."]

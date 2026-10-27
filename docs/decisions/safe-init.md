@@ -1,87 +1,50 @@
 ---
-title: init never overwrites what it does not own
+title: The harness writes only files it owns and never merges
 status: accepted
 date: 2026-10-14
 author: Vaubaan core
 ---
 
-# `init` never overwrites what it does not own
+# The harness writes only files it owns and never merges
 
 ## Context
 
-Until 1.3.2, `init` wrote every rendered file unconditionally. The debug
-pass of 2026-10-14 confirmed several ways to lose user data: a
-hand-written `AGENTS.md` or `CLAUDE.md` replaced silently, engine
-settings replaced by harness-only content then deleted by `uninstall`,
-and a second `init` dropping everything `update` had preserved.
-
-`update` already had the right rules
-([project-update-migrations](./project-update-migrations.md),
-[safe-project-artifact-lifecycle](./safe-project-artifact-lifecycle.md));
-`init` did not use them.
+`init` once wrote every rendered file unconditionally, replacing
+hand-written `AGENTS.md` or engine settings, and later merged shared
+configuration files entry by entry: ownership records in the manifest,
+reversal on `uninstall`, a new case with each engine release. Deciding
+what a shared file should look like is judgment; the CLI only does what
+is mechanical and says what is left.
 
 ## Decision
 
-`init` and `update` share one installation planner. They differ only in
-where the engines come from: `init` takes them from its mandatory
-`--engines` option, `update` from the manifest.
-
-Rules applied by both:
-
-1. **A generated file** (`AGENTS.md`, `CLAUDE.md`, skills, commands)
-   that exists outside the manifest, or that changed since the harness
-   wrote it, stops the command before any write. All conflicts are
-   reported at once. The user moves the content to `docs/` or
-   `.harness-overrides/`, or keeps the file as theirs with
-   `--preserve <path>`.
-2. **No file is merged.** A file the harness does not own is left
-   byte-for-byte untouched
-   ([no-mcp-no-code-merge](./no-mcp-no-code-merge.md)).
-3. **Settings recorded by a previous run are kept**: preserved files
-   and the overrides folder. A `.harness-overrides/` folder in the
-   project is loaded by default.
-4. **Changes are applied in one transaction**, with a private backup
-   outside the project, and rolled back on error.
-
-`uninstall` removes a generated file only if it is unchanged since the
-harness wrote it; a modified one is kept with a warning.
+`init` and `update` share one planner, and `uninstall` follows the same
+rule. The harness touches a file only when it is absent or recorded in the
+manifest with an unchanged fingerprint; any other file is left byte for
+byte. Conflicts stop the
+command before the first write, all listed at once; the user moves the
+content or keeps the file with `--preserve`. Changes apply in one
+transaction with a private backup.
 
 ## Consequences
 
-- `init` can be run on any existing project without risk to its files.
-  The first run may stop with a list of conflicts to resolve.
-- Re-running `init` to change engines keeps everything `update`
-  preserves.
-- `init` creates a backup only when it touches files that already
-  existed.
+- No feature may need to edit a file the project also edits (engine
+  settings, MCP configuration): such a feature is out of scope
+  ([spec §1.1](../spec/coding-agent-harness.md)).
+- `uninstall` removes only unchanged generated files.
+- Paths are validated as a batch before any mutation
+  ([spec §12](../spec/coding-agent-harness.md)).
 
 ## Rejected alternatives
 
-### Keep `init` as a blind writer and document the risk
+### Merge shared configuration entry by entry
+What 1.4 did: safe for JSON keys, but it keeps ownership records, cleanup
+and tests for every file shape. All or nothing; nothing was chosen.
 
-The README warned about `AGENTS.md`; the same risk on engine settings
-was undocumented and destroyed user permissions and model settings.
+### A `--force` flag
+Reintroduces the silent data loss; `--preserve` and moving the content
+cover the legitimate cases.
 
-### Make `init` refuse to run when a manifest exists
-
-Simpler, but re-running `init` with different engines is the documented
-way to change them.
-
-### A `--force` flag to overwrite conflicts
-
-It would reintroduce the silent data loss this decision removes;
-`--preserve` and moving content cover the legitimate cases.
-
-### Merge shared configurations entry by entry (what 1.4.0 did)
-
-It worked, at the price of ownership records in the manifest and a
-merge module for every file shape. Removed in 2.0 with the files it
-merged.
-
-## History
-
-- 2026-10-14, 6c2d3fc: decided (1.4.0), with entry-level merge of the
-  hook and MCP files and a printed `.codex/config.toml` block.
-- 2026-10-22, 8a92564: the merge rules removed; a file the harness does
-  not own is left untouched.
-- 2026-10-22, c45b319: engine settings no longer written at all.
+### Refuse to run when a manifest or a shared file exists
+Re-running `init` is how engines change, and a project with its own
+settings is the routine case.

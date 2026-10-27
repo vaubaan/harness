@@ -63,8 +63,7 @@ function emptyManifest(engines: ReadonlyArray<Engine>): Manifest {
 /**
  * Installs or re-renders the harness. Shares the planner of `update`: files
  * the harness does not own are never overwritten, merged or deleted, and
- * changes are applied in one transaction (see docs/decisions/safe-init.md
- * and docs/decisions/no-mcp-no-code-merge.md).
+ * changes are applied in one transaction (see docs/decisions/safe-init.md).
  */
 export function initCommand(args: InitArgs): InitResult {
   const root = resolve(args.targetDir);

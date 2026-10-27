@@ -7,9 +7,8 @@ import { MANIFEST_FILENAME, readManifest } from "../../src/cli/manifest.js";
 import { uninstallCommand } from "../../src/cli/uninstall.js";
 import { updateCommand } from "../../src/cli/update.js";
 
-// Scenarios from docs/decisions/safe-init.md and
-// docs/decisions/no-mcp-no-code-merge.md: init never overwrites, merges or
-// deletes what it does not own.
+// Scenarios from docs/decisions/safe-init.md: init never overwrites, merges
+// or deletes what it does not own.
 
 const PACKAGE_DIR = resolve(__dirname, "../../src");
 let sandbox: string;

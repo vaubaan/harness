@@ -1,11 +1,10 @@
 ---
 id: decision-record-writer
 description: |
-  Wizard to write an ADR under `docs/decisions/<slug>.md` (no
-  numbering — see README). Detects the implicit decisions in the
-  current diff (commits, code, configs) and offers to turn them into
-  ADRs. Guarantees the 4 required sections: Context, Decision,
-  Consequences, Rejected alternatives.
+  Writes an ADR under `docs/decisions/<slug>.md`, only for a structural
+  decision that passes the admission test below. Everything else goes to
+  the spec, the handbook, the test plans or the workflow. ADRs are short:
+  one decision, four sections, about 40 lines.
 engines: [claude-code, codex-cli, opencode]
 requires: [multi-step]
 tags: [decisions, doc, writer, adr]
@@ -13,153 +12,117 @@ tags: [decisions, doc, writer, adr]
 
 # Decision Record Writer
 
-You are the Vaubaan harness's ADR (Architecture Decision Record)
-writing wizard. An ADR captures *a settled choice* — why we decided X
-rather than Y, when, and in what context. Without ADRs, choices get
-lost and the same debates are revisited every 6 months.
+The decision log holds **only the structural decisions in force**: the few
+choices a newcomer must know so they don't undo them, and that would cost a
+lot to reverse. It is not a journal of the project, nor a place to justify
+every choice. Most choices do not get an ADR.
 
-## When to invoke you
+## Admission test
 
-- A feature is finished that involves a non-trivial choice (lib,
-  pattern, architecture, dependency) → write the ADR before commit.
-- A PR carrying a decision is about to be merged → confirm that an
-  ADR exists (otherwise create a light "merge decision" one).
-- `/decision` invoked explicitly by the human.
-- `doc-audit` flagged an implicit decision in `git log` → write the
-  ADR retrospectively.
+Write an ADR only if **all three** answers are yes. Otherwise, do not write
+it: say which test fails and where the content goes instead.
 
-## Procedure
+1. **Costly to reverse.** Changing it later takes more than one ordinary PR:
+   it touches the code structure, the data model, a module boundary, the
+   security model, or a vendor/platform the code depends on.
+2. **A real alternative was weighed.** Someone could reasonably propose the
+   other option again; the ADR exists to stop that debate from restarting.
+   No rejected alternative worth one sentence → no ADR.
+3. **It outlives the ticket.** It constrains future work across the
+   codebase, not just the feature that triggered it.
 
-1. **Detect implicit decisions** (if invoked without an explicit
-   subject):
-   - `git log --oneline -n 50` — spot messages containing hints:
-     `decided`, `switched`, `migrated`, `removed`, `dropped`,
-     `replaced`, `chose X over Y`, `no longer using`, `now using`.
-   - `git diff <base>...HEAD` — spot changes to `package.json` (deps
-     added/removed), to config (`vercel.json`, `.github/workflows/`,
-     `tsconfig.json`), to structure (new `packages/<name>/`, or
-     removal).
-   - List the candidate decisions and ask the human which one to turn
-     into an ADR (or several).
-2. **Slug**: short kebab-case (3-6 words) summarizing the decision.
-   **No numbering** — the slug is the durable identity; no implicit
-   precedence logic is carried by the file name.
-   E.g.: `supabase-zk`, `trunk-based-branching`, `multi-engine-pivot-format`.
-   If you find an already existing file with this slug, pick a more
-   precise one (do not overwrite).
-3. **Load the template** `@vaubaan/harness/templates/decision.md.tmpl`.
-4. **Core questions** to ask the human:
-   - **Context**: what motivated the decision? What problem needed
-     solving? At what point in the project?
-   - **Decision**: *what was settled*, phrased as one declarative
-     sentence ("We use X for Y").
-   - **Consequences**: positive (what it unlocks) + negative (what it
-     constrains, technical debt, lock-in).
-   - **Rejected alternatives**: list the options that were considered
-     and discarded, *with the reason* for rejection. This is the most
-     valuable section — without it, the ADR is just a note.
-5. **Metadata**: Date (today), Author (the human or the org), Status
-   (`accepted` by default; `proposed` if still under debate;
-   `superseded by <slug>` if a more recent ADR overrides it).
-6. **Draft** the ADR. Submit it to the human. Iterate.
-7. **Write** `docs/decisions/<slug>.md` via `Write`.
-8. **Cross-link**: if the ADR concerns an existing spec or handbook,
-   mention them. If the decision *supersedes* an earlier ADR, add
-   `superseded_by: <slug>` in the old one (with human confirmation).
-9. **Update the index**: if `docs/decisions/README.md` exists, add a
-   line for the new ADR.
+## Not an ADR — where it goes
 
-## Criteria
+| Content | Goes to |
+| --- | --- |
+| Product rule (who can sign in, which channels, what is out of scope) | `docs/spec/` |
+| Implementation detail: config values, file layout, env variables | the code (traps and settings outside the repo: `docs/handbook/`) |
+| Test strategy and tooling (runner, target env, what is E2E) | `docs/tests/` |
+| CI, branches, deploy, harness and tooling upgrades | `docs/workflow/` |
+| Review rules and conventions | `docs/quality/code-quality.md` |
+| Temporary choice with a planned end (stub, demo data until ticket X) | the ticket, plus a line in the handbook |
+| Library choice that a single PR can swap | the PR description |
+| Dependency upgrade | the commit message |
 
-- **4 mandatory required sections**: `## Context`, `## Decision`,
-  `## Consequences`, `## Rejected alternatives` (the French headings
-  `## Contexte` / `## Décision` / `## Conséquences` / `## Alternatives
-  rejetées` are also accepted for backward compatibility). Without
-  Rejected alternatives, the `lint:decision-schema` linter breaks CI.
-- **Concise but complete**. An ADR is typically 50-150 lines. Not an
-  essay, not a sticky note.
-- **Dated**. The date in the frontmatter is the date the decision was
-  *made*, not the date the ADR was written (often retrospective).
-- **Immutable**. An accepted ADR is no longer modified — if the
-  decision changes, create a new ADR that *supersedes* the old one. No
-  rewrite.
+A one-sentence *why* may sit in the handbook or test plan next to the fact
+it explains. Do not create an ADR just to hold it.
 
-## Expected output
+## Format
 
-A `docs/decisions/<slug>.md` file:
+Hard limits — an ADR that exceeds them is rewritten, not accepted:
+
+- **One decision per ADR.** If the Decision section needs a bullet list of
+  unrelated points, split it or move the points to the handbook.
+- **About 40 lines** including frontmatter, 60 at most.
+- **Context**: 2-4 sentences. The forces that made the choice necessary. No
+  chronology (who said what on which date), no issue history.
+- **Decision**: 1-3 sentences in the present tense, stated as a rule ("X is
+  Y; Z never does W"). No implementation detail unless it *is* the rule.
+- **Consequences**: only what constrains future work — the rules a
+  developer must follow because of this decision. 2-4 bullets. No list of
+  benefits restating the decision; no operational to-dos (those go to the
+  handbook).
+- **Rejected alternatives**: only the options seriously weighed, one or two
+  sentences each, with the reason it was rejected in this project's
+  context.
+- No `References` section by default; link the spec or handbook inline when
+  the reader needs it.
 
 ```markdown
 ---
-title: <Short title — the decision in one sentence>
-status: accepted | proposed | superseded | deprecated
+title: <The decision in one sentence>
+status: accepted | proposed
 date: YYYY-MM-DD
-author: <name or org>
-supersedes: <slug>            # optional
-superseded_by: <slug>         # optional, added later
-# ⚠️ No `tracks:` field — see guardrail below.
+author: <name>
 ---
 
 # <Title>
 
 ## Context
 
-<2-5 ¶. The problem, the constraints, the state of the project at that
-time. What someone needs to know to understand why the question
-arose.>
+<2-4 sentences.>
 
 ## Decision
 
-<1-3 ¶. What was settled, phrased in the declarative present tense:
-"We use X. The main reason is Y.">
+<1-3 sentences, a rule.>
 
 ## Consequences
 
-### Positive
-- ...
-
-### Negative / constraints
-- ...
+- <constraint on future work>
 
 ## Rejected alternatives
 
-### <Alternative A>
-<Short description, reason for rejection.>
-
-### <Alternative B>
-<...>
-
-## References
-- <link to the relevant spec/handbook, threads, external RFCs>
+### <Alternative>
+<1-2 sentences: what it is, why not here.>
 ```
 
-Finish by:
-- Recalling the path of the written file.
-- Suggesting an update of the relevant spec or handbook if applicable.
-- Recommending a commit (but do not commit yourself).
+`date` is the day the decision was made. Never add a `tracks:` field: an
+ADR is not refreshed when the code moves (`lint:adr-no-tracks`).
+
+## Procedure
+
+1. Find the candidate: the subject given by the human, or the structural
+   changes of the current diff (new package or module boundary, removed
+   layer, new vendor, data model, security model).
+2. Run the admission test on it, out loud. If it fails, stop and name the
+   doc that should receive the content.
+3. Check that no ADR in `docs/decisions/` already covers it. If one does and
+   the decision changed, write the new ADR and **delete the old file**
+   (git keeps the history); list the old option in the new ADR's Rejected
+   alternatives and update the links to it.
+4. Ask the human only what the code cannot tell: the alternatives weighed
+   and why they lost.
+5. Draft within the format limits, submit it, iterate, then write
+   `docs/decisions/<slug>.md` (short kebab-case slug, no number).
+6. Update the links to the ADR in the docs that rely on it. Do not commit.
 
 ## Guardrails
 
-- **Never a `tracks:` field in an ADR's frontmatter.** The `tracks:`
-  field is a "refresh-this-doc-when-the-code-moves" sensor, reserved
-  for handbooks / test plans / workflow that describe the *current*
-  state of the system. An ADR documents a decision *frozen in time*:
-  it is not refreshed — it is superseded or remains valid. Attaching a
-  `tracks:` to it produces false drift (every dep bump or config tweak
-  wakes the ADR up while the decision is intact). If you inherit an
-  existing ADR carrying a `tracks:`, flag it; the `lint:adr-no-tracks`
-  linter should flag it too.
-- **Decide nothing on the human's behalf**. You capture a decision
-  *already made* (or about to be). If the human hesitates, propose a
-  `proposed` status rather than settling it yourself.
-- **Do not rewrite existing ADRs**. An ADR is immutable. If the
-  decision changed, create a new ADR with `supersedes: <slug>`.
-- **Do not skip the Rejected alternatives section**. If the human says
-  "there was no alternative", insist: there always is one (status quo,
-  do nothing, build vs. buy, lib A vs lib B). Force it to be made
-  explicit.
-- **No tech-bashing**. A rejected alternative is justified by *fit
-  with the project's context*, not by "X sucks". Neutral tone.
-- **No duplication**. Before writing, check that no ADR already covers
-  the same decision (look at the index + grep by keyword). If one
-  does, propose a `supersedes` or a status update instead.
-- **No auto-commit**. File write only.
+- **Decide nothing for the human.** If the choice is still open, use
+  `proposed` or do not write the ADR yet.
+- **Fewer, shorter ADRs.** When in doubt, no ADR. The log is read in full
+  by newcomers and agents; every extra ADR dilutes the ones that matter.
+- **In force only.** The log holds decisions that apply today. A superseded
+  or expired ADR is deleted, not kept with a status.
+- **Neutral tone** in rejected alternatives: fit with this project, not
+  judgement on a tool.

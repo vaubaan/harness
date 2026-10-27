@@ -1,55 +1,13 @@
 # Handbook
 
-Implementation documentation for `@vaubaan/harness` — how each
-subsystem actually works. Each entry has a `tracks: [...]` frontmatter
-that lists the code files it depends on (drift detection via
-`lint:tracks-drift`, see the `linters-architecture` entry).
+What the code of `@vaubaan/harness` does not say: entry points, cross-file invariants, traps, procedures. One `<slug>.md` per feature, no numbering; each declares the code it depends on in `tracks:` (drift warning past 10 commits, `lint:tracks-drift`).
 
-The other doc pillars live elsewhere:
-
-- `docs/spec/` — product spec (the **what**)
-- `docs/decisions/` — ADRs (the **why**)
-- `docs/handbook/` — *this folder* (the **how**)
-- `docs/tests/` — test plan
-- `docs/workflow/` — CI / branches / release
-
-## Naming convention
-
-**No numbering.** Each entry is a `<slug>.md` file (kebab-case) — no numeric prefix. This is deliberate:
-
-- **No precedence logic or "ordered chapters"** — the handbook is a collection of independent entries, read à la carte.
-- **Easy evolution**: add, remove, rename without breaking a numeric sequence.
-- **The slug is the durable identity.**
-
-## Entries
-
-- [Renderer pipeline](./renderer-pipeline.md) — pivot parse →
-  pure orchestrator → per-engine renderers → write to the
-  target directory; skills, commands and the umbrella only.
-- [Capabilities matrix](./capabilities-matrix.md) —
-  `CAPABILITIES_MATRIX` + `DEGRADED_CAPABILITIES`, blocking vs degraded
-  warnings, adding a new capability.
-- [Linters architecture](./linters-architecture.md) — the `Linter`
-  interface shared by the 15 linters, the aggregator, the versioned JSON
-  report, the gitignore and generated-files checks.
-- [CLI package resolution](./cli-package-resolution.md) —
-  `resolvePackageDir()` and `defaultPackageDir()` in dev/prod, the role of
-  `scripts/copy-content.mjs`, override via `--package-dir`.
-- [Overrides loading](./overrides-loading.md) — semantics of
-  `.harness-overrides/`, stock + add - disable merge, end-to-end example.
-- [File lifecycle](./uninstall.md) — path validation,
-  cleanup on re-init and uninstall, files released to the project.
-- [Updating a project](./project-update.md) — manifest migrations,
-  preview, backup and rollback, legacy Stop hook warning.
-- [Project skills](./project-skills.md) — domain skills kept in
-  `docs/skills/` and rendered alongside the built-in skills.
-- [Quality pillar](./quality-pillar.md) — `docs/quality/code-quality.md`,
-  optional pillar: shape linter, mention in `AGENTS.md`.
-
-## When to update
-
-When a file listed in a `tracks:` changes significantly.
-The `lint:tracks-drift` linter (`src/linters/tracks-drift.ts`) emits a
-warning beyond 10 commits on the tracked files since the handbook's last
-edit. It is a signal, not a blocker — reread and update
-if the described behavior has become wrong.
+- [Renderer pipeline](./renderer-pipeline.md) — sources to native engine files, `AGENTS.md`, `CLAUDE.md`.
+- [Capabilities matrix](./capabilities-matrix.md) — when a skill is skipped or rendered degraded for an engine.
+- [Linters architecture](./linters-architecture.md) — the linter contract, the report, drift and freshness traps.
+- [CLI package resolution](./cli-package-resolution.md) — how the content root is found in `src/` and `dist/`.
+- [Overrides loading](./overrides-loading.md) — `.harness-overrides/` merge order and its traps.
+- [Project skills](./project-skills.md) — `docs/skills/` rendered alongside the built-in skills.
+- [Quality pillar](./quality-pillar.md) — the optional `docs/quality/code-quality.md`.
+- [File lifecycle](./uninstall.md) — path checks, `init` re-runs, `uninstall`.
+- [Updating a project](./project-update.md) — manifest migrations, backup and rollback, 1.x leftovers.

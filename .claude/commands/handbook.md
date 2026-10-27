@@ -1,7 +1,7 @@
 ---
 id: handbook
 trigger: /handbook
-description: Documents the actual implementation of a feature under `docs/handbook/<name>.md`.
+description: Writes `docs/handbook/<name>.md` — only what the code does not say (entry points, invariants, traps, settings outside the repo, procedures).
 args:
   - name: name
     type: string
@@ -16,5 +16,6 @@ If `name` is provided, the skill targets `docs/handbook/<name>.md`. Without
 an argument, it offers the existing handbooks or creates a new one
 after identifying the code area to document.
 
-The skill reads the code, proposes a draft (`tracks:` frontmatter included
-via `handbook.md.tmpl`), and lets the human validate before writing.
+The skill reads the code, keeps only what an agent would not get from it
+quickly, proposes a short draft (`tracks:` frontmatter included via
+`handbook.md.tmpl`), and lets the human validate before writing.

@@ -44,9 +44,9 @@ Each pillar stores one kind of information the code cannot carry, and links to t
 | ----------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | `README.md`       | What this is, how to run it.                                               | `package.json` scripts, the quick start.                                                                   |
 | `docs/spec/`      | What we want, for whom, what we refuse to do. Vocabulary. Tech-agnostic.   | The modules and entry points that realize each requirement. A requirement with no pointer is a todo or dead. |
-| `docs/decisions/` | Why it is built this way, what was rejected, what changed since.           | The config files and commits that embody the decision: `tsconfig.json`, `ci.yml`, a sha.                  |
+| `docs/decisions/` | The structural choices in force: why, and what was rejected.               | The config files and commits that embody the decision: `tsconfig.json`, `ci.yml`, a sha.                  |
 | `docs/handbook/`  | The map: where to look, the invariants the code assumes, the gotchas.      | The files it describes, declared in `tracks:`. A map, not a retelling.                                     |
-| `docs/tests/`     | Which scenarios matter, what "done" means.                                 | The test that implements each scenario. A scenario with no test is an acceptance criterion still open.     |
+| `docs/tests/`     | Test scope, stack, conventions, known gaps. Never the covered scenarios.   | The test files: their titles say what is covered. A spec with no test is a known gap.                      |
 | `docs/workflow/`  | What lives outside the repo: approvals, protections, secrets, languages.   | `ci.yml`, build scripts, pre-commit hook.                                                                  |
 | `docs/quality/`   | Optional. The code rules this team holds, and the deviations it accepts.   | The linter and formatter configs that enforce the mechanical part.                                         |
 | `docs/skills/`    | Optional. Domain know-how the agent should load.                           | Whatever the skill needs.                                                                                  |
@@ -103,7 +103,7 @@ status: draft
 - Multi-currency: not before a customer asks.
 ```
 
-**`docs/decisions/postgres-over-sqlite.md`**: the why, the rejected options, the history. Current state, rewritten when you change your mind, with a one-line history per reversal; git holds the rest.
+**`docs/decisions/postgres-over-sqlite.md`**: one structural decision in force, about 40 lines: the why and the rejected options. When you change your mind, a new file replaces it; git holds the rest.
 
 ```markdown
 # Postgres over SQLite for the invoice store
@@ -119,11 +119,8 @@ and `src/db/client.ts`. Introduced in commit `4f1c2ab`.
 Local setup needs Docker. Migrations live in `db/migrations/`.
 
 ## Rejected alternatives
-| SQLite | single-writer lock under two workers |
-
-## History
-- 2026-03-02 `9a0b7e1`: started on SQLite for speed of setup.
-- 2026-06-14 `4f1c2ab`: moved to Postgres after the first lost write.
+### SQLite
+Where it started; its single-writer lock lost a write under two workers.
 ```
 
 **`docs/handbook/invoice-pipeline.md`**: the map, declared with `tracks:` so the linter notices when the code moves.
@@ -147,17 +144,18 @@ Gotcha: `void.ts` keeps the row and flips `status`; reports must filter
 on it (`src/reports/monthly.ts`).
 ```
 
-**`docs/tests/integration-tests.md`**: which scenarios matter, and the test that holds each one.
+**`docs/tests/integration-tests.md`**: scope, stack, conventions and known gaps. The covered scenarios are the test titles, never copied here.
 
 ```markdown
 ---
-tracks: [tests/integration/**/*.test.ts]
+tracks: [vitest.config.ts, tests/integration/fixtures/*.ts]
 ---
-| Scenario | Test |
-|---|---|
-| Issuing a draft twice fails the second time | `tests/integration/issue.test.ts` › "is irreversible" |
-| Voiding keeps the invoice visible in reports | `tests/integration/void.test.ts` › "stays in monthly report" |
-| Two workers issue the same draft | *open*: no test yet |
+## Scope
+Invoicing modules against a throwaway Postgres; no browser (→ e2e-tests.md).
+## Conventions
+One database per worker (`fixtures/db.ts`); never share a draft across tests.
+## Known gaps
+- ⚠️ Two workers issuing the same draft (spec invoicing §3) — not tested yet.
 ```
 
 **`docs/workflow/coding-workflow.md`**: what lives outside the repo, and pointers to what lives in it.

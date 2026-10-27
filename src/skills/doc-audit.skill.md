@@ -111,8 +111,8 @@ you audit them only if they exist:
 ### Tests
 - ❌ `docs/tests/integration-tests.md` missing.
 - ❌ `docs/tests/e2e-tests.md` missing.
-- ⚠️ Spec without a test plan: no integration-tests or e2e-tests
-  scenario mentions the spec (by name or by ID `[[spec-name]]`).
+- ⚠️ Spec without tests: no integration or E2E test file exercises the
+  subsystem, and the spec is not listed in a "Known gaps" section.
 - ❌ Stale test plan: `tracks:` points to code that no longer exists.
 - ⚠️ Explicit gaps listed in the "Known gaps" section of the test plan
   (not an error, but to be reported).
@@ -197,7 +197,7 @@ invent empty sections):
 - ✅/❌ docs/tests/integration-tests.md
 - ✅/❌ docs/tests/e2e-tests.md
 - Specs without a test plan:
-  - ⚠️ <spec>.md (no scenario references it)
+  - ⚠️ <spec>.md (no test, not listed as a known gap)
 
 ## README (root)
 

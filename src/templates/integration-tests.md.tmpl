@@ -1,50 +1,32 @@
 ---
+title: Integration test plan
 tracks:
-  - <TEST_DIR_OR_FILE_1>
-  - <TEST_DIR_OR_FILE_2>
+  - <RUNNER_CONFIG_AND_TEST_INFRASTRUCTURE>
 last_reviewed: <DATE>
 ---
 
 # Integration test plan
 
+<!--
+Never list the covered scenarios: the describe()/it() titles of the test
+files are their source of truth. Document what the code cannot tell.
+Target 20-50 lines, bullets. Do not restate the runner config.
+-->
+
 ## Scope
 
-Define what is tested in integration **vs** unit **vs** e2e:
+- Several modules assembled in one process, real I/O against local dependencies (ephemeral DB, network-level mocks, temporary filesystem). Unit tests live next to the code; full-system journeys are in [e2e-tests.md](./e2e-tests.md).
+- <project-specific boundary>
 
-- **Unit**: isolated, no real I/O, next to the code (`*.test.<ext>`).
-  Not documented here.
-- **Integration**: several modules assembled, real I/O against
-  local dependencies (ephemeral DB, service mocked at the network
-  level, temporary filesystem). This is the scope of this document.
-- **E2E**: complete system against real or staging dependencies,
-  walking through a user journey. Documented in
-  [e2e-tests.md](./e2e-tests.md).
+## Stack
 
-Specify here the boundaries specific to the current project.
+- <framework, test environment, core mocks / fixtures — with the *why* of a non-obvious choice>
 
-## Test stack
+## Conventions
 
-- **Runner:** <TEST_RUNNER>
-- **Assertions:** <ASSERTION_LIB>
-- **Fixtures:** <FIXTURE_STRATEGY>
-- **Setup / teardown:** <SETUP_TEARDOWN>
-- **Data:** <DATA_STRATEGY>
-
-## Covered scenarios
-
-| ID    | Scenario                            | Linked spec             | Test file                          |
-|-------|-------------------------------------|-------------------------|------------------------------------|
-| IT-01 | <SCENARIO_1_NAME>                   | [[<SPEC_NAME_1>]]       | <TEST_FILE_PATH_1>                 |
-| IT-02 | <SCENARIO_2_NAME>                   | [[<SPEC_NAME_2>]]       | <TEST_FILE_PATH_2>                 |
-| IT-NN | <SCENARIO_N_NAME>                   | [[<SPEC_NAME_N>]]       | <TEST_FILE_PATH_N>                 |
-
-Each scenario must cross-link the spec it verifies (syntax
-`[[spec-name]]`) — the `cross-link` linter uses it.
+- <where the tests live and how they are found>
+- <shared fixtures, cleanup, rules that protect shared state>
 
 ## Known gaps
 
-Explicitly list the areas not covered in integration, with a
-risk estimate and a pointer to the tracking ticket, if any.
-
-- <GAP_1> — risk <LOW | MEDIUM | HIGH> — <TRACKING_REF>
-- <GAP_N> — ...
+- ⚠️ **<what is not tested>** (spec [<name>](../spec/<name>.md)) — <reason, priority>

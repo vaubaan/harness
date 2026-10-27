@@ -17,7 +17,7 @@ export interface RenderPlanArgs {
 
 /**
  * The engine choice is mandatory: nothing is rendered for a tool the project
- * does not use (docs/decisions/engine-choice-mandatory.md).
+ * does not use (docs/spec/coding-agent-harness.md §8).
  */
 export function resolveEngineList(requested: ReadonlyArray<string> | undefined): Engine[] {
   if (!requested || requested.length === 0) {
