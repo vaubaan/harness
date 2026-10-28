@@ -1,58 +1,43 @@
-# Multi-engine pivot format
+---
+title: One pivot source per skill, one pure renderer per engine
+status: accepted
+date: 2026-05-21
+author: Vaubaan core
+---
 
-**Date:** 2026-05-21
-**Status:** accepted
-**Author:** Vaubaan core
+# One pivot source per skill, one pure renderer per engine
 
 ## Context
 
-The harness targets three coding agent engines, `claude-code`,
-`codex-cli` and `opencode`, each with its own native filesystem layout
-and frontmatter conventions
-([engine-native-layouts-1-0](./engine-native-layouts-1-0.md)). We want
-one set of doc skills that works identically on all three, without
-duplicating the content or building a heavy abstraction.
+The harness targets three engines with different native layouts and
+frontmatter conventions
+([engine-native-layouts-1-0](./engine-native-layouts-1-0.md)). The same
+doc skills must behave identically on all three without duplicating
+their content.
 
 ## Decision
 
-A single **pivot format** per artifact type:
-
-- `*.skill.md`, the source of every skill (spec §5);
-- `*.cmd.md`, the source of every slash command (spec §6).
-
-Three pure **per-engine renderers** (`src/renderers/claude-code.ts`,
-`codex-cli.ts`, `opencode.ts`) transform the pivot into the engine's
-native layout. Rendering is a pure function `(skill, engine) →
-RenderedFile[]`: no I/O, no state, idempotent.
-
-The pivot is Markdown with YAML frontmatter, readable and editable by
-hand. No templating engine sits in between.
+Each skill and each command has a single source, `*.skill.md` or
+`*.cmd.md`: Markdown with a strict YAML frontmatter, no templating in the
+body. One renderer per engine turns it into the engine's layout as a pure
+function `(source, engine) → files`.
 
 ## Consequences
 
-- One skill is one file in the package. Cross-engine differences live
-  in the frontmatter (`engines:`, `requires:`) and in the renderers,
-  not in duplicated copies.
-- Adding an engine is writing a fourth renderer; no source file
-  changes.
-- The same pivot can be skipped or rendered in degraded mode per engine
-  through the capabilities matrix
-  ([capabilities-matrix-with-degradation](./capabilities-matrix-with-degradation.md)).
+- Cross-engine differences live in the frontmatter (`engines:`,
+  `requires:`) and in the renderers, never in per-engine copies of a skill.
+- Adding an engine means writing a renderer; no source changes.
+- Which engine supports which capability is declared once in the package,
+  not in each skill ([spec §4.2](../spec/coding-agent-harness.md)).
 
 ## Rejected alternatives
 
-- **Separate sources per engine**: N× duplication, inevitable drift.
-- **A templating engine on the source**: needless runtime complexity; a
-  skill's body is a prompt, not a template.
-- **One common layout imposed on all three engines**: each engine has
-  its own loader scanning its own folder.
-- **Convert on the fly inside the agent**: moves the problem into the
-  engine and breaks the idempotence of `init`.
+### Separate sources per engine
+N× duplication and inevitable drift.
 
-## History
+### A templating engine on the source
+A skill body is a prompt, not a template; conditionals in it would make
+every source harder to read and test.
 
-- 2026-05-21: decided with three pivot types, `*.agent.md` included,
-  and a YAML to TOML conversion for OpenCode.
-- 2026-09-20: TOML output dropped, OpenCode reads YAML (1.0.0).
-- 2026-10-22, c45b319: `*.agent.md` and `renderAgents` removed
-  ([no-personas-no-code-judgment](./no-personas-no-code-judgment.md)).
+### Convert inside the agent at load time
+Moves the problem into the engine and breaks the idempotence of `init`.

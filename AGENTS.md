@@ -6,9 +6,9 @@ This file describes **how to work in this project**. The **business context** (w
 
 - `README.md` — pitch, quick start, scripts. Entry point.
 - `docs/spec/<subsystem>.md` — *what* and *why* (tech-agnostic).
-- `docs/handbook/<feature>.md` — *how it actually works* today.
+- `docs/handbook/<feature>.md` — what the code does not say: entry points, traps, settings outside the repo, manual procedures.
 - `docs/decisions/<slug>.md` — ADRs: structural choices and rejected alternatives.
-- `docs/tests/integration-tests.md` & `e2e-tests.md` — core scenarios.
+- `docs/tests/integration-tests.md` & `e2e-tests.md` — test scope, stack, conventions, known gaps.
 - `docs/workflow/coding-workflow.md` — CI, branches, PR, release. How this team works: follow it.
 
 ## Doc-first
@@ -28,10 +28,10 @@ The files the harness generates (`AGENTS.md`, `CLAUDE.md`, the `.claude/`, `.age
 
 ## Doc-skills
 
-- `decision-record-writer` (`/decision`) — Wizard to write an ADR under `docs/decisions/<slug>.md` (no
+- `decision-record-writer` (`/decision`) — Writes an ADR under `docs/decisions/<slug>.md`, only for a structural
 - `doc-audit` (`/doc-audit`) — Audits the completeness and freshness of the docs (6 pillars: README,
 - `drift-detector` (`/drift`) — Detects code ↔ doc drift. For each doc file that declares a
-- `handbook-writer` (`/handbook`) — Documents the actual implementation of a feature or subsystem under
+- `handbook-writer` (`/handbook`) — Writes or updates `docs/handbook/<slug>.md`: only what an agent cannot
 - `readme-writer` (`/readme`) — Maintains `README.md` at the repo root. Syncs the links to the other
 - `spec-writer` (`/spec`) — Human-guided wizard to write or update a `docs/spec/<name>.md`
 - `test-plan-writer` (`/test-plan`) — Updates `docs/tests/integration-tests.md` and/or

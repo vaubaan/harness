@@ -12,7 +12,7 @@ export const MANIFEST_VERSION = "6";
 // Fields written by 1.x and dropped on read as unknown keys: the entry
 // ownership of shared files (`hookConfigs`, `opencodeConfig`, `mcpConfig`)
 // and the Stop hook preference (`stopHookInstalled`, `stopHookEngines`).
-// Decisions: no-mcp-no-code-merge, lint-in-ci-and-pre-commit.
+// Decisions: safe-init, lint-in-ci-and-pre-commit.
 const ManifestSchema = z.object({
   version: z.enum(["4", "5", MANIFEST_VERSION]),
   engines: z.array(z.string()),

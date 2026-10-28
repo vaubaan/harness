@@ -1,62 +1,33 @@
 ---
+title: E2E test plan
 tracks:
-  - <E2E_TEST_DIR_OR_FILE_1>
-  - <E2E_TEST_DIR_OR_FILE_2>
+  - <RUNNER_CONFIG_AND_TEST_INFRASTRUCTURE>
 last_reviewed: <DATE>
 ---
 
 # E2E test plan
 
+<!--
+Never list the covered scenarios: the describe()/it() titles of the test
+files are their source of truth. Document what the code cannot tell.
+Target 20-50 lines, bullets. Do not restate the runner config.
+-->
+
 ## Scope
 
-E2E tests verify the **complete** system against real dependencies
-(or a staging environment faithful to prod). We distinguish:
-
-- **Golden paths**: the main user journeys that must
-  pass on every release. Exhaustive coverage required.
-- **Edge cases**: less frequent but high-value scenarios
-  (errors, permissions, boundary states). Selective coverage.
-
-Anything that can be validated in local integration (see
-[integration-tests.md](./integration-tests.md)) **must** be —
-E2E tests are expensive, we reserve them for journeys that cannot
-be validated otherwise.
+- The complete system against real or staging dependencies, on the journeys that cannot be validated in [integration](./integration-tests.md).
+- <project-specific boundary>
 
 ## Stack
 
-- **E2E runner:** <E2E_RUNNER>
-- **Drivers:** <BROWSER_OR_API_DRIVER>
-- **Target environment:** <ENV_TARGET>
-- **Reporting:** <REPORT_TOOL>
+- <framework, test environment, core mocks / fixtures — with the *why* of a non-obvious choice>
 
-## Fixture conventions
+## Conventions
 
-- **E2E organization:** each scenario runs in an isolated
-  fixture (`<E2E_ORG_NAMING_CONVENTION>`) to avoid
-  interference between parallel runs.
-- **Naming:** <FIXTURE_NAMING_RULE>
-- **Seed data:** <SEED_STRATEGY>
-- **Authentication:** <AUTH_STRATEGY>
-
-## Sweeper / cleanup
-
-E2E fixtures inevitably leave artifacts behind (created orgs,
-uploaded files, in-flight jobs). The sweeper:
-
-- **Cadence:** <SWEEPER_FREQUENCY>
-- **Purge criterion:** <PURGE_CRITERIA>
-- **Logs:** <SWEEPER_LOG_LOCATION>
-- **Dry-run mode:** <DRY_RUN_SWITCH>
-
-## Covered scenarios
-
-| ID     | Scenario                          | Category        | Linked spec          | Test file                  |
-|--------|-----------------------------------|-----------------|----------------------|----------------------------|
-| E2E-01 | <SCENARIO_1_NAME>                 | golden          | [[<SPEC_NAME_1>]]    | <TEST_FILE_PATH_1>         |
-| E2E-02 | <SCENARIO_2_NAME>                 | edge            | [[<SPEC_NAME_2>]]    | <TEST_FILE_PATH_2>         |
-| E2E-NN | <SCENARIO_N_NAME>                 | golden | edge   | [[<SPEC_NAME_N>]]    | <TEST_FILE_PATH_N>         |
+- <where the tests live and how they are found>
+- <shared fixtures, cleanup, rules that protect shared state>
+- Dedicated test org / project: `<name>`; orphaned resource sweeper: `<script>`
 
 ## Known gaps
 
-- <GAP_1> — <REASON> — <TRACKING_REF>
-- <GAP_N> — ...
+- ⚠️ **<what is not tested>** (spec [<name>](../spec/<name>.md)) — <reason, priority>

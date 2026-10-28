@@ -1,234 +1,177 @@
 # Vaubaan harness — spec
 
-> **Status:** stable, 2.0 contract (2026-10-22). The harness (`@vaubaan/harness`) *harnesses*
-> a project directory so that a coding agent (claude-code /
+> **Status:** stable, 2.1 contract. The harness (`@vaubaan/harness`)
+> *harnesses* a project directory so that a coding agent (claude-code /
 > codex-cli / opencode) is immediately productive in it, and provides
-> the skills that *keep alive* a project's **doc**
-> (6 mandatory pillars: README.md at the root + spec + decisions +
-> handbook + tests + workflow under `docs/`; 2 optional pillars:
-> skills and quality, see §9.1.2).
->
-> The harness is **standalone** — a simple package + companion CLI
-> that drops doc skills, commands and an engine-neutral `AGENTS.md`
-> into a target directory. No runtime dependency, no engine hook, no
-> agent persona, no integration with any particular orchestrator: a
-> human, the CI or a third-party script invokes `vaubaan harness init`.
-> What persists in the project repo is the **doc** (6 pillars, see §9)
-> plus the generated files, which are committed and checked against the
-> current render by a linter (see §3.3). The harness imposes one working
-> rule, doc-first; the team's own workflow is written in
-> `docs/workflow/`, not supplied by the harness.
+> the skills that *keep alive* the project's **doc**: 6 mandatory
+> pillars (README.md at the root + spec + decisions + handbook + tests +
+> workflow under `docs/`) and 2 optional ones (skills and quality, see
+> §9.1.2).
 
 ## 0. Vocabulary
 
 The harness reasons with these words:
 
-- **Harness** — the subsystem (a `@vaubaan/harness` package + a companion
-  CLI `vaubaan harness ...`). No daemon, no runtime service;
-  it is *configuration dropped into a target directory*.
-- **Harness** — the set of agent configuration files placed
-  in a target directory: `AGENTS.md` (global instructions),
-  skills (capabilities), commands (slash-commands). Dropped by
-  `vaubaan harness init` and committed (see §3.3).
+- **Harness** — the `@vaubaan/harness` package and its companion CLI
+  `vaubaan-harness`, and by extension the set of agent configuration
+  files it drops into a target directory: `AGENTS.md` (global
+  instructions), skills (capabilities), commands (slash-commands). No
+  daemon, no runtime service.
 - **Engine** — target coding agent: `claude-code | codex-cli |
   opencode`. Each has its own native skills/commands layout (see §4.3).
 - **Skill** — reusable unit of capability. Pivot format
-  `*.skill.md` (see §5); rendered per-engine at init time.
+  `*.skill.md` (see §5); rendered per engine.
 - **Command** — slash-command invocable by the human or the agent
-  (`/doc-audit`, `/spec-writer`, …). Pivot format `*.cmd.md` (see §6).
+  (`/doc-audit`, `/spec`, …). Pivot format `*.cmd.md` (see §6).
 - **Doc** — umbrella for the persistent artifacts supervised by the
   harness:
   - **README** (`README.md` at the root, outside `docs/`) — entry point
     of the repo: pitch, install, usage, links to the other pillars.
   - **spec** (theoretical vision, "what we want") — `docs/spec/`,
   - **decisions** (ADRs, "what we settled") — `docs/decisions/`,
-  - **handbook** (implementation docs, "how it actually works") —
+  - **handbook** (what the code does not say: entry points, traps, settings outside the repo) —
     `docs/handbook/`,
   - **tests** (test plans, "how we guarantee it works") —
-    `docs/tests/`, two required files in v1:
+    `docs/tests/`, two required files:
     `integration-tests.md` and `e2e-tests.md`,
   - **workflow** (operational process, "how we work") —
-    `docs/workflow/`, one required file in v1:
-    `coding-workflow.md` (CI, prod/staging env variants, PR
-    process or direct-push, branch logic, release / deploy
-    logic).
-- **Doc-skill** — cross-cutting doc-maintenance skill
-  (`doc-audit`, `spec-writer`, `decision-record-writer`, `handbook-writer`,
-  `test-plan-writer`, `workflow-writer`, `readme-writer`,
-  `drift-detector`). Invocable by the agent or by the human via
-  slash-command.
-- **Override** — a project's local override of the dropped harness
-  (adding/disabling/modifying a skill). **Gitignored** by
-  design (see §11) — it is local customization, not harness
-  versioning.
-- **Doc-audit** — the harness's canonical skill that checks the
-  completeness and freshness of the doc (see §10).
+    `docs/workflow/`, one required file: `coding-workflow.md` (CI,
+    env variants, PR process or direct-push, branches, release).
+- **Doc-skill** — cross-cutting doc-maintenance skill (see §7).
+  Invocable by the agent or by the human via slash-command.
+- **Override** — a local, gitignored customization of the dropped
+  harness (adding, disabling or replacing a skill or command, see §11).
+- **Manifest** — `.harness-manifest.json`, generated: what the harness
+  wrote, for which engines, with fingerprints (see §13.1).
 
 ### 0.1 Position
 
-`@vaubaan/harness` is a standalone package. No coupling to
-a third-party service, no dependency on a session runtime.
+`@vaubaan/harness` is a standalone package: a CLI and a library that
+drop files into a project and lint its docs. No coupling to a
+third-party service, no session runtime, no protocol with an
+orchestrator, no supervision or end-of-turn signal.
 
-Installation and update are explicitly invoked by the
-user, their CI or their script. No automatic injection at
-session start is promised. The project's checks cover
-the harness and its documents, with no convention imposed by an
-abandoned runtime. No engine hook is installed: the documentation
-check runs in CI, in the project's git pre-commit hook and on demand
-(`vaubaan harness lint`); no supervision signal is emitted. See
-[the removal of CAR couplings](../decisions/retire-coding-agent-runner-coupling.md).
-
-The flow is minimal:
+Installation and update are invoked explicitly by the user, their CI
+or their script; nothing is injected at session start. No engine hook
+is installed: the documentation check runs in CI, in the project's git
+pre-commit hook and on demand (`vaubaan-harness lint`).
 
 ```
-@vaubaan/harness (npm)
+@vaubaan/harness (package registry)
         │
-        │ npm install / npx -y
         ▼
-CLI `vaubaan harness init <target-dir> --engines=<list>`
-        │
-        │ render skills + commands + the umbrella
+vaubaan-harness init <target-dir> --engines=<list>
+        │  render skills + commands + the umbrella
         ▼
 <target-dir>/
-  AGENTS.md                ← umbrella: the working rule, the project map, the checks, the doc-skills
-  CLAUDE.md                ← imports `@AGENTS.md` (claude-code only)
+  AGENTS.md                      ← umbrella: working rule, project map, checks, doc-skills
+  CLAUDE.md                      ← imports `@AGENTS.md` (claude-code only)
   .claude/skills/<id>/SKILL.md   (claude-code)
   .agents/skills/<id>/SKILL.md   (codex-cli — the only repo folder Codex scans)
-  .opencode/skills/<id>/SKILL.md (opencode, if this skill is not already exposed by another engine)
+  .opencode/skills/<id>/SKILL.md (opencode, if the skill is not already exposed by another engine)
   .<engine>/commands/<id>.md     (claude-code, opencode — no commands on the Codex side)
   .harness-manifest.json         ← what was written, committed with the rest
 ```
 
-The harness does not touch secrets, does no network I/O, and
-assumes nothing about the calling environment: it is a pure
-transformation `(catalog, engines, overrides) → dropped files`. The
-engine list is mandatory: nothing is rendered for a tool the project
-does not use. The harness ships no agent persona: roles, phases and
-the team's workflow are the project's, written in `docs/workflow/`.
+The harness does not touch secrets, does no network I/O, and assumes
+nothing about the calling environment: it is a pure transformation
+`(catalog, project skills, engines, overrides) → dropped files`.
 
 ## 1. Vision
 
 The **harness** is the subsystem that:
 
 1. **Standardizes** agent configuration across the 3 supported
-   engines. The same `doc-audit.skill.md` is rendered into `.claude/skills/`,
-   `.agents/skills/` (Codex), `.opencode/skills/`. The `*.skill.md` pivot format
-   guarantees we maintain only one source per skill (see §5).
-2. **Ships** a canonical set of v1 skills (see §7) covering a
-   project's doc lifecycle: `doc-audit`, `spec-writer`,
-   `decision-record-writer`, `handbook-writer`, `drift-detector`,
-   plus `test-plan-writer`.
-3. **Ships no agent persona.** The harness provides no role, no
-   phase and no workflow: the team writes how it works in
-   `docs/workflow/` and the agents read it. The only rule the harness
-   imposes is doc-first, stated in the umbrella `AGENTS.md`. All
-   skills and commands are dropped into the target directory for the
-   engines the operator names (see §7, §8).
-6. **Enforces its rules via linters**. Every check that can be
-   mechanized (file presence, frontmatter schema, tech keywords
-   in `spec/`, cross-links, freshness of the generated files) is
-   shipped as an **exit-code linter** run in CI
-   (`npx -y @vaubaan/harness lint`), in the project's git pre-commit
-   hook and on demand, so that a harnessed project *cannot* merge a PR
-   that creates mechanically detectable drift (see §10.2). No engine
-   hook is installed. The `doc-audit` skill additionally covers the
-   non-mechanizable semantic judgment.
-4. **Maintains the doc**. The harness's implicit promise
-   is: every harnessed project keeps its `docs/spec/`,
-   `docs/decisions/`, `docs/handbook/` consistent and complete — it is
-   `doc-audit` that checks it, and `spec-writer` /
-   `decision-record-writer` / `handbook-writer` that feed it.
-5. **Stays lightweight on the project repo side**. The generated files
-   and the manifest are committed so that a clone has the whole
-   context without the harness installed, but there is no logic to
-   maintain: the harness version is the `@vaubaan/harness` version tag
-   used at init. A project "is harnessed" because `vaubaan harness
-   init` was run in its directory — no particular runtime needed.
+   engines. One source per skill (see §5), rendered into each engine's
+   native layout.
+2. **Ships** a canonical set of doc-skills (see §7) covering the
+   project's doc lifecycle: audit, writers for each pillar, drift
+   detection.
+3. **Ships no agent persona.** No role, no phase, no workflow: the only
+   rule it imposes is doc-first, stated in `AGENTS.md`; the team writes
+   how it works in `docs/workflow/` and the agents read it.
+4. **Enforces its rules via linters.** Every check that can be
+   mechanized is an exit-code linter run in CI, in the pre-commit hook
+   and on demand, so that a harnessed project cannot merge a PR that
+   creates mechanically detectable drift (see §10.2). The `doc-audit`
+   skill covers the semantic judgment.
+5. **Stays lightweight on the project side.** The generated files and
+   the manifest are committed so that a clone has the whole context
+   without the harness installed (see §3.3); the project maintains
+   nothing by hand outside `docs/`. The harness version is the package
+   version the project pins as a dev dependency, so that CI and local
+   renders agree.
 
 ### 1.1 Explicitly out of scope
 
-- **No committed project manifest.** No `harness.yaml`,
-  `.harness.json`, or equivalent. The project repo does not know which
-  harness version it carries; that is carried by the version tag
-  used at init.
-- **No committed override.** The `.harness-overrides/` mechanism is
-  *gitignored* by design (see §11). A harness fork for a
-  project = forking the `@vaubaan/harness` package, not customizing in
-  the repo.
-- **No runtime daemon.** The harness is dropped configuration;
-  nothing runs in the background. Skills execute in the
-  coding engine's process (claude-code, codex-cli, opencode),
-  not in a dedicated harness process.
-- **No telemetry.** The harness phones home about nothing. The CLI only
-  performs local file writes.
-- **No cross-project sharing.** No "skills shared across
-  several projects of the same org" — all skills come from the
-  `@vaubaan/harness` package. If a project has a custom skill, it forks
-  the package (or proposes it upstream).
-- **No hot-reload during an execution.** Once `init` has run,
-  the dropped files are frozen. To pick up an update:
-  re-run `init` or `update` (idempotent; never overwrites a file
-  the harness does not own).
-- **No skill generation by the agent.** A skill is written
-  deliberately by a human (or with an agent's help in
-  brainstorm mode), then committed to `@vaubaan/harness`. No
-  auto-creation.
+- **No project configuration file to maintain.** No `harness.yaml` or
+  equivalent; the manifest is generated, never edited.
+- **No committed override.** `.harness-overrides/` is gitignored (see
+  §11). Knowledge shared by the team goes to `docs/skills/` (§9.1.2);
+  a change to the harness itself is an upstream PR.
+- **No runtime daemon.** Skills execute in the engine's process, not in
+  a harness process.
+- **No telemetry.** The CLI only performs local file reads and writes.
+- **No skills shared across projects** outside the package: a skill is
+  either shipped by `@vaubaan/harness` or kept in one project's
+  `docs/skills/`.
+- **No hot-reload.** The dropped files are frozen until `init` or
+  `update` runs again.
+- **No skill generation by the agent.** A skill is written deliberately
+  and committed (to the package or to `docs/skills/`).
+- **No engine settings, hook, plugin or MCP configuration.** The harness
+  never reads, writes or lists `.claude/settings.json`,
+  `.codex/hooks.json`, `.codex/config.toml`, `.mcp.json` or
+  `.opencode/opencode.json`: those are the project's.
+- **No merge.** The harness never merges its content into a file it
+  does not own (see §13.1).
+- **No code-quality judgment.** No skill audits code; a project that
+  wants one keeps it in `docs/skills/`.
 
 ## 2. Domain
 
 ### 2.1 Hierarchy
 
 ```
-@vaubaan/harness (npm package, source of truth)
+@vaubaan/harness (package, source of truth)
+   ├── skills/<id>.skill.md     # skill pivot format (see §5)
+   ├── commands/<id>.cmd.md     # command pivot format (see §6)
+   └── templates/               # skeletons of the doc pillars (see §9.2)
    │
-   ├── skills/<id>.skill.md         # skill pivot format (see §5)
-   ├── commands/<id>.cmd.md         # command pivot format (see §6)
-   └── templates/                   # spec / decision / handbook / tests skeletons
-   │
-   │ rendered via
-   ▼
-CLI `vaubaan harness init <target-dir> --engines=<list>`
-   │
+   │ rendered with the project's docs/skills/ and .harness-overrides/
    ▼
 <target-dir>/
-   ├── AGENTS.md                       # umbrella: working rule + project map + checks + doc-skills
+   ├── AGENTS.md                # umbrella
    ├── .<engine>/skills/<id>/SKILL.md
    ├── .<engine>/commands/<id>.md
-   └── .harness-overrides/             # (if present in the target directory, gitignored)
+   └── .harness-manifest.json
 ```
 
 ### 2.2 Definitions
 
-| Entity            | Short definition                                                                                                                               |
-|-------------------|------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Harness**       | The `@vaubaan/harness` package + the `vaubaan harness *` CLI. No daemon.                                                                         |
-| **Harness**       | The set of files dropped into the target directory: AGENTS.md + skills + commands rendered per-engine.                                         |
-| **Engine**        | Target coding agent. v1: `claude-code`, `codex-cli`, `opencode`. Each has its native layout.                                                   |
-| **Skill format**  | `*.skill.md`: Markdown + YAML frontmatter describing a skill (id, engines, tools, body prompt). Single source rendered per-engine. See §5.      |
-| **Command format**| `*.cmd.md`: slash-command (trigger, args, invoked skill). See §6.                                                                                |
-| **Renderer**      | Per-engine module that transforms `*.skill.md` / `*.cmd.md` into the target engine's native layout. See §4.                                      |
-| **Doc**           | Umbrella = spec + decisions + handbook. Persists under `docs/` in the project repo.                                                              |
-| **Override**      | File under `<target-dir>/.harness-overrides/` that overrides a skill / command for this project. Gitignored.                                   |
-| **Skill manifest**| YAML frontmatter of a `*.skill.md` declaring `id`, `engines`, `tools`, `tags`. Source of authority for per-engine rendering.                     |
+| Entity             | Short definition                                                                                              |
+|--------------------|---------------------------------------------------------------------------------------------------------------|
+| **Renderer**       | Per-engine module that transforms `*.skill.md` / `*.cmd.md` into the engine's native layout (see §4).        |
+| **Skill frontmatter** | YAML header of a `*.skill.md` declaring `id`, `description`, `engines`, `requires`, `tags`. Drives per-engine rendering. |
+| **Capability**     | A feature a skill may require from an engine (`multi-step`, `slash-command`, `inline-exec`), see §4.2.       |
+| **Generated file** | A file the harness rendered and records in the manifest; owned by the harness until edited or preserved.      |
 
 ### 2.3 States (statelessness)
 
-The harness **has no persistent runtime service**. Its rendering is
-functional; the install and update operations keep the artifacts'
-provenance and the necessary backups locally.
-The content operations remain:
+The harness **has no persistent runtime service**. Rendering is
+functional; install and update keep the artifacts' provenance and the
+necessary backups locally.
 
-- **render(harness, engine, overrides) → files**: pure function,
-  no side-effect. **Always** emits all agents, skills and
-  commands; no per-kind filtering. Used by the `init` CLI.
-- **audit(repo) → report**: `doc-audit` skill, executed by the agent
-  within its invocation.
-- **scaffold(repo, type) → files**: `spec-writer` /
-  `decision-record-writer` / `handbook-writer` skills, executed by the agent.
+- **render(catalog, engines, overrides) → files**: pure function, no
+  side effect. Emits every skill and command, filtered only by the
+  `engines:` and `requires:` constraints (§4.2).
+- **audit(repo) → report**: `doc-audit` skill, executed by the agent.
+- **scaffold(repo, pillar) → files**: the writer skills, executed by
+  the agent.
 
 Given identical inputs, rendering produces the same contents. Applying
-these contents also takes into account the existing installation and
-file ownership (update contract §13.1).
+them takes the existing installation and file ownership into account
+(§13.1).
 
 ## 3. Filesystem layout
 
@@ -236,116 +179,55 @@ file ownership (update contract §13.1).
 
 ```
 node_modules/@vaubaan/harness/
-├── package.json                      # version, peerDeps, exports
-├── src/
-│   ├── render.ts                     # pure render function
-│   ├── renderers/
-│   │   ├── claude-code.ts
-│   │   ├── codex-cli.ts
-│   │   └── opencode.ts
-│   └── parser/
-│       ├── skill.ts                  # parse *.skill.md frontmatter + body
-│       └── cmd.ts                    # same for *.cmd.md
-├── linters/                          # mechanical CI gates (see §10.2)
-│   ├── readme-presence.ts
-│   ├── readme-sections.ts
-│   ├── doc-layout.ts
-│   ├── cardinal-files.ts
-│   ├── decision-schema.ts
-│   ├── adr-no-tracks.ts
-│   ├── frontmatter-tracks.ts
-│   ├── tracks-drift.ts
-│   ├── spec-tech-agnostic.ts
-│   ├── cross-links.ts
-│   ├── orphan-decisions.ts
-│   ├── gitignore-harness.ts
-│   ├── quality-schema.ts
-│   └── generated-fresh.ts
-├── skills/                           # doc-skills (cross-cutting)
-│   ├── doc-audit.skill.md
-│   ├── spec-writer.skill.md
-│   ├── decision-record-writer.skill.md
-│   ├── handbook-writer.skill.md
-│   ├── test-plan-writer.skill.md
-│   ├── workflow-writer.skill.md
-│   ├── readme-writer.skill.md
-│   └── drift-detector.skill.md
-├── commands/
-│   ├── doc-audit.cmd.md
-│   ├── spec.cmd.md
-│   ├── decision.cmd.md
-│   ├── handbook.cmd.md
-│   ├── test-plan.cmd.md
-│   ├── workflow.cmd.md
-│   ├── readme.cmd.md
-│   └── drift.cmd.md
-└── templates/
-    ├── spec.md.tmpl
-    ├── decision.md.tmpl
-    ├── handbook.md.tmpl
-    ├── integration-tests.md.tmpl
-    ├── e2e-tests.md.tmpl
-    ├── coding-workflow.md.tmpl
-    ├── code-quality.md.tmpl
-    └── readme.md.tmpl
+├── skills/      # the 8 doc-skills (§7)
+├── commands/    # one command per writer and audit skill
+├── templates/   # readme, spec, decision, handbook, integration-tests,
+│                # e2e-tests, coding-workflow, code-quality (§9.2)
+└── (CLI, renderers, parser, linters)
 ```
 
-### 3.2 In the target directory (after `vaubaan harness init`)
+### 3.2 In the target directory (after `init`)
 
 ```
 <target-dir>/
-├── AGENTS.md                         # umbrella: working rule, project map, checks,
-│                                    # listing of the available doc-skills/commands
+├── AGENTS.md                         # umbrella: working rule, project map, checks, doc-skills
 ├── CLAUDE.md                         # imports `@AGENTS.md` (claude-code only)
 ├── .harness-manifest.json            # what the harness wrote, with fingerprints
 ├── .claude/                          # if engine=claude-code
-│   ├── skills/
-│   │   └── <id>/SKILL.md
-│   └── commands/
-│       └── <id>.md
+│   ├── skills/<id>/SKILL.md
+│   └── commands/<id>.md
 ├── .agents/skills/<id>/SKILL.md      # if engine=codex-cli (also read by opencode)
 ├── .opencode/                        # if engine=opencode
 │   ├── commands/
 │   └── skills/                       # only if no other engine exposes the skills
 └── .harness-overrides/               # optional, gitignored (see §11)
-    ├── skills/
-    └── commands/
 ```
 
-The harness writes nothing under `.codex/` any more: Codex reads its
-skills from `.agents/skills/` and has no command files. It writes no
-engine settings file (`.claude/settings.json`, `.codex/hooks.json`),
-no plugin and no MCP configuration: those are the project's.
+The harness writes nothing under `.codex/`: Codex reads its skills from
+`.agents/skills/` and has no command files.
 
 ### 3.3 In the project repo (what persists vs gitignored)
 
 ```
 project/
 ├── README.md                         # ← COMMITTED (README pillar, root)
-├── docs/                             # ← COMMITTED (5 underlying pillars)
-│   ├── spec/
-│   ├── decisions/
-│   ├── handbook/
-│   ├── tests/
-│   └── workflow/
-├── AGENTS.md, CLAUDE.md, .<engine>/  # ← COMMITTED (generated by `init`)
-├── .harness-manifest.json            # ← COMMITTED (what was generated)
+├── docs/                             # ← COMMITTED (the other pillars)
+├── AGENTS.md, CLAUDE.md, .<engine>/  # ← COMMITTED (generated)
+├── .harness-manifest.json            # ← COMMITTED (generated)
 ├── .gitignore                        # contains .harness-overrides/ and .vaubaan/
 ├── .harness-overrides/               # ← GITIGNORED (see §11)
-├── .vaubaan/                         # ← GITIGNORED (skill reports)
-└── (all the rest of the project code)
+└── .vaubaan/                         # ← GITIGNORED (skill reports)
 ```
 
-The files dropped by `init` are **committed**, like any generated code:
-a clone has the whole context without the harness installed, and a
-contributor without the tool still gets `AGENTS.md`. Two linters keep
+The generated files are **committed**, like any generated code: a clone
+has the whole context without the harness installed. Two linters keep
 this honest. `lint:gitignore-harness` requires `.harness-overrides/`
 and `.vaubaan/` to be ignored and refuses a `.gitignore` entry for a
 generated path. `lint:generated-fresh` renders the harness with the
-engines recorded in the manifest and fails when a committed generated
-file differs from the render, is missing, or is no longer rendered:
-the fix is always to edit the source (`docs/` or the overrides), run
-`update`, and commit. Decision:
+engines and overrides recorded in the manifest and fails when a
+committed generated file differs from the render, is missing, or is no
+longer rendered: the fix is always to edit the source (`docs/` or the
+overrides), run `update`, and commit. Decision:
 [generated-files-committed](../decisions/generated-files-committed.md).
 
 ## 4. Multi-engine composition
@@ -353,52 +235,45 @@ the fix is always to edit the source (`docs/` or the overrides), run
 ### 4.1 Pivot format
 
 One `*.skill.md` (or `*.cmd.md`) source → 3 renderers → 3 native
-layouts. The source lives in `@vaubaan/harness/skills/` (resp.
-`commands/`). The renderer is purely functional: no network I/O,
-no persistent state.
+layouts. Renderers are pure: no I/O, no state, idempotent. Decision:
+[multi-engine-pivot-format](../decisions/multi-engine-pivot-format.md).
 
 ```
-                     ┌─── claude-code renderer ───► <target-dir>/.claude/skills/<id>/SKILL.md
-                     │
-*.skill.md ─► parser ──┼─── codex-cli renderer  ────► <target-dir>/.agents/skills/<id>/SKILL.md
-                     │
-                     └─── opencode renderer   ────► <target-dir>/.opencode/skills/<id>/SKILL.md
+                       ┌── claude-code renderer ──► .claude/skills/<id>/SKILL.md
+*.skill.md ─► parser ──┼── codex-cli renderer  ──► .agents/skills/<id>/SKILL.md
+                       └── opencode renderer   ──► .opencode/skills/<id>/SKILL.md
 ```
 
 ### 4.2 Capabilities matrix
 
-Not all skills render identically on the 3 engines —
-some support features that others lack. The matrix is
-documented in `@vaubaan/harness/src/renderers/capabilities.ts`:
+A skill declares the capabilities it needs in `requires:`. Which
+engine supports which capability, fully or in degraded mode, is
+declared once in the package, never in the skills:
 
-| Feature                        | claude-code | codex-cli | opencode |
+| Capability                     | claude-code | codex-cli | opencode |
 |--------------------------------|:-----------:|:---------:|:--------:|
 | Slash command                  |     ✅      |    ✅     |    ✅    |
-| Skill auto-loaded via frontmatter |  ✅      |    ✅     |    ✅    |
-| Multi-step workflow (subagent) |     ✅      |    ⚠️*    |    ✅    |
+| Multi-step workflow (subagent) |     ✅      |    ⚠️     |    ✅    |
 | Inline code execution          |     ✅      |    ✅     |    ✅    |
 
-\* = supported with a degradation documented in the rendered skill (the
-renderer emits a warning in the rendered skill's frontmatter).
-
-If a source skill declares a `requires` that an engine does not
-support, the renderer **skips** that skill for that engine and logs a
-warning in `audit.log` (see §9). No fatal error.
+- A required capability the engine does not support → the skill is
+  **skipped** for that engine, with a warning. No fatal error.
+- A required capability supported in degraded mode (⚠️) → the skill is
+  **rendered**, with an informational warning at render time.
 
 ### 4.3 Native engine layouts (reference)
 
-| Engine        | Skill path                          | Command path                 | Frontmatter |
-|---------------|-------------------------------------|------------------------------|-------------|
-| claude-code   | `.claude/skills/<id>/SKILL.md`      | `.claude/commands/<id>.md`   | YAML        |
-| codex-cli     | `.agents/skills/<id>/SKILL.md`      | — (custom prompts deprecated) | YAML        |
-| opencode      | `.opencode/skills/<id>/SKILL.md`    | `.opencode/commands/<id>.md` | YAML        |
+| Engine        | Skill path                          | Command path                  | Frontmatter |
+|---------------|-------------------------------------|-------------------------------|-------------|
+| claude-code   | `.claude/skills/<id>/SKILL.md`      | `.claude/commands/<id>.md`    | YAML        |
+| codex-cli     | `.agents/skills/<id>/SKILL.md`      | — (the skill is invoked by name) | YAML     |
+| opencode      | `.opencode/skills/<id>/SKILL.md`    | `.opencode/commands/<id>.md`  | YAML        |
 
-These paths are the ones each engine's documentation declares it
-reads, verified on 2026-09-20 (see ADR
-[_engine-native-layouts-1-0_](../decisions/engine-native-layouts-1-0.md)).
+These are the paths each engine's documentation declares it reads.
 OpenCode also reads `.claude/skills/` and `.agents/skills/`: when
 another rendered engine already exposes a skill, the `.opencode/skills/`
-copy is omitted to avoid duplicates.
+copy is omitted. Decision:
+[engine-native-layouts-1-0](../decisions/engine-native-layouts-1-0.md).
 
 ## 5. `*.skill.md` format
 
@@ -406,79 +281,39 @@ copy is omitted to avoid duplicates.
 ---
 id: doc-audit
 description: |
-  Audits the completeness of the doc (spec + decisions + handbook)
-  of the current project. Reports gaps: features without a spec,
-  implicit decisions not turned into ADRs, handbooks outdated vs code.
-engines: [claude-code, codex-cli, opencode]  # rendered on these engines (omit = all)
-requires:                              # required engine capabilities
-  - multi-step
-tags: [audit, doc]                     # for the UI picker
+  Audits the completeness and freshness of the doc.
+engines: [claude-code, codex-cli, opencode]  # omit = all
+requires: [multi-step]                       # required engine capabilities
+tags: [audit, doc]
 ---
 
 # Doc Audit
 
-You are invoked to audit the completeness of a Vaubaan
-project's doc. The doc lives under `docs/` + `README.md` at the root and has 6 pillars:
+You are invoked to audit the completeness of the project's doc:
 
 - `docs/spec/`     — theoretical vision (what we want)
 - `docs/decisions/` — ADRs (what we settled)
-- `docs/handbook/`   — implementation docs (how it actually works)
-
-## Criteria per pillar
-
-### Spec
-- Each major subsystem (1 folder under `packages/` or top-level route)
-  has at least one spec file.
-- ...
-
-### Decisions
-- ...
-
-### Handbook
-- ...
-
-## Procedure
-
-1. ...
-2. ...
-
-## Expected output
-
-Markdown:
-
-```
-# Doc Audit Report — <project> @ <commit>
-
-## Spec
-- ✅ covered: ...
-- ⚠️ gaps: ...
-
-## Decisions
-...
-
-## Handbook
-...
-
-## Recommendations
-...
-```
+- `docs/handbook/`   — what the code does not say (entry points, traps, procedures)
+…
 ```
 
 **Writing rules**:
 
-- Strict frontmatter (Zod schema in `@vaubaan/harness/src/parser/skill-schema.ts`).
-- Body = free-form Markdown, the content of the system prompt rendered to the agent.
-- No conditional logic in the body (no Jinja / Handlebars
-  templating) — it is a prompt, not a template. Per-engine
-  variation is handled via the frontmatter (`engines:`, `requires:`).
+- **Strict frontmatter.** An unknown or misspelled field fails the
+  parse with a precise message; a skill whose frontmatter does not
+  validate is never loaded or rendered. The error surfaces when the
+  harness is built or run, not when the engine invokes the skill.
+- Body = free-form Markdown, the prompt rendered to the agent.
+- No conditional logic in the body (no templating): per-engine
+  variation goes through the frontmatter (`engines:`, `requires:`).
 
 ## 6. `*.cmd.md` format
 
 ```markdown
 ---
 id: doc-audit
-trigger: /doc-audit                    # slash in the agent
-invokes_skill: doc-audit               # skill to activate
+trigger: /doc-audit
+invokes_skill: doc-audit
 args:
   - name: scope
     type: enum
@@ -493,15 +328,13 @@ When the human or the agent invokes `/doc-audit [scope]`, load the
 `doc-audit` skill with the scope passed as argument.
 ```
 
-Commands are **thin**: they are just a `slash → skill +
-args` binding. All the logic lives in the skill (`*.skill.md`).
+Commands are **thin**: a `slash → skill + args` binding. All the logic
+lives in the skill. Same strict-frontmatter rule as §5.
 
 ## 7. Skills shipped
 
-One category: **doc-skills**, cross-cutting, all dropped into the
-target directory. The harness ships no agent persona and no
-code-quality audit: roles, phases and code judgment belong to the
-project (see
+One category: **doc-skills**, all dropped into the target directory.
+The harness ships no agent persona and no code-quality audit (see
 [no-personas-no-code-judgment](../decisions/no-personas-no-code-judgment.md)).
 
 ### 7.1 Doc-skills
@@ -512,47 +345,37 @@ project (see
 | `spec-writer`               | Human-guided, progressive wizard to write / update a `docs/spec/<name>.md` file, section by section.                 |
 | `decision-record-writer`    | Wizard to write an ADR under `docs/decisions/<slug>.md` (no numbering — see §9.1). Detects implicit decisions in the current diff.  |
 | `handbook-writer`           | Documents the actual implementation under `docs/handbook/<name>.md`. Reads the code, proposes, the human validates.     |
-| `test-plan-writer`          | Updates `docs/tests/integration-tests.md` and/or `docs/tests/e2e-tests.md`. Detects unlisted scenarios from the existing test code. |
+| `test-plan-writer`          | Updates `docs/tests/integration-tests.md` and/or `docs/tests/e2e-tests.md`. Scope, stack, conventions and known gaps; never the covered scenarios. |
 | `workflow-writer`           | Updates `docs/workflow/coding-workflow.md`. Reads the repo's CI/CD config, the package manifest scripts and the branch/PR config, proposes the required sections (CI / env / PR / branches / release) and the optional ones (languages). |
 | `readme-writer`             | Maintains `README.md` at the root. Syncs the links to the other pillars; makes sure pitch + quick start stay up to date vs the code. |
 | `drift-detector`            | Detects code ↔ doc divergences.                                                                                      |
 
-All skills are `.skill.md` files. Their evolution is versioned
-by the package version tag. **All are dropped into the target
-directory**: only the `engines:` and `requires:` constraints (see
-§4.2) filter a skill out of a given engine render. A skill says *how*
-to write or check a pillar, never *when*: the when is the team's
-workflow.
+Their evolution is versioned by the package version. Only the
+`engines:` and `requires:` constraints (§4.2) filter a skill out of an
+engine render. A skill says *how* to write or check a pillar, never
+*when*: the when is the team's workflow.
 
 ## 8. Composition: umbrella + skills + commands
 
-`vaubaan harness init <target-dir> --engines=<list>` performs a
-monolithic multi-engine drop:
+`vaubaan-harness init <target-dir> --engines=<list>` performs one drop
+for all the named engines:
 
-- **The engine list is mandatory** (`--engines=claude-code`, or several
-  comma-separated). Nothing is rendered for a tool the project does not
-  use; `update` keeps the engines recorded in the manifest. Decision:
-  [engine-choice-mandatory](../decisions/engine-choice-mandatory.md).
-- **Rendered content**: everything lives directly under the engine's
-  native folders (`.claude/`, `.agents/`, `.opencode/`). No indirection.
+- **The engine list is mandatory**, with no default and no "all"
+  shortcut: one or several of `claude-code`, `codex-cli`, `opencode`,
+  comma-separated. A missing or empty value fails and lists the three.
+  Nothing is rendered for a tool the project does not use; `update`
+  keeps the engines recorded in the manifest and takes no engine
+  option.
+- **Rendered content** lives directly under the engines' native folders
+  (`.claude/`, `.agents/`, `.opencode/`). No indirection.
 - **Umbrella `AGENTS.md`** at the root, engine-neutral, in four
   sections: the project map (where each pillar lives, including the
   optional ones when present), the doc-first rule, the checks (run
-  `lint` before committing, never edit a generated file by hand) and
-  a single compact list of the doc-skills with their slash-command
-  when one exists. The engines discover skills natively.
-- **`CLAUDE.md`** at the root **if** claude-code is included, reduced to the `@AGENTS.md` import: the umbrella is actually loaded on all versions and all providers of Claude Code.
-
-**Actual rendering in the target directory**:
-
-```
-<target-dir>/AGENTS.md                          = umbrella: project map + doc-first + checks
-                                                  + "Doc-skills" section: one line per dropped doc-skill
-<target-dir>/.<engine>/skills/<id>/SKILL.md     = render(<id>.skill.md, engine)
-                                                  for each doc-skill in the catalog
-<target-dir>/.<engine>/commands/<id>.md         = render(<id>.cmd.md, engine)
-                                                  for each command in the catalog
-```
+  `lint` before committing, never edit a generated file by hand) and a
+  compact list of the doc-skills with their slash-command when one
+  exists. The engines discover skills natively.
+- **`CLAUDE.md`** at the root if claude-code is included, reduced to
+  the `@AGENTS.md` import.
 
 ## 9. Doc pillars — persistent contract
 
@@ -562,102 +385,84 @@ monolithic multi-engine drop:
 project/
 ├── README.md                         # README pillar (root, outside docs/)
 └── docs/
-    ├── spec/
-    │   ├── README.md                 # spec index
-    │   ├── <subsystem>.md            # 1 file per major subsystem
-    │   └── ...
+    ├── spec/<subsystem>.md           # 1 file per major subsystem
     ├── decisions/
     │   ├── README.md                 # ADR index
-    │   ├── <slug>.md                 # no numbering (see §9.1.1)
-    │   └── ...
-    ├── handbook/
-    │   ├── README.md                 # handbook index
-    │   ├── <slug>.md                 # no numbering (see §9.1.1)
-    │   └── ...
+    │   └── <slug>.md                 # no numbering (see §9.1.1)
+    ├── handbook/<slug>.md            # no numbering (see §9.1.1)
     ├── tests/
-    │   ├── README.md                 # test plan index
-    │   ├── integration-tests.md      # integration test plan (required)
-    │   └── e2e-tests.md              # E2E test plan (required)
+    │   ├── integration-tests.md      # required
+    │   └── e2e-tests.md              # required
     ├── workflow/
-    │   ├── README.md                 # workflow index
-    │   └── coding-workflow.md        # required in v1: CI + env + PR + branches
-    ├── skills/                       # OPTIONAL (see §9.1.2)
-    │   └── <id>.skill.md             # the project's domain skills
-    └── quality/                      # OPTIONAL (see §9.1.2)
-        └── code-quality.md           # required: the project's quality rules
+    │   └── coding-workflow.md        # required
+    ├── skills/<id>.skill.md          # OPTIONAL (see §9.1.2)
+    └── quality/code-quality.md       # OPTIONAL (see §9.1.2)
 ```
 
-**Notes**:
 - The `README` pillar lives at the root (universal convention of
-  package registries), not under `docs/`. It is the only pillar
-  outside `docs/`.
-- The `tests/` pillar is *intentionally constrained* to two required
-  files in v1 (`integration-tests.md`, `e2e-tests.md`). Unit
-  tests live next to the code and speak for themselves — we do not
-  document them separately.
-- The `workflow/` pillar contains only one required file in v1
-  (`coding-workflow.md`). Possible future extensions
-  (`release-workflow.md`, `incident-workflow.md`, …) — OQ §15.2.
+  package registries); it is the only pillar outside `docs/`.
+- The `tests/` pillar is constrained to two required files. Unit tests
+  live next to the code and are not documented separately.
+- The `workflow/` pillar has one required file. Further files
+  (`release-workflow.md`, …) are an open question (§15.2).
+- No other pillar (no separate `tutorials/` or `runbooks/`).
 
 ### 9.1.1 No numbering for `decisions/` and `handbook/`
 
 Files under `docs/decisions/` and `docs/handbook/` are named
-`<slug>.md` (kebab-case) — **without a numeric prefix** like `0001-...` or
-`01-...`. Deliberately:
+`<slug>.md` (kebab-case), **without a numeric prefix**:
 
-- **No implicit precedence logic.** An ADR supersedes another
-  only if it says so explicitly (`superseded_by: <slug>` field
-  in frontmatter, or header metadata). The file order
-  carries nothing. Same for the handbook: each entry is independent,
-  not a chapter in a sequence.
-- **Evolution without renaming.** Adding, archiving, refactoring doc
-  content without renumbering or breaking existing links.
-- **The slug is the durable identity** — it survives moves and
-  stays searchable. The harness tools (`decision-record-writer`,
-  `handbook-writer`) always generate slugs, never numbers.
+- **No implicit precedence.** The file order carries nothing; each
+  file is independent, not a chapter in a sequence.
+- **Evolution without renaming.** Adding or rewriting a file breaks no
+  link.
+- **The slug is the durable identity.** The writer skills always
+  generate slugs, never numbers.
+
+The decision log holds only the decisions in force: a replaced decision
+is deleted and its option moves to the Rejected alternatives of the new
+one (see
+[decisions-as-current-state](../decisions/decisions-as-current-state.md)).
 
 ### 9.1.2 Optional pillars
 
 Two pillars are added to the six mandatory ones. Their absence is
 never an error; their presence commits to a form contract.
 
-- **`skills/`** — domain skills versioned with the project, rendered
-  alongside the shipped skills. See ADR
-  [project-skills-seventh-pillar](../decisions/project-skills-seventh-pillar.md).
-- **`quality/`** — the code quality rules *specific to the project*.
-  A single required file, `code-quality.md`. See ADR
-  [quality-optional-pillar](../decisions/quality-optional-pillar.md).
+**`skills/`** — domain skills versioned with the project (a plugin
+recipe, a migration runbook, a review checklist, a team persona):
 
-**Contract of the `quality/` pillar.** The file is *normative*: it states
-what the project requires, not what the code does today. It
-has three required sections:
+- Files `docs/skills/*.skill.md` are discovered at `init` and `update`,
+  use the frontmatter schema of §5, and are rendered alongside the
+  shipped skills into every target engine.
+- Merge order: shipped, then project, then overrides (§11). A project
+  skill with the id of a shipped skill replaces it; `disable.yaml` can
+  disable any skill, project skills included.
+- No slash command is generated for a project skill; it is invoked by
+  name. `AGENTS.md` lists the pillar in its project map when it holds
+  skills.
 
-1. **Mechanical checks** — the project's automated tools
-   (formatting, static analysis, typing), their configuration
-   file and what each covers. The configuration remains the
-   source of truth: this section *points* to it, it does not
-   copy any rule.
-2. **Project rules** — the judgment rules that no tool
-   checks: naming, decomposition, chosen patterns, thresholds.
-3. **Accepted deviations** — the generic rules the project chooses
-   not to follow, each with its reason.
+**`quality/`** — the code-quality rules *specific to the project*, in a
+single required file, `code-quality.md`. The file is *normative*: it
+states what the project requires, not what the code does today. It has
+three required sections:
 
-**Boundaries with the other pillars** (anti-drift, see §9.3):
+1. **Mechanical checks** — the project's automated tools, their
+   configuration file and what each covers. The configuration remains
+   the source of truth: this section *points* to it, it copies no rule.
+2. **Project rules** — the judgment rules that no tool checks: naming,
+   decomposition, chosen patterns, thresholds.
+3. **Accepted deviations** — the generic rules the project chooses not
+   to follow, each with its reason.
 
-- The *why* of a structural choice remains an ADR; `code-quality.md`
-  states the rule and points to the ADR.
-- The description of the actual implementation remains in the handbook.
-- Generic quality principles are not restated; the file lists only
-  what is specific to the project.
-- CI commands remain in `coding-workflow.md`.
+Boundaries with the other pillars (anti-drift, see §9.3): the *why* of
+a structural choice remains an ADR, which `code-quality.md` points to;
+the implementation remains in the handbook; generic principles are not
+restated; CI commands remain in `coding-workflow.md`.
 
-**Effect on the agents.** When the file exists, `AGENTS.md` lists it
-in the project map and every agent reads it before writing or
-auditing code. The harness ships no code audit skill: a project that
-wants one keeps it in `docs/skills/`, where it reads this file first.
-
-The file declares no `tracks:`: like an ADR, it sets a
-norm and does not follow the state of the code.
+When the file exists, `AGENTS.md` lists it in the project map and every
+agent reads it before writing or auditing code. The file declares no
+`tracks:`: like an ADR, it sets a norm and does not follow the code.
 
 ### 9.2 Templates (shipped by the harness)
 
@@ -672,15 +477,15 @@ templates. Minimal format:
 - **spec.md**: Status + Vocabulary + Vision + Out of scope + Domain
   + ... (see this harness spec — it is the canonical template).
 - **decision.md**: Context + Decision + Consequences + Rejected
-  alternatives + Date + Author.
-- **handbook.md**: Overview + How it works (cross-link to the
-  code) + How to use it + How to debug.
-- **integration-tests.md**: Scope (what is tested in integration
-  vs unit vs e2e) + Test stack + List of covered scenarios +
-  Known gaps.
-- **e2e-tests.md**: Scope (golden paths vs edge cases) + Stack
-  (Playwright/etc.) + Fixture conventions (e2e org, naming) +
-  Sweeper / cleanup + List of covered scenarios.
+  alternatives, about 40 lines, only for a decision that passes the
+  admission test (costly to reverse, real alternative weighed,
+  outlives the ticket).
+- **handbook.md**: only what the code does not say — Start here +
+  Invariants + Traps + Outside the repo + Procedures + Debug, each
+  optional; 30-60 lines.
+- **integration-tests.md** / **e2e-tests.md**: Scope + Stack +
+  Conventions + Known gaps; 20-50 lines. Never a list of covered
+  scenarios: the test titles are their source of truth.
 - **coding-workflow.md**: CI pipeline (what triggers what, typical
   duration, required jobs) + Env variants (prod / staging / preview /
   local) + PR process or direct-push (depending on the project) + Branch model
@@ -696,111 +501,82 @@ templates. Minimal format:
 - **README presence**: `README.md` at the root **must** exist and
   contain at least the template sections (pitch + quick start +
   links). Gap → ❌.
-- **README links**: the README must explicitly link to
-  `docs/spec/`, `docs/handbook/`, `docs/workflow/coding-workflow.md`
-  (linking the other pillars is optional). Otherwise → ⚠️.
-- **Spec coverage**: every major subsystem has a spec. A
-  subsystem is defined as "a package under `packages/`" or "a
-  top-level route of an app" (configurable via
-  `.harness-overrides/doc-audit.config.yaml` if needed).
-- **Explicit decisions**: `doc-audit` parses recent commits and
-  flags commits whose message contains decision hints
-  ("decided to", "switched from X to Y", "removed X because") without
-  a matching ADR.
-- **Handbook freshness**: each handbook declares in frontmatter a
-  list of code files it depends on (`tracks: [...]`).
-  `doc-audit` compares the mtime / commit-time of the handbook vs its
-  tracked files. Drift beyond a threshold (configurable, default N
-  commits) → warning.
-- **Tests presence**: the two required files
-  (`integration-tests.md`, `e2e-tests.md`) **must** exist. Gap
-  → ❌.
-- **Tests coverage cross-check**: each spec must be mentioned
-  by at least one scenario in `integration-tests.md` *or*
-  `e2e-tests.md` (explicit cross-link via `[[spec-name]]` or scenario
-  ID). Otherwise → ⚠️ "spec without a test plan".
-- **Tests freshness**: same `tracks: [...]` criteria as handbook —
-  an outdated test plan that refers to code that has disappeared = ❌.
+- **README links**: the README must link to `docs/spec/`,
+  `docs/handbook/`, `docs/workflow/coding-workflow.md`. Otherwise → ⚠️.
+- **Spec coverage**: every major subsystem has a spec. A subsystem is
+  a package of a multi-package repo or a top-level route of an app,
+  unless the project's `doc-audit` override lists them.
+- **Explicit decisions**: `doc-audit` flags recent commits whose
+  message carries decision hints ("decided to", "switched from X to
+  Y", "removed X because") without a matching ADR.
+- **Handbook freshness**: each handbook declares the code it depends on
+  (`tracks: [...]`). A handbook older than its tracked files by more
+  than a threshold (default N commits) → warning.
+- **Tests presence**: the two required files (`integration-tests.md`,
+  `e2e-tests.md`) **must** exist. Gap → ❌.
+- **Tests coverage cross-check**: each spec is exercised by at
+  least one integration or E2E test file, or listed under "Known
+  gaps" in a test plan. Otherwise → ⚠️ "spec without tests".
+- **Tests freshness**: same `tracks: [...]` criteria as the handbook —
+  a test plan that refers to code that has disappeared = ❌.
 - **Workflow presence**: `docs/workflow/coding-workflow.md` **must**
-  exist and cover the 5 core topics (CI, env variants, PR
-  process, branches, release). Gap → ❌.
-- **Workflow freshness**: `coding-workflow.md` typically `tracks:`
-  the project's CI/CD config files and package manifest.
-  Drift vs tracked files → ⚠️.
+  exist and cover the 5 core topics (CI, env variants, PR process,
+  branches, release). Gap → ❌.
+- **Workflow freshness**: `coding-workflow.md` `tracks:` the CI/CD
+  config files and the package manifest. Drift → ⚠️.
 - **Quality (optional pillar)**: if `docs/quality/` exists,
-  `code-quality.md` **must** exist with its three required
-  sections (see §9.1.2). Gap → ❌. Directory absent → nothing to
-  report. Content that copies an ADR, a handbook, a tool's
+  `code-quality.md` **must** exist with its three required sections
+  (§9.1.2). Gap → ❌. Content that copies an ADR, a handbook, a tool's
   configuration or generic principles → ⚠️ (pillar boundary).
-- **Cross-link consistency**: a spec file must have at least one
-  decision or one handbook *or* a mention in tests (otherwise orphan).
-  A decision must have at least one linked spec or handbook. Etc.
-- **Pillar boundaries — anti-drift between pillars.** The
-  spec / handbook / decisions separation is subtle: it is *the* critical point
-  where the doc drifts if it is not audited. Heuristics (mix of regex +
-  LLM judgment by the agent executing the skill):
-  - **spec/** must stay *tech-agnostic*: flag mentions of
-    concrete libraries/frameworks/runtimes, code file
-    paths, or code blocks → suggest a move to `handbook/` or
-    turning it into an ADR. The effective blocklist is defined in the
-    source code of the `spec-tech-agnostic` linter.
-  - **handbook/** must describe the real technical *how*: flag
-    files that mention no code file and no
-    technology → suggest a move to `spec/`.
-  - **decisions/** must have 4 sections: Context + Decision +
-    Consequences + Rejected alternatives. Flag ADRs that are
-    limited to a decision summary with no context or alternatives
-    (= not really a decision, it is documentation).
-  - Reverse case: any commit that mentions a lib or an
-    architectural choice without a matching ADR is already flagged by
-    "Explicit decisions" (see above).
+- **Cross-link consistency**: a spec has at least one decision, one
+  handbook or a mention in the tests; a decision is referenced by at
+  least one other doc. Otherwise → orphan.
+- **Pillar boundaries — anti-drift between pillars.** The critical
+  point where the doc drifts if it is not audited. Heuristics (regex +
+  the agent's judgment):
+  - **spec/** stays *tech-agnostic*: mentions of concrete
+    libraries/frameworks/runtimes, code file paths or code blocks →
+    move to `handbook/` or an ADR. The effective blocklist is the one
+    of `lint:spec-tech-agnostic`.
+  - **handbook/** says what the code does not: a file that mentions no
+    code file → move to `spec/`; a file that paraphrases the code →
+    cut.
+  - **decisions/** holds only decisions that pass the admission test
+    (§9.2), with the 4 sections. An ADR that is a product rule, an
+    implementation detail or a release record → move to the matching
+    pillar and delete the ADR.
+  - Any commit that introduces a library or an architectural choice
+    without an ADR is caught by "Explicit decisions".
 
 ## 10. Doc audit: skill + linters
 
-The §9.3 criteria are checked on **two complementary levels**,
-shipped by the harness and injected into the project at the same time:
+The §9.3 criteria are checked on **two complementary levels**, shipped
+together. Decision:
+[linters-mechanical-vs-skills](../decisions/linters-mechanical-vs-skills.md).
 
-- **§10.1 `doc-audit` skill** — the *intelligent* audit, executed by
-  an agent (LLM judgment needed for subtle cases: pillar
-  boundaries, semantic freshness, implicit decisions). Output =
-  Markdown report.
-- **§10.2 Mechanical linters** — the *exit-code* version of the checks
-  that can be mechanized (file presence, frontmatter schema,
-  tech keyword regex blocklist, cross-links). Run in CI,
-  they **block the merge** if red.
+- **§10.1 `doc-audit` skill** — the judgment audit, executed by an
+  agent (pillar boundaries, semantic freshness, implicit decisions).
+  Output = Markdown report.
+- **§10.2 Mechanical linters** — the exit-code version of the checks
+  that can be mechanized. Run in CI, they **block the merge** if red.
 - **§10.3 Division of labor** between the two.
 
 ### 10.1 `doc-audit` skill
 
-Typically run before a review or a plan. Reads `docs/`,
-parses each file's frontmatter, runs the §9.3 checks.
+Reads `docs/` and the root README, parses each file's frontmatter, runs
+the §9.3 checks. Output: a Markdown report under
+`.vaubaan/reports/doc-audit.md` in the target directory (or at a path
+passed as argument): one section per pillar with ✅ / ⚠️ / ❌ items, then
+cross-links, pillar boundaries and recommendations.
 
-Output: a Markdown report under `.vaubaan/reports/doc-audit.md`
-(creates the folder if absent) in the target directory, or at a path
-passed as argument. Format:
-
-The report follows the "Expected output" skeleton of the skill
-(`src/skills/doc-audit.skill.md`): one section per pillar with ✅ / ⚠️ /
-❌ items, then cross-links, pillar boundaries and recommendations.
-
-Global verdict: `done` if zero `❌`, otherwise `needs-human`. The report
-serves as the verdict's justification for the orchestrating tool or
-the human consuming the output.
+Global verdict: `done` if zero `❌`, otherwise `needs-human`.
 
 ### 10.2 Mechanical linters (CI gates)
 
-Shipped in `@vaubaan/harness/linters/` (accessible via the CLI). Each linter is a pure function `(repoRoot) → LintIssue[]`
-with an aggregated exit code: `0` if zero issues of severity ≥ `error`,
-`1` otherwise.
-
-```bash
-vaubaan harness lint                       # all linters, aggregated exit code
-vaubaan harness lint --pillar=spec         # a single pillar
-vaubaan harness lint --format=json         # JSON output for CI parsing
-vaubaan harness lint --fix                 # auto-fix when possible (rare)
-```
-
-**Linters shipped in v1**:
+Each linter is a pure function `(repoRoot) → issues`, with no LLM and no
+network. `vaubaan-harness lint` runs them all with an aggregated exit
+code: `0` if no issue of severity `error`, `1` otherwise. Options
+filter by pillar or by linter id and choose a text or JSON output.
 
 | Linter ID                       | Targeted pillar(s)       | Check                                                                                                                                                     | Severity      |
 |---------------------------------|--------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|---------------|
@@ -809,78 +585,26 @@ vaubaan harness lint --fix                 # auto-fix when possible (rare)
 | `lint:doc-layout`               | all                      | `docs/{spec,decisions,handbook,tests,workflow}/` exist.                                                                                                  | error         |
 | `lint:cardinal-files`           | tests, workflow          | `tests/integration-tests.md`, `tests/e2e-tests.md`, `workflow/coding-workflow.md` exist.                                                                  | error         |
 | `lint:decision-schema`          | decisions                | Each ADR has the 4 sections Context + Decision + Consequences + Rejected alternatives (regex headers).                                                     | error         |
-| `lint:adr-no-tracks`            | decisions                | No ADR declares a non-empty `tracks:` (ADRs document a frozen decision, not the current state of the code).                                              | error         |
+| `lint:adr-no-tracks`            | decisions                | No ADR declares a non-empty `tracks:` (an ADR states a decision, it does not follow the code).                                                          | error         |
 | `lint:frontmatter-tracks`       | handbook, tests, workflow | Each file declares `tracks: [...]` in frontmatter and all tracked paths exist in the repo.                                                               | error         |
 | `lint:tracks-drift`             | handbook, tests, workflow | The doc file is older than its tracked files by more than N commits (configurable).                                                                      | warning       |
 | `lint:spec-tech-agnostic`       | spec                     | Blocklist of tech keywords (frameworks, runtimes, infra providers — effective list in the source code) **forbidden** in `spec/` files.                   | error         |
 | `lint:spec-has-content`         | spec                     | `docs/spec/` contains at least one `.md` file (warns if the directory exists but is empty).                                                              | warning       |
-| `lint:cross-links`              | all                      | All Markdown links `[...](docs/...)` resolve to an existing file.                                                                                        | error         |
+| `lint:cross-links`              | all                      | All relative Markdown links resolve to an existing file.                                                                                                 | error         |
 | `lint:orphan-decisions`         | decisions                | Each ADR is referenced by at least one other doc file.                                                                                                   | warning       |
 | `lint:gitignore-harness`        | repo root                | `.gitignore` excludes `.harness-overrides/` and `.vaubaan/`, and ignores none of the generated paths (`AGENTS.md`, `CLAUDE.md`, engine folders, manifest). | error         |
 | `lint:quality-schema`           | quality (optional)       | If `docs/quality/` exists: `code-quality.md` exists and contains the 3 required sections (regex headers). No effect if the directory is absent.           | error         |
 | `lint:generated-fresh`          | repo root                | When a manifest exists: every generated file equals the current render for the recorded engines and overrides; none is missing or stale.                 | error         |
 
-**Text output** (human, default):
+Section headings are matched in English (`Context`, `Decision`,
+`Consequences`, `Rejected alternatives`; `Mechanical checks`, `Project
+rules`, `Accepted deviations`) and, for projects documented in French,
+in French, accented or not, each section independently. Messages name
+the English heading.
 
-```
-docs/spec/web-ui.md:34: error[lint:spec-tech-agnostic]
-  forbidden tech keyword "Next.js" — should be in handbook/ or decisions/
-
-docs/decisions/renderer-tables.md: error[lint:decision-schema]
-  missing required section "Rejected alternatives"
-
-docs/handbook/overrides-loading.md:1: error[lint:frontmatter-tracks]
-  missing frontmatter `tracks:` field
-
-3 errors, 1 warning. ✘ CI fails.
-```
-
-**JSON output** (CI parsing):
-
-```json
-{
-  "version": 1,
-  "summary": { "errors": 3, "warnings": 1, "pass": false },
-  "issues": [
-    {
-      "linter": "lint:spec-tech-agnostic",
-      "severity": "error",
-      "file": "docs/spec/web-ui.md",
-      "line": 34,
-      "message": "forbidden tech keyword \"Next.js\""
-    }
-  ]
-}
-```
-
-**CI integration**:
-
-```yaml
-# .github/workflows/doc.yml
-name: doc
-on: [pull_request]
-jobs:
-  doc-lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - run: npx -y @vaubaan/harness lint
-      # exit code != 0 → PR blocked
-```
-
-**Pre-commit integration**: the same command in the project's git
-pre-commit hook, so the agent sees the report as a failed command in
-its own flow, at zero token cost, before anything leaves its machine:
-
-```bash
-# pre-commit hook
-npx @vaubaan/harness lint
-```
-
-This is how the harness rules become *enforced* rather than
-merely recommended: a harnessed project cannot merge a PR
-that creates mechanically detectable drift. No engine hook is
-installed; the decision is
+The project wires the same command into its CI (the gate) and its git
+pre-commit hook (zero token cost: the agent sees a failed commit in its
+own flow). No engine hook is installed. Decision:
 [lint-in-ci-and-pre-commit](../decisions/lint-in-ci-and-pre-commit.md).
 
 ### 10.3 Division of labor: skill vs linters
@@ -895,364 +619,179 @@ installed; the decision is
 | Implicit decisions detected in `git log`                    |        ❌         |        ✅         |
 | Subsystem spec coverage (semantic judgment)                 |        ❌         |        ✅         |
 | Subtle boundary drift (ambiguous spec/handbook content)     |        ❌         |        ✅         |
-| Semantic manual freshness (did the code really change?)     | partial (count)   |        ✅         |
+| Semantic freshness (did the code really change?)            | partial (count)   |        ✅         |
 | Doc move / refactor suggestions                             |        ❌         |        ✅         |
 
-**Golden rule**: every check that can be written as a regex / AST parser
-*must* become a linter (and therefore a CI gate); the skill keeps the
-checks that require judgment.
+**Golden rule**: every check that can be written as a regex, a parser
+or a file comparison *must* become a linter, and therefore a CI gate;
+the skill keeps the checks that require judgment.
 
 ## 11. Gitignored overrides
 
-A project can locally override the harness via the
-`.harness-overrides/` folder in its worktree. **Gitignored by design
-— never committed.** Typical use cases:
-
-- A dev iterating on a new skill, before pushing it
-  upstream into `@vaubaan/harness`.
-- Temporary tinkering for debugging.
-- Disabling a standard skill for a project where it is
-  useless (rare).
-
-Layout:
+A project can override the harness locally via `.harness-overrides/`
+in its worktree. **Gitignored by design, never committed.** Typical
+uses: iterating on a skill before proposing it upstream, temporary
+debugging, disabling a shipped skill.
 
 ```
 project/.harness-overrides/
 ├── skills/
-│   └── my-custom-skill.skill.md        # addition; merged with the catalog
-│   └── doc-audit.skill.md              # override; replaces the stock version
+│   ├── my-custom-skill.skill.md      # addition
+│   └── doc-audit.skill.md            # replaces the shipped version
 ├── commands/
-│   └── ...
-└── disable.yaml                      # list of IDs to disable
-    # disable:
-    #   - drift-detector
+└── disable.yaml                      # disable: [drift-detector]
 ```
 
-The renderer applies the overrides after the stock catalog. Order:
-`stock + overrides_add - overrides_disable`, and on collision the override
-wins.
+Overrides apply last: `shipped + project skills + overrides_add −
+overrides_disable`, and on collision the override wins.
 
-**Why gitignored?** To preserve the promise "every harnessed
-project behaves identically". If committed overrides were allowed,
-each project would diverge and the "Vaubaan harness" invariant would
-dissolve. To propagate an improvement: upstream PR on
-`@vaubaan/harness`, period.
+**Why gitignored?** So that every harnessed project behaves like the
+harness version it pins. Knowledge the team shares belongs in
+`docs/skills/` (§9.1.2); an improvement to the harness is an upstream
+PR.
 
 ## 12. Security
 
-The harness carries no security model of its own — it is merely a
-dropper of text files. Execution security is carried by
-**whoever invokes the harness and launches the engine** (CI runner,
-agent orchestrator, human). The harness relies on that trust
-boundary.
+The harness carries no security model of its own — it drops text
+files. Execution security is carried by **whoever invokes the harness
+and launches the engine** (CI runner, orchestrator, human).
 
-- **YOLO by design on the skills side.** No skill declares a
-  tool allowlist. If the called engine runs in "ask
-  permission for each tool" mode, it is up to the operator (human or
-  orchestrator) to configure it; the shipped skills assume a
-  bypass-permissions mode or equivalent. Adding a per-skill
-  tool allowlist layer would be defense-in-depth that
-  does not increase real security (the blast radius is defined by
-  the isolation of the calling environment) and creates needless
-  friction with the agent.
-- **No arbitrary skill injection at render.** The `vaubaan harness
-  init` CLI renders only what is embedded in the
-  `@vaubaan/harness` package + any `.harness-overrides/`
-  present in the target directory. No network loading, no
-  dynamic fetch. A malicious override therefore already requires
-  write access to the target directory — a trust level
-  equivalent to being able to launch the engine itself.
-- **No secret access by the harness.** The CLI only reads
-  text files (`*.skill.md`, `*.cmd.md`) and writes
-  text files. It does not touch secret environment
-  variables, nor vaults; and the shipped skills
-  never assume explicit handling of cleartext
-  secrets.
-- **Signed `*.skill.md` frontmatter?** Not in v1. The
-  `@vaubaan/harness` package is delivered via the standard registry; its supply
-  chain relies on that registry + the hash in the lock-file. OQ for v2
-  (signing via cosign / sigstore).
+- **YOLO by design on the skills side.** No skill declares a tool
+  allowlist; the shipped skills assume a bypass-permissions mode or
+  equivalent. The blast radius is defined by the isolation of the
+  calling environment; a per-skill allowlist would add friction, not
+  security.
+- **No arbitrary skill injection at render.** The CLI renders only what
+  the package embeds, the project's `docs/skills/` and the
+  `.harness-overrides/` present in the target directory. No network
+  loading. A malicious override already requires write access to the
+  target directory.
+- **No secret access.** The CLI reads and writes text files only; it
+  touches no environment secret and no vault.
+- **Every path is validated before any mutation.** `init`, `update` and
+  `uninstall` check the whole batch of paths first — relative,
+  contained in the target directory, inside the managed locations, no
+  `..`, no absolute path, no symbolic component under the target root
+  (the root itself may be a link). One invalid entry aborts the
+  operation before the first file is touched, so a tampered manifest
+  cannot write or delete outside the project. These checks protect the
+  inspected state; they are not a lock against a concurrent process.
+- **Signed skills?** Not yet; the supply chain relies on the registry
+  and the lock-file hash (§15.2).
 
 ## 13. UX
 
 ### 13.1 For the harnessed project
 
-A project's operator runs `vaubaan-harness init` the first
-time, then `update` for updates. It is the orchestrating tool
-(human, script, CI, or third-party agent) that invokes the CLI — the harness
-assumes nothing about that caller.
+The operator (human, script, CI or third-party agent) runs `init` once,
+then `update`. The CLI is pure mechanics; the intelligence lives in the
+skills.
 
-**First-install CLI**: `vaubaan-harness init`. Mechanical rendering.
+**First install**: `vaubaan-harness init <target-dir> --engines=<list>`
+renders `AGENTS.md`, the doc-skills and the commands each engine
+supports, applies the overrides, writes the manifest, and ends with the
+next step: commit the generated files. Options let the operator choose
+the overrides' parent directory, keep generated files as the project's
+(`--preserve`) and place the backup.
 
-```bash
-vaubaan-harness init <target-dir> --engines=claude-code,codex-cli \
-                                 [--overrides-dir=<target-dir>]
-# --engines is mandatory. Effects:
-#  - render AGENTS.md umbrella → <target-dir>/AGENTS.md
-#  - render the doc-skills and the commands supported by each engine
-#  - apply the overrides from the explicitly provided parent
-#  - write .harness-manifest.json
-# Output: exit 0, file count rendered, and the next step: commit the
-# generated files. No network I/O.
-```
+Re-running `init` refreshes the dropped files and keeps the choices
+recorded by previous runs (preserved files, overrides folder); it is
+also how the engines are changed.
 
-Idempotent: re-running `init` refreshes the dropped files without
-requiring cleanup, and keeps the choices recorded by previous runs
-(preserved files, overrides folder).
-
-`init` never overwrites or deletes a file it does not own. A generated
-path already holding a file the harness did not write, or a generated
-file edited since, stops the command before any write and is reported;
-the operator moves the content or keeps the file with `--preserve`.
-The harness never merges a file and writes no engine settings file:
-`.claude/settings.json`, `.codex/hooks.json` and the MCP configurations
-are the project's. Decisions:
-[safe init](../decisions/safe-init.md),
-[no MCP, no code merge](../decisions/no-mcp-no-code-merge.md).
+**Ownership.** `init` and `update` share one installation planner and
+never overwrite, merge or delete a file the harness does not own. A
+generated path already holding a file the harness did not write, or a
+generated file edited since it wrote it, stops the command before any
+write; all conflicts are reported at once. The operator moves the
+content to `docs/` or `.harness-overrides/`, or keeps the file as the
+project's with `--preserve`. There is no `--force`. Decision:
+[safe-init](../decisions/safe-init.md).
 
 **Preserving the project during an update or a removal:**
 
-- Files that have become unnecessary are removed only when the
-  harness's ownership of them is established. The full set of destinations is
-  validated before any deletion; an unsafe external or indirect
-  destination makes the operation fail with no partial deletion.
-- A file the harness did not write, or that changed since it wrote
-  it, is never replaced or removed. Without sufficient proof of
-  ownership, preservation prevails. Files 1.x edited entry by entry
-  (`.mcp.json`, `.codex/config.toml`, `.opencode/opencode.json`) are
-  released to the project.
-
-The technical decision and the compatibility of existing installations
-are detailed in
-[safe lifecycle of project artifacts](../decisions/safe-project-artifact-lifecycle.md).
+- A file that has become unnecessary is removed only when the harness's
+  ownership of it is established; without sufficient proof,
+  preservation prevails.
+- `uninstall` removes a generated file only if it is unchanged since
+  the harness wrote it; an edited one is kept with a warning.
+- Files 1.x wrote or edited entry by entry (MCP files, engine settings)
+  are released to the project: they leave the manifest with a warning
+  and stay in place.
 
 #### Updating an existing installation
 
-A dedicated operation updates a known installation to the harness
-version chosen by the caller. It neither looks for nor downloads a
-more recent version. It recognizes older installations and
-keeps the engines, the project skills and the applicable overrides.
+`update [target-dir]` moves a known installation to the harness
+version that runs it. It neither looks for nor downloads a newer
+version, and does not touch the project's dependency on the package.
+It recognizes older installations and keeps the engines, the preserved
+files, the project skills and the applicable overrides.
 
-The update preserves the project's own configuration files and
-hooks. It renews only the harness elements and migrates
-locations that have become obsolete without overwriting a user
-file. An unknown destination that already contains a file is treated
-as a conflict. A manifest written by 1.x may still list engine
-settings or MCP files; they leave the manifest with a warning and stay
-in place.
+- The preview modifies nothing, not even a backup folder.
+- Before applying, destinations and conflicts are checked, then a
+  private backup of the touched files is created outside the project.
+  An apply error rolls back the touched files; a restoration problem is
+  reported with the path of the kept backup.
+- The manifest keeps the provenance (fingerprint) of each generated
+  file. A managed file modified since the last generation and different
+  from the new rendering blocks the update before writing. Older
+  installations without fingerprints get a warning before their managed
+  files are regenerated.
+- `--preserve` transfers a generated file to the project and excludes
+  it from future generations; the choice is remembered. The manifest
+  cannot be preserved.
 
-The preview modifies no file. Before applying, the
-destinations and conflicts are checked, then a private backup is
-created. An application error triggers a rollback to the previous state
-of the touched files; any restoration difficulty is reported and
-the backup remains available. The provenance of generated files is
-kept to detect local modifications on subsequent
-updates. A managed file modified since the last generation and
-different from the new rendering blocks the update before writing.
-The caller can explicitly transfer a generated artifact to the
-project's ownership and exclude it from future generations; this choice
-is remembered. The manifest cannot be transferred by this option.
-Older installations without this provenance produce a
-warning before regenerating their files declared as managed.
+**Layout check**: `vaubaan-harness check <repo>` exits `0` if `docs/`
+exists and `.gitignore` covers `.harness-overrides/` and `.vaubaan/`
+without ignoring a generated file, `1` with a diagnostic otherwise.
 
-This operation updates the project's artifacts, not the dependencies
-or package versions declared by that project.
+**Lint**: `vaubaan-harness lint` (§10.2), wired into the project's CI
+and pre-commit hook.
 
-The compatibility and transaction details are decided in
-[migration of existing installations](../decisions/project-update-migrations.md).
+**Bootstrapping the doc of an existing project** is not a CLI: the
+agent, following the doc-first rule of `AGENTS.md`, finds the gaps with
+`doc-audit` and fills them with the writer skills.
 
-**Layout check CLI**: `vaubaan-harness check`.
+### 13.2 For skill developers (contributors)
 
-```bash
-vaubaan-harness check ./my-project
-# → exit 0 if docs/ exists, .gitignore covers .harness-overrides/ and
-#   .vaubaan/, and ignores none of the generated files
-# → exit 1 + diagnostic otherwise
-```
-
-**Lint CLI (CI gate)**: `vaubaan-harness lint`. Runs all the
-mechanical linters (§10.2) and exits `0` or `1`. To be wired into the CI
-of the harnessed project to **block PRs** that create drift:
-
-```bash
-vaubaan-harness lint                       # all linters, aggregated
-vaubaan-harness lint --pillar=spec         # targeted
-vaubaan-harness lint --format=json         # CI parsing
-```
-
-**Bootstrapping the doc of an existing project**: *not a CLI*.
-It is intelligence — the agent, following the doc-first rule of
-`AGENTS.md` (*"understand the docs, fill the gaps, then code"*), finds
-the gaps via `doc-audit`, then fills them by calling the writers
-(`spec-writer`, `decision-record-writer`, `handbook-writer`,
-`test-plan-writer`).
-
-### 13.2 For skill developers (Vaubaan contributors)
-
-Iteration workflow:
-
-```bash
-# 1. Clone @vaubaan/harness
-gh repo clone vauban/harness
-cd harness/
-
-# 2. Edit a skill
-$EDITOR skills/doc-audit.skill.md
-
-# 3. Local render for preview
-npx @vaubaan/harness render --engines=claude-code --out=/tmp/rendered
-ls /tmp/rendered/
-
-# 4. Test on a project via override
-cp skills/doc-audit.skill.md /path/to/project/.harness-overrides/skills/
-# re-run `vaubaan harness update <project>` → the modified skill is rendered
-
-# 5. Upstream PR when satisfied
-```
+1. Edit a skill in the harness repository.
+2. Preview with `vaubaan-harness render --engines=<list> --out=<dir>`
+   (no overrides applied).
+3. Try it on a project by copying it to the project's
+   `.harness-overrides/skills/`, then `update`.
+4. Propose it upstream.
 
 ## 14. Tests
 
-### 14.1 Unit (Vitest)
-
-- `*.skill.md` / `*.cmd.md` parser: property tests on the Zod frontmatter.
-- Renderers: per-engine snapshot tests (input = `.skill.md` fixture,
-  output = expected native layout).
-- Capabilities matrix: test that if `requires: multi-step` is declared
-  and an engine does not support it, the renderer skips + emits a warning.
-
-### 14.2 Integration
-
-- `vaubaan harness init` on an empty target directory × engine →
-  snapshot matrix of the rendered layout.
-- `vaubaan harness check` on repos in various states (empty,
-  missing `docs/`, missing correct `.gitignore`, complete, etc.) →
-  matrix of return codes.
-- `vaubaan harness lint` on a matrix of fixture repos (each
-  linter has its "pass" fixture and its "fail" fixture) → checks that
-  the return codes + the produced `LintIssue[]` are exact. One
-  fixture per shipped linter (§10.2).
-- `doc-audit` run on a fixture repo with known gaps → checks
-  that the report surfaces exactly the expected gaps.
-- `lint:generated-fresh` on a harnessed fixture: passes after `init`,
-  fails after a generated file is edited by hand.
-
-### 14.3 E2E
-
-- `vaubaan harness init <tmp> --engines=claude-code` then check that
-  `<tmp>/.claude/skills/doc-audit/SKILL.md` and `<tmp>/AGENTS.md` exist
-  on disk, and that no `.claude/agents/` folder was written.
-- `/doc-audit` invocation on the vaubaan repo itself → report
-  generated, verdict produced.
-- Modified `.harness-overrides/skills/doc-audit.skill.md` override →
-  re-run `init` → rendered skill = the override version, not the
-  stock one.
-
-### 14.4 Self-application (dogfooding)
-
-The `@vaubaan/harness` repo itself is harnessed. `doc-audit` run on
-this repo legitimately reports (in v1):
-
-- **Partial handbook** at the beginning (the `handbook/` pillar is built
-  as the code is written).
-- Specs OK for the harness (this spec).
-- Decisions: to be fleshed out over the course of the cutover.
-
-The `doc-audit` E2E on this repo itself is an integration test: it
-must always pass (in the sense of "producing a report"), even if the
-verdict is `needs-human` because of the known gaps.
+- **Unit**: the parser (strict frontmatter), each renderer (pivot
+  fixture → expected native layout), the capabilities policy (skip vs
+  degraded).
+- **Integration**: `init`, `update`, `uninstall` and `check` on target
+  directories in various states (empty, existing user files, edited
+  generated files, old manifests, unsafe paths); each linter on a
+  passing and a failing fixture; `lint:generated-fresh` passing after
+  `init` and failing after a hand edit.
+- **E2E**: the packed package installed and run as a user would, per
+  engine; an override replacing a shipped skill in the render.
+- **Self-application**: the harness repository is harnessed by itself
+  and passes its own linters.
 
 ## 15. Decisions in force & open questions
 
 ### 15.1 Decisions in force
 
-- **Name**: the harness, published as `@vaubaan/harness`.
-- **Standalone.** The harness is a package + CLI, with no dependency
-  on any particular orchestrator. It is the caller (human, CI,
-  third-party script) that invokes the CLI.
-- **Multi-engine in v1**: yes, the 3 engines (claude-code, codex-cli,
-  opencode) are shipped. Pivot format `*.skill.md` / `*.cmd.md`.
-- **Generated files committed.** `AGENTS.md`, `CLAUDE.md`, the engine
-  folders and the manifest are committed; `lint:generated-fresh` keeps
-  them equal to the current render. The project maintains nothing by
-  hand outside `docs/`. See
-  [generated-files-committed](../decisions/generated-files-committed.md).
-- **Lint in CI and pre-commit, no engine hook.** See
-  [lint-in-ci-and-pre-commit](../decisions/lint-in-ci-and-pre-commit.md).
-- **No MCP configuration, no code-driven merge.** See
-  [no-mcp-no-code-merge](../decisions/no-mcp-no-code-merge.md).
-- **Gitignored project overrides.** No committed local fork; to
-  amend the harness, upstream PR.
-- **Language & runtime**: see ADR [typescript-node-stack](../decisions/typescript-node-stack.md).
-- **No auto-generated skill.** A skill is written by a human and
-  committed to the package.
-- **Doc = 6 mandatory pillars**: `README.md` (root) +
-  `docs/{spec, decisions, handbook, tests, workflow}/`. Two
-  **optional** pillars are added, `docs/skills/` and `docs/quality/`
-  (see §9.1.2). No other pillar (e.g. no separate `tutorials/` or
-  `runbooks/`).
-- **No agent persona, no code judgment.** The harness ships
-  doc-skills only; roles, phases and code-quality audits belong to the
-  project. See
-  [no-personas-no-code-judgment](../decisions/no-personas-no-code-judgment.md).
-- **YOLO by default, no per-skill tool allowlist.** Isolation
-  is carried by the calling environment; layering a per-skill
-  tool allowlist adds no real security and creates friction
-  with the agent.
-- **Clean separation between CLI (inert) and skill (intelligent).**
-  - **`vaubaan harness init` CLI** = pure mechanics, idempotent,
-    invoked by the operator or a script to drop the harness
-    rendered for the engines named with `--engines` (mandatory, see
-    [engine-choice-mandatory](../decisions/engine-choice-mandatory.md)).
-    No intelligence.
-  - **`vaubaan harness check` CLI** = layout check of a repo.
-  - **`vaubaan harness lint` CLI** = mechanical linters (§10.2)
-    run in CI, exit-code-based, *block PRs* that create
-    mechanically detectable drift.
-  - **Skills (doc-audit + writers)** = the real intelligence; they
-    build and maintain the doc *within nominal agent
-    invocations*, prescribed by the doc-first rule of `AGENTS.md`. The
-    bootstrap of an existing project emerges naturally from the
-    "doc-check first" coding workflow — no dedicated `harness-init` skill.
-- **Every mechanizable check becomes a CI linter.** Golden rule: if
-  a §9.3 criterion can be written as a regex / AST parser / file lookup,
-  it is shipped as a **linter** (CI gate, exit-code) in addition to being
-  covered by the `doc-audit` skill. The skill keeps only the
-  checks that require semantic judgment (§10.3).
-- **Harness versioning** = package version tag. The project pins the
-  package as a dev dependency so that CI and local renders agree on
-  `lint:generated-fresh`.
-
-Standing decisions also in force, not restated above:
-[github-actions-ci](../decisions/github-actions-ci.md),
-[linters-mechanical-vs-skills](../decisions/linters-mechanical-vs-skills.md),
-[capabilities-matrix-with-degradation](../decisions/capabilities-matrix-with-degradation.md),
-[yaml-frontmatter-zod-strict](../decisions/yaml-frontmatter-zod-strict.md).
+The structural decisions are listed in
+[docs/decisions/](../decisions/README.md); this spec links each one
+where it applies.
 
 ### 15.2 Still-open questions
 
-- **OQ — Skill signing.** Should the `.skill.md` files be signed (cosign /
-  sigstore) to prevent a supply-chain compromise of
-  `@vaubaan/harness`? To be settled when we start distributing the
-  package publicly.
-- **OQ — Cross-project skills shared outside `@vaubaan/harness`.**
-  Today: a project that wants a custom skill forks the package.
-  Tomorrow: a separate extensions registry? To be reconsidered if
-  clients ask for recurring custom work.
-- **OQ — `handbook` granularity.** One `handbook/<feature>.md` file
-  per feature, or one file per code file? To be experimented with
-  during the bootstrap of the Vaubaan handbook.
-- **OQ — `tests/` and `workflow/` extensions.** In v1, `tests/` is
-  limited to `{integration,e2e}-tests.md` and `workflow/` to
-  `coding-workflow.md`. v2 candidates: `tests/load-tests.md`,
-  `tests/security-tests.md`, `workflow/release-workflow.md`,
-  `workflow/incident-workflow.md`. To be settled when a project has a
-  concrete need.
-- **OQ — Per-project `doc-audit` config.** The "N commits of drift
-  before warning" threshold is configurable via `.harness-overrides/`. Should
-  more knobs be exposed (regex of expected subsystem names,
-  exclusions, etc.)?
-
----
-
-_Date: 2026-05-21. Author: rpelissier + Claude (drafting). Status:
-draft for review._
+- **OQ — Skill signing.** Should the `.skill.md` files be signed to
+  protect the supply chain of `@vaubaan/harness`?
+- **OQ — Skills shared across projects** outside the package: a
+  separate extensions registry? To reconsider if projects ask for it.
+- **OQ — `tests/` and `workflow/` extensions.** Candidates:
+  `tests/load-tests.md`, `tests/security-tests.md`,
+  `workflow/release-workflow.md`, `workflow/incident-workflow.md`. To
+  settle when a project has a concrete need.
+- **OQ — Per-project `doc-audit` config.** Beyond the drift threshold,
+  should more knobs be exposed (expected subsystem names, exclusions)?

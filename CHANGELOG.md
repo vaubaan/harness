@@ -5,9 +5,25 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.1.0] — 2026-10-27
+
+Docs say only what the code does not. The writer skills now apply a content test and a size target to every pillar, so an agent reads less and finds the rule in force. Decision: [a decision file holds a structural decision in force](docs/decisions/decisions-as-current-state.md).
+
+### Changed
+- `decision-record-writer`: an admission test (costly to reverse, a real alternative weighed, outlives the ticket) decides whether an ADR is written at all, with a table of where the rest goes. About 40 lines, 60 at most. No `## History` section: a replaced decision is deleted and its option moves to Rejected alternatives.
+- `handbook-writer`: only entry points, cross-file invariants, traps, what lives outside the repo, manual procedures and debug. 30-60 lines, 80 at most. Never a description of files, functions, routes or fields.
+- `test-plan-writer`: scope, stack, conventions and known gaps. The plans never list covered scenarios: the test titles are their source of truth. 20-50 lines; `tracks:` lists runner configs and test infrastructure.
+- `spec-writer`: a content test (a rule someone could disagree with or test, said once), 50-100 lines; `stable` is set by the PR that delivers the feature.
+- `workflow-writer`: a content test (nothing readable in `.github/workflows/`), 60-100 lines.
+- `doc-audit` and `drift-detector` check specs against test files and known gaps, not against scenario lists.
+- Templates `handbook`, `integration-tests`, `e2e-tests` and `decision` follow the new formats. The `AGENTS.md` project map describes handbooks and test plans accordingly.
+
+### Migration
+None required: no linter or file format changes. Existing docs are rewritten to the new targets at their own pace, with `/handbook`, `/test-plan`, `/decision`.
+
 ## [2.0.0] — 2026-10-22
 
-Breaking. The harness narrows to one job: keep a project's context in `docs/`, render it for the engines the project uses, lint it in CI. Decisions of 2026-10-22: [no MCP, no code merge](docs/decisions/no-mcp-no-code-merge.md), [lint in CI and pre-commit](docs/decisions/lint-in-ci-and-pre-commit.md), [generated files committed](docs/decisions/generated-files-committed.md), [engine choice mandatory](docs/decisions/engine-choice-mandatory.md), [no personas, no code judgment](docs/decisions/no-personas-no-code-judgment.md), [decisions as current state](docs/decisions/decisions-as-current-state.md).
+Breaking. The harness narrows to one job: keep a project's context in `docs/`, render it for the engines the project uses, lint it in CI. Decisions of 2026-10-22: no MCP, no code merge (`no-mcp-no-code-merge`), [lint in CI and pre-commit](docs/decisions/lint-in-ci-and-pre-commit.md), [generated files committed](docs/decisions/generated-files-committed.md), engine choice mandatory (`engine-choice-mandatory`), [no personas, no code judgment](docs/decisions/no-personas-no-code-judgment.md), [decisions as current state](docs/decisions/decisions-as-current-state.md).
 
 ### Removed
 - The four agent personas (`coding`, `review`, `merge`, `planning`), the `*.agent.md` pivot format and the `.<engine>/agents/` output. The harness imposes one working rule, doc-first, and asks the team to write its workflow in `docs/workflow/`.
@@ -80,7 +96,7 @@ Run `npx @vaubaan/harness update .` to get the new OpenCode plugin, and add `.ha
 
 ### Changed
 - Publish publicly as `@vaubaan/harness` on npmjs (with npm provenance) instead of `@sbw-vaubaan/harness` on GitHub Packages. Rendered Stop hooks now call `npx -y @vaubaan/harness stop-hook`. See [the decision](docs/decisions/public-npmjs-vaubaan-scope.md).
-- Switch the whole harness to English: spec, ADRs, handbooks, rendered skills, agents and commands, doc templates and the generated `AGENTS.md`. See [the decision](docs/decisions/english-canonical-language.md).
+- Switch the whole harness to English: spec, ADRs, handbooks, rendered skills, agents and commands, doc templates and the generated `AGENTS.md`. See the decision (`english-canonical-language`).
 - `lint:decision-schema` now expects `Context` / `Decision` / `Consequences` / `Rejected alternatives`, and `lint:quality-schema` expects `Mechanical checks` / `Project rules` / `Accepted deviations`. The French headings are still accepted.
 - License changed from MIT to Apache-2.0.
 
@@ -90,7 +106,7 @@ Installations made with `@sbw-vaubaan/harness` keep a Stop hook pointing to the 
 ## [1.2.0] — 2026-10-13
 
 ### Added
-- Add the optional `docs/quality/` pillar: a single required file `docs/quality/code-quality.md` holding the project's own code-quality rules in three sections (mechanical checks, project rules, accepted deviations). See [the decision](docs/decisions/quality-optional-pillar.md) and [the handbook](docs/handbook/quality-pillar.md).
+- Add the optional `docs/quality/` pillar: a single required file `docs/quality/code-quality.md` holding the project's own code-quality rules in three sections (mechanical checks, project rules, accepted deviations). See the decision (`quality-optional-pillar`) and [the handbook](docs/handbook/quality-pillar.md).
 - Add `lint:quality-schema` (14th linter): enforces the required file and its three sections once `docs/quality/` exists; silent when the directory is absent.
 - Ship the `code-quality.md.tmpl` template.
 - `clean-code-guardian` reads the quality file first, skips what tools already check and does not report accepted deviations; `doc-audit` checks the pillar's shape and boundaries; the `coding` persona reads it before coding.
@@ -106,7 +122,7 @@ None required. Projects without `docs/quality/` are unaffected.
 - Remove the CAR turn-end journal from stop hooks, including `CAR_TURN_END_LOG` and the `/var/run/car/turn-end.log` fallback. Lint decisions and native engine continuations remain active.
 
 ### Documentation
-- Describe explicit CLI/API installation, archive the unimplemented supervisor proposal, and retain CAR references only as historical context. See [the retirement decision](docs/decisions/retire-coding-agent-runner-coupling.md).
+- Describe explicit CLI/API installation, archive the unimplemented supervisor proposal, and retain CAR references only as historical context. See the retirement decision (`retire-coding-agent-runner-coupling`).
 
 ## [1.1.0] — 2026-09-20
 
@@ -120,7 +136,7 @@ Run the selected package version's `update --dry-run --json`, then `update`. The
 
 ## [1.0.1] — 2026-09-20
 
-Release decision `release-safety-patch-1-0-1` (PR #51, validation and publication conditions), folded into [github-actions-ci](docs/decisions/github-actions-ci.md) in 2.0.
+Release decision `release-safety-patch-1-0-1` (PR #51, validation and publication conditions), folded into github-actions-ci (`github-actions-ci`) in 2.0.
 
 ### Fixed
 - Validate every managed path before installation or removal; reject traversal, absolute paths, unexpected locations and symbolic links before touching any file.

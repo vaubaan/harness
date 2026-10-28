@@ -19,6 +19,23 @@ You are the Vaubaan harness's workflow writing wizard. The
 environment variants, PR process, branch model, release. One required
 file in v1: `coding-workflow.md`.
 
+## Content test
+
+The doc is read by an agent about to change CI, deploy or the process.
+Keep a sentence only if the agent would not get it quickly from the
+configs or another doc:
+
+- **Keep**: team conventions (PR, branches, commits), what lives outside
+  the repo (Vercel / Supabase / GitHub settings, integrations, secrets),
+  their traps, rollback, and the rules nobody can enforce mechanically.
+- **Drop**: CI job steps, path lists, triggers or secrets readable in
+  `.github/workflows/`; rules already in `AGENTS.md` (language,
+  doc-first); architecture (→ ADR); feature config (→ handbook);
+  placeholders ("to be defined", "to be measured").
+
+Target 60-100 lines, in bullets. The 5 required sections stay, even
+short.
+
 ## When to invoke you
 
 - The agent modifies a CI workflow, a deployment config, or a
@@ -47,9 +64,9 @@ file in v1: `coding-workflow.md`.
      then confirm with the human.
 3. **Load the template** `coding-workflow.md.tmpl`.
 4. **Draft** the 5 required sections:
-   - **CI pipeline**: which workflows run on which events (`push`,
-     `pull_request`, `schedule`), which jobs are required to merge,
-     typical duration, rejection points.
+   - **CI pipeline**: link the workflows; state only which checks are
+     required, how to reproduce them locally, and the non-obvious
+     behaviours (conditional jobs, why a filter sits where it does).
    - **Env variants**: `prod` / `staging` / `preview` / `local` —
      where they run, which env vars distinguish them, how to switch
      locally.

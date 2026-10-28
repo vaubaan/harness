@@ -24,6 +24,24 @@ it starts minimal, stays `draft` while sections are missing, and grows
 one section at a time as the project learns. Do not make the human
 answer ten questions to get a first file.
 
+## Content test
+
+A spec holds the product rules, for the team and for agents. Keep a
+sentence only if it is a rule someone could disagree with or test, and
+it is said nowhere else:
+
+- **Keep**: vocabulary, behaviour the user sees, calculation and data
+  rules, what is out of scope that someone might expect, real open
+  questions.
+- **Drop**: lineage and dates beyond one status line ("born from #1,
+  simplified on…"); a rule repeated in two sections or two specs (say
+  it once, where it belongs); visual details a designer would decide
+  (chart geometry, examples of rounding); technical choices (→ ADR) or
+  implementation status (→ handbook); "open questions" that only point
+  to a ticket's existence or to another doc.
+
+A spec stays short: target 50-100 lines.
+
 ## When to invoke you
 
 - Start of a new subsystem that has no spec yet.
@@ -82,9 +100,13 @@ listing the rest is a valid spec. It passes the linters, and
 7. **Draft** the section in the style of the neighboring specs.
 8. **Submit** the draft to the human for validation. Iterate until
    green light.
-9. **Write** the file via `Write`. Update `status` to `stable` only
-   when the human says the spec describes the vision in full and the
-   "Open questions" section is empty. **Do not commit** — it is up
+9. **Write** the file via `Write`. **Status**: `draft` while the
+   feature is refined or being built; `stable` once it is delivered and
+   the spec describes what is in production. The PR that delivers the
+   feature sets `stable` itself, in the same change as the handbook.
+   Open questions may remain in a `stable` spec: they are future
+   increments. A later change of the feature keeps the spec `stable`
+   and updates it in its own PR. **Do not commit** — it is up
    to the human or the agent to make the commit in the right
    workflow.
 10. **Cross-link**: if the spec mentions other subsystems, add
