@@ -361,6 +361,55 @@ describe("lint:cross-links", () => {
     const ctx = { repoRoot: repo.root, config: { ignore: ["vendor/**"] } };
     expect(crossLinks.run(repo.root, ctx)).toEqual([]);
   });
+  it("ignores links in fenced code blocks and inline code", () => {
+    repo.write(
+      "docs/source.md",
+      "```md\n[broken](./nope.md)\n```\n\nSee `[broken](./nope.md)` here.\n",
+    );
+    expect(crossLinks.run(repo.root)).toEqual([]);
+  });
+  it("ignores anchor and mailto links", () => {
+    repo.write("docs/source.md", "[a](#section) and [m](mailto:someone@example.com)\n");
+    expect(crossLinks.run(repo.root)).toEqual([]);
+  });
+  it("strips the fragment before resolving the target", () => {
+    repo.write("docs/target.md", "target");
+    repo.write("docs/source.md", "[ok](./target.md#section)\n[ko](./gone.md#section)\n");
+    const issues = crossLinks.run(repo.root);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.message).toBe("broken link: ./gone.md#section");
+  });
+  it("resolves links starting with / from the repo root", () => {
+    repo.write("docs/target.md", "target");
+    repo.write("docs/sub/source.md", "[ok](/docs/target.md)\n[ko](/docs/gone.md)\n");
+    const issues = crossLinks.run(repo.root);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.message).toBe("broken link: /docs/gone.md");
+  });
+  it("ignores data: links", () => {
+    repo.write("docs/source.md", "[img](data:image/png;base64,iVBORw0KGgo=)\n");
+    expect(crossLinks.run(repo.root)).toEqual([]);
+  });
+  it("reports file, line and message of a broken link", () => {
+    repo.write("docs/source.md", "# Title\n\n[link](./gone.md)\n");
+    expect(crossLinks.run(repo.root)).toEqual([
+      {
+        linter: "lint:cross-links",
+        severity: "error",
+        file: "docs/source.md",
+        line: 3,
+        message: "broken link: ./gone.md",
+      },
+    ]);
+  });
+  it("reports each broken link on the same line", () => {
+    repo.write("docs/source.md", "[a](./gone-a.md) and [b](./gone-b.md)\n");
+    const issues = crossLinks.run(repo.root);
+    expect(issues.map((i) => i.message)).toEqual([
+      "broken link: ./gone-a.md",
+      "broken link: ./gone-b.md",
+    ]);
+  });
 });
 
 describe("lint:orphan-decisions", () => {
