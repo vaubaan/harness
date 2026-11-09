@@ -26,7 +26,7 @@ mechanized.
 - Before drafting a plan: we need to know whether the existing docs
   are sound.
 - On explicit request via `/doc-audit [scope]` (scope = `spec`,
-  `decisions`, `handbook`, `tests`, `workflow`, `readme`, or `all`).
+  `decisions`, `handbook`, `tests`, `workflow`, `readme`, `journeys`, or `all`).
 
 ## Scope of the 6 pillars
 
@@ -39,12 +39,14 @@ mechanized.
   (required v1).
 - **workflow** — `docs/workflow/coding-workflow.md` (required v1).
 
-Two **optional** pillars are added. Their absence is never reported;
+Three **optional** pillars are added. Their absence is never reported;
 you audit them only if they exist:
 
 - **skills** — `docs/skills/*.skill.md`: the project's domain skills.
 - **quality** — `docs/quality/code-quality.md`: project-specific
   quality rules.
+- **journeys** — `docs/journeys/*.md`: what the user does and wants,
+  at every scale, anchored to the code (`README.md` there is generated).
 
 ## Procedure
 
@@ -142,6 +144,26 @@ Audit **only if `docs/quality/` exists**.
   longer exists in the repo.
 - ⚠️ An accepted deviation with no reason and no link to an ADR.
 
+### Journeys (optional pillar)
+Audit **only if `docs/journeys/` holds a journey**. The linters
+(`lint:journey-*`) already check the grammar, the anchors and the
+vocabulary; you judge what they cannot.
+- ⚠️ **Spec without journey**: a `docs/spec/*.md` file that no journey
+  links in its `spec:` frontmatter. The subsystem has rules but no
+  documented user activity.
+- ⚠️ **Leaf without a test**: an `implemented` leaf none of whose
+  `anchors:` is a test file (by the project's test conventions, see
+  `docs/tests/`).
+- ⚠️ **Pending increment**: a `proposed` leaf whose journey has not
+  changed for more than N commits (default 10). List them: they are the
+  backlog nobody delivered.
+- ⚠️ **Criteria lost at delivery**: the tests anchored by a leaf
+  delivered in the recent history (`git log` on the journey) do not
+  restate its former `acceptance:` items in their titles.
+- ❌ **Pillar drift**: a leaf carrying prose that states a business rule
+  (→ `spec/`) or how the code works (→ `handbook/`); a field the linter
+  does not know is already an error.
+
 ### Cross-link consistency
 - ⚠️ Orphan spec: no decision, handbook or test references it.
 - ⚠️ Orphan decision: not referenced by any other doc file.
@@ -159,6 +181,8 @@ This is *the* critical point where docs drift. Heuristics:
   paraphrases generic principles (SOLID, Clean Code), what lengthily
   justifies a structural decision (→ ADR) or describes the
   implementation (→ handbook).
+- journeys/ (if present) must stay intention + pointers → flag a leaf
+  that explains a rule or an implementation.
 - Any architectural choice mentioned in a commit without an ADR → flag
   (see "Implicit decisions").
 
@@ -217,6 +241,12 @@ invent empty sections):
 - ❌ section "<section>" missing
 - ⚠️ <cited tool or config file> not found in the repo
 
+## Journeys (optional — section omitted if docs/journeys/ is absent)
+
+- ⚠️ docs/spec/<name>.md — no journey links it
+- ⚠️ docs/journeys/<slug>.md › <leaf title> — implemented, no test anchor
+- ⚠️ docs/journeys/<slug>.md › <leaf title> — proposed for N commits
+
 ## Cross-link consistency
 
 - Orphan spec: <path>
@@ -239,8 +269,8 @@ invent empty sections):
 
 - **Fix nothing**. You audit, you list, you recommend. The writers
   (`spec-writer`, `decision-record-writer`, `handbook-writer`,
-  `test-plan-writer`, `workflow-writer`, `readme-writer`) are there to
-  fix — not you.
+  `test-plan-writer`, `workflow-writer`, `readme-writer`,
+  `journey-writer`) are there to fix — not you.
 - **Do not re-implement the mechanical linters**. If a check is already
   covered by `vaubaan harness lint` (file presence, frontmatter schema,
   tech keyword regex, cross-links), you may mention it briefly but do

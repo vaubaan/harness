@@ -15,6 +15,14 @@ The optional `docs/journeys/` pillar: what the user does and wants, at every sca
 - `lint:tracks-drift` covers `docs/journeys/`: a journey's tracked paths are the union of its anchors.
 - The rendered index `docs/journeys/README.md`: written by `init` and `update` while a journey exists, recorded in the manifest, checked by `lint:generated-fresh`, refused in `.gitignore`, removed with the last journey. A journey that does not parse fails the render.
 - `AGENTS.md` lists `docs/journeys/` in its project map when the pillar holds a journey.
+- Skill `journey-writer`, invoked by two commands: `/journey [name]` writes or extends a journey one anchored node at a time (three questions on a greenfield scope, extraction from the code's entry points on a mature one); `/story <intent>` adds a `proposed` leaf with its acceptance criteria before any code, and refuses an entity no linked spec defines. 9 skills, 10 commands, 19 linters.
+- `AGENTS.md` doc-first rule, when the pillar holds a journey: a visible change of behavior starts with a `proposed` leaf (`/story <intent>`), never with the code.
+- `doc-audit` audits the journeys pillar: spec without journey, `implemented` leaf without a test anchor, `proposed` leaf pending for N commits, acceptance criteria lost at delivery, leaves that state a rule or an implementation.
+- `drift-detector` reads journey anchors: an anchor to a deleted file or an entity gone from the spec vocabulary is hard drift; a code branch without a node or a `proposed` leaf already coded is soft drift; an entry point anchored by a journey leaf is no longer reported as undocumented code.
+- `handbook-writer` links the journey leaf that anchors the feature, without restating it.
+
+### Changed
+- The `AGENTS.md` Doc-skills list names every command of a skill, in command order (`journey-writer` (`/journey`, `/story`)); it kept only the last one. Run `update .` to refresh the committed file.
 
 ## [2.1.0] — 2026-10-27
 

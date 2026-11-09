@@ -100,12 +100,20 @@ export function frontmatterDataForCmd(cmd: Cmd): Record<string, unknown> {
  * Everything project-specific lives in `README.md` and `docs/`.
  */
 export function buildUmbrellaBody(extras: UmbrellaExtras): string {
-  const triggerBySkill = new Map(
-    extras.availableCommands.map((c) => [c.meta.invokes_skill, c.meta.trigger]),
-  );
+  // One skill may be invoked by several commands (`/journey`, `/story`):
+  // list every trigger, in command order.
+  const triggersBySkill = new Map<string, string[]>();
+  for (const c of extras.availableCommands) {
+    const triggers = triggersBySkill.get(c.meta.invokes_skill) ?? [];
+    triggers.push(c.meta.trigger);
+    triggersBySkill.set(c.meta.invokes_skill, triggers);
+  }
   const skillLines = extras.availableSkills.map((s) => {
-    const trigger = triggerBySkill.get(s.meta.id);
-    const label = trigger ? `\`${s.meta.id}\` (\`${trigger}\`)` : `\`${s.meta.id}\``;
+    const triggers = triggersBySkill.get(s.meta.id) ?? [];
+    const label =
+      triggers.length > 0
+        ? `\`${s.meta.id}\` (${triggers.map((t) => `\`${t}\``).join(", ")})`
+        : `\`${s.meta.id}\``;
     return `- ${label} — ${s.meta.description.split("\n")[0]}`;
   });
   const sections: string[] = [
@@ -139,6 +147,11 @@ export function buildUmbrellaBody(extras: UmbrellaExtras): string {
     "",
     "The order is: **understand the docs → fill the gaps → code → update the docs → commit**. If the docs are silent or stale on something you change, fill the gap upfront with the doc-skill writers — not downstream, not after the fact.",
     "",
+    ...(extras.hasJourneys
+      ? [
+          "- Visible change of behavior → a `proposed` leaf first (`/story <intent>`), never the code first.",
+        ]
+      : []),
     "- Missing spec for a subsystem you touch → **do not code**, report the gap.",
     "- Implicit structural decision in your changes → an ADR (`/decision`).",
     "- Changed feature behavior → update the matching handbook (`/handbook`).",

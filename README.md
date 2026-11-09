@@ -17,7 +17,7 @@ npx -y @vaubaan/harness init . --engines=claude-code
 
 A few Markdown files hold what the code cannot say and point to the code and configs for everything else. The harness renders them into the native layout of Claude Code, Codex or OpenCode, and lints them so context and code never drift apart.
 
-- **One context, every engine.** Eight skills, one per pillar plus an audit and a drift detector, each with a slash command. Written once for Claude Code, Codex and OpenCode.
+- **One context, every engine.** Nine skills, one per pillar plus an audit and a drift detector, each with a slash command. Written once for Claude Code, Codex and OpenCode.
 - **Pointers that stay true.** Handbooks and test plans declare the files they describe in a `tracks:` field. When that code moves and the doc does not, the linter says so.
 - **Checks with zero tokens.** Nineteen mechanical linters run in CI and in your pre-commit hook. No engine hook, no injected turn, no loop. The agent sees a failed command and fixes it.
 
@@ -256,6 +256,7 @@ jobs:
 /doc-audit      # what is missing or stale
 /spec           # write the spec of a subsystem, guided
 /decision       # turn an implicit choice into an ADR
+/story          # a proposed leaf with acceptance criteria, before the code
 ```
 
 > [!NOTE]
@@ -285,7 +286,7 @@ jobs:
 
 ### Skills
 
-**8 skills**, each with a slash command. A skill never says *when* to do something. It says *how* to write or check one pillar.
+**9 skills**, each with a slash command. A skill never says *when* to do something. It says *how* to write or check one pillar.
 
 | Command       | Skill                    | What it does                                                                                   |
 | ------------- | ------------------------ | ---------------------------------------------------------------------------------------------- |
@@ -297,6 +298,8 @@ jobs:
 | `/test-plan`  | `test-plan-writer`       | Keeps integration and e2e test plans up to date.                                               |
 | `/workflow`   | `workflow-writer`        | Documents CI, environments, PR process, branches, release, languages.                          |
 | `/readme`     | `readme-writer`          | Keeps the README in sync with the code.                                                        |
+| `/journey`    | `journey-writer`         | Writes the user journeys, one anchored node at a time; three questions on a greenfield scope, extraction from the code on a mature one. |
+| `/story`      | `journey-writer`         | Adds a `proposed` leaf with acceptance criteria to the right journey, before any code.         |
 
 ### Linters
 
@@ -421,7 +424,7 @@ npx @vaubaan/harness update .                    # then commit the result
 
 ## Where this is going
 
-Decided, not shipped yet: typed context transactions (`/story`, `/decide`, `/refactor`, `/fix`), an optional `docs/todo/` pillar for increments that fold into the spec when delivered, pointer checks per section, a token budget per file, and `/compact` to rewrite a context that has grown contradictions. The [spec](./docs/spec/coding-agent-harness.md) and the [decisions](./docs/decisions/) say what exists today.
+Shipped: the optional `docs/journeys/` pillar and its first typed context transaction, `/story`, which writes an increment as a `proposed` leaf before the code and passes it `implemented` when delivered. Decided, not shipped yet: the other transactions (`/decide`, `/refactor`, `/fix`), pointer checks per section, a token budget per file, and `/compact` to rewrite a context that has grown contradictions. The [spec](./docs/spec/coding-agent-harness.md) and the [decisions](./docs/decisions/) say what exists today.
 
 ## Documentation
 
