@@ -5,6 +5,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.2.0] — 2026-11-09
+
 The optional `docs/journeys/` pillar: what the user does and wants, at every scale, anchored to the code. Decision: [journeys-pillar](docs/decisions/journeys-pillar.md); contract: spec §9.1.3.
 
 ### Added
@@ -23,6 +25,9 @@ The optional `docs/journeys/` pillar: what the user does and wants, at every sca
 
 ### Changed
 - The `AGENTS.md` Doc-skills list names every command of a skill, in command order (`journey-writer` (`/journey`, `/story`)); it kept only the last one. Run `update .` to refresh the committed file.
+
+### Migration
+None required. Run `update .` to refresh `AGENTS.md`. The pillar is optional: start it with `/journey` on a mature project, or `/story <intent>` before the next visible change.
 
 ## [2.1.0] — 2026-10-27
 
