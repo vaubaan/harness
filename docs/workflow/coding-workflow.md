@@ -5,7 +5,7 @@ tracks:
   - .github/workflows/ci.yml
   - .github/workflows/publish.yml
   - .husky/pre-commit
-last_reviewed: 2026-10-27
+last_reviewed: 2026-11-09
 ---
 
 # Coding workflow — @vaubaan/harness
@@ -43,6 +43,9 @@ pushing a `v<semver>` tag that publishes to npmjs.
 
 - Open the PR against `main`; green CI is required, plus one human
   review; squash merge.
+- Stacked PRs: CI runs only on PRs targeting `main`. After the base PR
+  merges, rebase the next branch, retarget its PR to `main`, then close
+  and reopen it: changing the base does not trigger CI.
 - Add an entry under `[Unreleased]` in `CHANGELOG.md` when the change is
   user-visible.
 - **Dogfooding.** This repository is harnessed by itself and its
@@ -67,10 +70,13 @@ pushing a `v<semver>` tag that publishes to npmjs.
 
 ## 5. Release
 
-- **Prepare** in a PR: bump the version in `package.json` and the
-  lockfile, move `[Unreleased]` to the new version in `CHANGELOG.md`,
-  check the README against the code (`readme-writer`), refresh the
-  generated files.
+- **Prepare** in a PR: `npm version <X.Y.Z> --no-git-tag-version` bumps
+  `package.json`, the lockfile and `src/version.ts` (the `version` script
+  syncs the constant and reformats `package.json`; a test fails when they
+  differ). Then move `[Unreleased]` to the new version in `CHANGELOG.md`,
+  check the README against the code (`readme-writer`), and refresh the
+  generated files with `npm run build && node dist/cli/index.js update .`:
+  the manifest records the harness version.
 - **Trigger**: after merge and green CI on `main`, create the tag
   `v<X.Y.Z>` on that commit and push it. `publish.yml` checks the tag
   form, runs CI, publishes with provenance, then waits until npm shows

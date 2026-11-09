@@ -56,6 +56,7 @@
     "test:coverage": "vitest run --coverage",
     "lint:harness": "node dist/cli/index.js lint --cwd .",
     "ci": "npm run typecheck && npm run lint && npm run test && npm run build && npm run lint:harness",
+    "version": "node scripts/sync-version.mjs && biome format --write package.json",
     "prepare": "husky"
   },
   "dependencies": {
