@@ -7,6 +7,10 @@ import { docLayout } from "./doc-layout.js";
 import { frontmatterTracks } from "./frontmatter-tracks.js";
 import { generatedFresh } from "./generated-fresh.js";
 import { gitignoreHarness } from "./gitignore-harness.js";
+import { journeyAnchors } from "./journey-anchors.js";
+import { journeyGraph } from "./journey-graph.js";
+import { journeySchema } from "./journey-schema.js";
+import { journeyVocabulary } from "./journey-vocabulary.js";
 import { orphanDecisions } from "./orphan-decisions.js";
 import { qualitySchema } from "./quality-schema.js";
 import { readmePresence } from "./readme-presence.js";
@@ -31,6 +35,10 @@ export const ALL_LINTERS: ReadonlyArray<Linter> = [
   orphanDecisions,
   gitignoreHarness,
   qualitySchema,
+  journeySchema,
+  journeyAnchors,
+  journeyVocabulary,
+  journeyGraph,
   generatedFresh,
 ];
 

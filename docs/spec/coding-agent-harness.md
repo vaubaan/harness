@@ -526,7 +526,7 @@ blank. Fenced code is ignored.
 | `spec:`                  | any node       | Relative path, optional `#fragment`, to the spec section that holds the rule. The path must resolve.                                                                  |
 | `anchors:`               | leaf           | Paths or globs from the repo root, code and tests, the `tracks:` syntax. Required when the leaf is `implemented`; each must match at least one existing file.         |
 | `acceptance:`            | leaf           | Followed by `- ` list items: observable criteria. Required when the leaf is `proposed`. Removed at delivery: the titles of the anchored tests restate them.           |
-| `requires:` / `creates:` | leaf, optional | Entities (below) the activity needs or produces. The edges of the journey graph. A leaf without `requires:` is an entry point.                                        |
+| `requires:` / `creates:` | leaf, optional | Entities (below) the activity needs from another activity, or produces. The edges of the journey graph. What comes from outside the project (an operator's input, an external system) is not declared: the leaf is an entry point. |
 
 Any other key directly under a heading is an error. A derivable fact
 (`uses:`, `guards:`, depth, coverage) is never declared. A leaf carries

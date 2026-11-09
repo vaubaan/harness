@@ -10,6 +10,7 @@ This file describes **how to work in this project**. The **business context** (w
 - `docs/decisions/<slug>.md` — ADRs: structural choices and rejected alternatives.
 - `docs/tests/integration-tests.md` & `e2e-tests.md` — test scope, stack, conventions, known gaps.
 - `docs/workflow/coding-workflow.md` — CI, branches, PR, release. How this team works: follow it.
+- `docs/journeys/<journey>.md` — user intentions and journeys, anchored to the code. `docs/journeys/README.md` is the generated index.
 
 ## Doc-first
 

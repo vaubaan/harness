@@ -25,6 +25,7 @@ describe("assertManagedPaths", () => {
         "AGENTS.md",
         "CLAUDE.md",
         ".harness-manifest.json",
+        "docs/journeys/README.md",
         ".claude/agents/coding.md",
         ".claude/commands/decision.md",
         ".claude/skills/doc-audit/SKILL.md",
@@ -60,12 +61,17 @@ describe("assertManagedPaths", () => {
     expect(() => assertManagedPaths(root, [path])).toThrow(/unsafe harness path/);
   });
 
-  it.each(["README.md", "docs/spec/api.md", ".git/config", ".codex/auth.json", ".agents/foo.md"])(
-    "rejects unrelated project path %j",
-    (path) => {
-      expect(() => assertManagedPaths(root, [path])).toThrow(/outside harness-managed locations/);
-    },
-  );
+  it.each([
+    "README.md",
+    "docs/spec/api.md",
+    "docs/journeys/ship.md",
+    "docs/journeys/sub/README.md",
+    ".git/config",
+    ".codex/auth.json",
+    ".agents/foo.md",
+  ])("rejects unrelated project path %j", (path) => {
+    expect(() => assertManagedPaths(root, [path])).toThrow(/outside harness-managed locations/);
+  });
 
   it("rejects an ancestor symlink pointing outside the target", () => {
     const outside = join(sandbox, "outside");

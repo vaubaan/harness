@@ -12,6 +12,17 @@ export function readText(repoRoot: string, relativePath: string): string {
   return readFileSync(join(repoRoot, relativePath), "utf8");
 }
 
+/**
+ * A `tracks:` entry or a journey anchor: a path from the repo root, or a glob
+ * (any `*`) that must match at least one file.
+ */
+export function trackedPathExists(repoRoot: string, pattern: string): boolean {
+  if (pattern.includes("*")) {
+    return fg.sync(pattern, { cwd: repoRoot, absolute: false }).length > 0;
+  }
+  return existsSync(join(repoRoot, pattern));
+}
+
 export function listMarkdown(repoRoot: string, dir: string): string[] {
   const cwd = join(repoRoot, dir);
   if (!existsSync(cwd)) return [];
