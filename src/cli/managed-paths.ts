@@ -1,7 +1,13 @@
 import { lstatSync, realpathSync, statSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, resolve, win32 } from "node:path";
 
-const MANAGED_FILES = new Set(["AGENTS.md", "CLAUDE.md", ".harness-manifest.json"]);
+const MANAGED_FILES = new Set([
+  "AGENTS.md",
+  "CLAUDE.md",
+  ".harness-manifest.json",
+  // Index of the optional journeys pillar, rendered while a journey exists.
+  "docs/journeys/README.md",
+]);
 
 /**
  * Files 1.x wrote or edited and 2.0 never touches again: MCP configurations

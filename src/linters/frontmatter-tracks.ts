@@ -1,17 +1,7 @@
-import { existsSync } from "node:fs";
-import { join } from "node:path";
-import fg from "fast-glob";
 import type { LintIssue, Linter } from "./types.js";
-import { listMarkdown, parseFrontmatter, readText } from "./util.js";
+import { listMarkdown, parseFrontmatter, readText, trackedPathExists } from "./util.js";
 
 const TRACKED_DIRS = ["docs/handbook", "docs/tests", "docs/workflow"];
-
-function trackedPathExists(repoRoot: string, pattern: string): boolean {
-  if (pattern.includes("*")) {
-    return fg.sync(pattern, { cwd: repoRoot, absolute: false }).length > 0;
-  }
-  return existsSync(join(repoRoot, pattern));
-}
 
 export const frontmatterTracks: Linter = {
   id: "lint:frontmatter-tracks",

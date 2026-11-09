@@ -11,6 +11,10 @@ The optional `docs/journeys/` pillar: what the user does and wants, at every sca
 - Spec §9.1.3 and the `journeys-pillar` decision: one file per level-1 intention, nested nodes, leaves with `anchors:`, `requires:` / `creates:` (entities of the spec vocabulary) and `acceptance:`; statuses `proposed` → `implemented` → `deprecated`.
 - Template `journey.md.tmpl`.
 - The harness's own journeys: `harness-a-project`, `keep-docs-honest`.
+- Four linters for the pillar, no-ops without `docs/journeys/` and selected by `lint --pillar journeys`: `lint:journey-schema` (strict frontmatter, node grammar, required `anchors:` / `acceptance:`, `spec` paths resolve), `lint:journey-anchors` (every anchor matches a file), `lint:journey-vocabulary` (every `requires:` / `creates:` entity is a Vocabulary term of a linked spec; a warning when no linked spec has a Vocabulary section), `lint:journey-graph` (warns when a leaf requires an entity no leaf creates).
+- `lint:tracks-drift` covers `docs/journeys/`: a journey's tracked paths are the union of its anchors.
+- The rendered index `docs/journeys/README.md`: written by `init` and `update` while a journey exists, recorded in the manifest, checked by `lint:generated-fresh`, refused in `.gitignore`, removed with the last journey. A journey that does not parse fails the render.
+- `AGENTS.md` lists `docs/journeys/` in its project map when the pillar holds a journey.
 
 ## [2.1.0] — 2026-10-27
 

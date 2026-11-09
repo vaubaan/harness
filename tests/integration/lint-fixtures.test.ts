@@ -131,4 +131,112 @@ describe("lint integration on synthetic repos", () => {
     const report = runLinters(repo, { pillar: "spec" });
     expect(report.issues.every((i) => i.linter === "lint:spec-tech-agnostic")).toBe(true);
   });
+
+  describe("optional docs/journeys/ pillar", () => {
+    const SPEC = `# System
+
+## 0. Vocabulary
+
+- **Source file** — what is written.
+- **Artifact** — what is built.
+
+## 1. Vision
+
+Build things.
+`;
+
+    const JOURNEY = `---
+title: Ship a thing
+status: implemented
+actors: [maintainer]
+spec: ../spec/system.md
+last_reviewed: 2026-11-09
+---
+
+# Ship a thing
+
+As a maintainer, I ship.
+
+## Write the source
+
+creates: source-file
+anchors: src/write.ts
+
+## Build it
+
+requires: source-file
+creates: artifact
+anchors: src/build.ts, src/*.ts
+spec: ../spec/system.md#1-vision
+
+## Sign it
+
+status: proposed
+requires: artifact
+acceptance:
+- The artifact is signed.
+`;
+
+    function bootstrapWithJourney(): void {
+      bootstrapFullPassingRepo();
+      write("docs/spec/system.md", SPEC);
+      write("src/write.ts", "");
+      write("src/build.ts", "");
+      write("docs/journeys/ship.md", JOURNEY);
+    }
+
+    function journeyIssues(): Array<{ linter: string; severity: string }> {
+      return runLinters(repo).issues.filter((i) => i.linter.startsWith("lint:journey-"));
+    }
+
+    it("stays green with a journey anchored to the code and a spec with a Vocabulary", () => {
+      bootstrapWithJourney();
+      const report = runLinters(repo);
+      if (report.issues.length) console.log(JSON.stringify(report.issues, null, 2));
+      expect(report.issues).toEqual([]);
+    });
+
+    it("lint:journey-schema fails on a broken grammar", () => {
+      bootstrapWithJourney();
+      write("docs/journeys/ship.md", JOURNEY.replace("creates: source-file\n", "uses: disk\n"));
+      const report = runLinters(repo);
+      expect(report.summary.pass).toBe(false);
+      expect(journeyIssues().map((i) => i.linter)).toContain("lint:journey-schema");
+    });
+
+    it("lint:journey-anchors fails on an anchor that matches no file", () => {
+      bootstrapWithJourney();
+      write("docs/journeys/ship.md", JOURNEY.replace("src/write.ts", "src/gone.ts"));
+      expect(runLinters(repo).summary.pass).toBe(false);
+      expect(journeyIssues().map((i) => i.linter)).toEqual(["lint:journey-anchors"]);
+    });
+
+    it("lint:journey-vocabulary fails on an entity the spec does not define", () => {
+      bootstrapWithJourney();
+      write("docs/journeys/ship.md", JOURNEY.replace("creates: artifact", "creates: binary"));
+      expect(runLinters(repo).summary.pass).toBe(false);
+      expect(journeyIssues().map((i) => [i.linter, i.severity])).toContainEqual([
+        "lint:journey-vocabulary",
+        "error",
+      ]);
+    });
+
+    it("lint:journey-graph warns, without failing, when nothing creates a required entity", () => {
+      bootstrapWithJourney();
+      write("docs/journeys/ship.md", JOURNEY.replace("creates: source-file\n", ""));
+      const report = runLinters(repo);
+      expect(report.summary.pass).toBe(true);
+      expect(journeyIssues()).toMatchObject([
+        { linter: "lint:journey-graph", severity: "warning" },
+      ]);
+    });
+
+    it("--pillar=journeys runs only the journey linters and tracks-drift", () => {
+      bootstrapWithJourney();
+      write("docs/spec/x.md", "Uses React heavily.\n");
+      write("docs/journeys/ship.md", JOURNEY.replace("src/write.ts", "src/gone.ts"));
+      const report = runLinters(repo, { pillar: "journeys" });
+      expect(report.issues.map((i) => i.linter)).toEqual(["lint:journey-anchors"]);
+    });
+  });
 });

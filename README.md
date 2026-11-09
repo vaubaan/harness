@@ -19,7 +19,7 @@ A few Markdown files hold what the code cannot say and point to the code and con
 
 - **One context, every engine.** Eight skills, one per pillar plus an audit and a drift detector, each with a slash command. Written once for Claude Code, Codex and OpenCode.
 - **Pointers that stay true.** Handbooks and test plans declare the files they describe in a `tracks:` field. When that code moves and the doc does not, the linter says so.
-- **Checks with zero tokens.** Fifteen mechanical linters run in CI and in your pre-commit hook. No engine hook, no injected turn, no loop. The agent sees a failed command and fixes it.
+- **Checks with zero tokens.** Nineteen mechanical linters run in CI and in your pre-commit hook. No engine hook, no injected turn, no loop. The agent sees a failed command and fixes it.
 
 **Contents:**
 [The problem](#the-problem) · [A context database with pointers](#a-context-database-with-pointers) · [What it looks like](#what-it-looks-like) · [Quick start](#quick-start) ·
@@ -50,6 +50,7 @@ Each pillar stores one kind of information the code cannot carry, and links to t
 | `docs/workflow/`  | What lives outside the repo: approvals, protections, secrets, languages.   | `ci.yml`, build scripts, pre-commit hook.                                                                  |
 | `docs/quality/`   | Optional. The code rules this team holds, and the deviations it accepts.   | The linter and formatter configs that enforce the mechanical part.                                         |
 | `docs/skills/`    | Optional. Domain know-how the agent should load.                           | Whatever the skill needs.                                                                                  |
+| `docs/journeys/`  | Optional. What the user does and wants, at every scale, anchored to the code. | Each leaf's `anchors:`; `requires:`/`creates:` name the spec vocabulary.                                |
 
 > [!IMPORTANT]
 > **One rule.** The only working rule the harness imposes, written into `AGENTS.md` for every engine: **understand the context, fill the gaps, code, update the context, commit.**
@@ -75,6 +76,7 @@ acme-billing/
     ├── tests/e2e-tests.md
     ├── workflow/coding-workflow.md
     ├── quality/code-quality.md    # optional
+    ├── journeys/                  # optional: send-an-invoice.md, README.md (rendered index)
     └── skills/tax-rules.skill.md  # optional
 ```
 
@@ -272,7 +274,7 @@ jobs:
   Claude Code · Codex · OpenCode               read the same context, write the code
     │
     ▼  pre-commit, CI
-  vaubaan-harness lint                         15 linters: shape, links, drift, freshness
+  vaubaan-harness lint                         19 linters: shape, links, drift, freshness
 ```
 
 1. **Your docs are the context.** A small, fixed layout under `docs/`. Every file has a template and a writer skill, so you rarely start from a blank page.
@@ -298,7 +300,7 @@ jobs:
 
 ### Linters
 
-**15 linters**, fast enough to run on every commit.
+**19 linters**, fast enough to run on every commit.
 
 <details>
 <summary>See the list</summary>
@@ -315,6 +317,7 @@ jobs:
 | `gitignore-harness`                  | Overrides and reports are ignored; generated files are not.         |
 | `generated-fresh`                    | Committed generated files match the current render.                 |
 | `quality-schema`                     | `docs/quality/code-quality.md` has its sections, if you use it.     |
+| `journey-schema`, `journey-anchors`, `journey-vocabulary`, `journey-graph` | Optional `docs/journeys/`: node grammar, anchors exist, entities are spec vocabulary, nothing requires what nothing creates. |
 
 </details>
 

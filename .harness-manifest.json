@@ -6,7 +6,7 @@
     "codex-cli",
     "opencode"
   ],
-  "renderedAt": "2026-10-27T20:53:57.103Z",
+  "renderedAt": "2026-11-09T18:41:50.628Z",
   "files": [
     ".agents/skills/decision-record-writer/SKILL.md",
     ".agents/skills/doc-audit/SKILL.md",
@@ -41,7 +41,8 @@
     ".opencode/commands/test-plan.md",
     ".opencode/commands/workflow.md",
     "AGENTS.md",
-    "CLAUDE.md"
+    "CLAUDE.md",
+    "docs/journeys/README.md"
   ],
   "fileHashes": {
     ".claude/skills/decision-record-writer/SKILL.md": "33293e2bc462e7fcac14f439749b4dc7cf5d7ee44849e1cc702d9e71f67c0863",
@@ -76,7 +77,8 @@
     ".opencode/commands/spec.md": "c809502114670893ec72083d69448439a931207acd8ae69d912b491a553087d1",
     ".opencode/commands/test-plan.md": "a08b9037d6fa9dd7baa1ceaf656a395b301e58236ddf17926f79bbd0deb1122c",
     ".opencode/commands/workflow.md": "769b18667fdc004de7293cdf2ea0ddd0491bd3df5a109f943ebe779090a023df",
-    "AGENTS.md": "8710d4542ceed8864b6b369437af266f3f1d032ce57f6655d32a244418737438",
-    "CLAUDE.md": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49"
+    "AGENTS.md": "b93c76f359a6c6c6df9fd741d2b2ca66c61bf02f4a0578e9008bc2eb6763a4b5",
+    "CLAUDE.md": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49",
+    "docs/journeys/README.md": "0dfd06cfef2911c5e6973bd949e98b45635df8e04159b9f95ab30a7c77ef4617"
   }
 }

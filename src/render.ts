@@ -1,7 +1,9 @@
 import type { Cmd } from "./parser/cmd.js";
+import { JOURNEYS_INDEX_PATH, type ParsedJourney } from "./parser/journey.js";
 import type { Skill } from "./parser/skill.js";
 import { buildUmbrellaBody } from "./renderers/common.js";
 import { getRenderer } from "./renderers/index.js";
+import { buildJourneysIndex } from "./renderers/journeys-index.js";
 import type { Engine, RenderedFile } from "./types.js";
 
 export interface Harness {
@@ -21,6 +23,8 @@ export interface RenderInput {
   projectSkills?: ReadonlyArray<Skill>;
   /** True when the target project ships `docs/quality/code-quality.md` (optional pillar). */
   hasQualityDoc?: boolean;
+  /** The project's parsed `docs/journeys/*.md` (optional pillar); renders their index. */
+  journeys?: ReadonlyArray<ParsedJourney>;
 }
 
 export interface RenderOutput {
@@ -132,12 +136,18 @@ export function render(input: RenderInput): RenderOutput {
     availableCommands: Array.from(exposedCmds.values()),
     hasProjectSkills: (input.projectSkills?.length ?? 0) > 0,
     hasQualityDoc: input.hasQualityDoc === true,
+    hasJourneys: (input.journeys?.length ?? 0) > 0,
   });
   files.push({ path: "AGENTS.md", content: umbrellaContent });
 
   // CLAUDE.md stub only if claude-code is enabled (Claude Code reads it historically)
   if (engines.includes("claude-code")) {
     files.push({ path: "CLAUDE.md", content: CLAUDE_MD_STUB });
+  }
+
+  // The journeys index is a generated file too, rendered only while a journey exists.
+  if (input.journeys && input.journeys.length > 0) {
+    files.push({ path: JOURNEYS_INDEX_PATH, content: buildJourneysIndex(input.journeys) });
   }
 
   return { files, warnings };

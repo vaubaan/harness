@@ -137,7 +137,7 @@ program
   .description("Run all mechanical linters and exit non-zero on errors")
   .option(
     "--pillar <pillar>",
-    "filter by pillar (spec, decisions, handbook, tests, workflow, quality)",
+    "filter by pillar (spec, decisions, handbook, tests, workflow, quality, journeys)",
   )
   .option("--only <ids>", "comma-separated linter ids to run (e.g. lint:cross-links)")
   .option("--format <fmt>", "text | json", "text")

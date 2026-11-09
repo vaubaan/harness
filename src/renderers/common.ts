@@ -14,6 +14,7 @@ export interface UmbrellaExtras {
   availableCommands: ReadonlyArray<Cmd>;
   hasProjectSkills?: boolean;
   hasQualityDoc?: boolean;
+  hasJourneys?: boolean;
 }
 
 export interface RenderResult {
@@ -126,6 +127,11 @@ export function buildUmbrellaBody(extras: UmbrellaExtras): string {
     ...(extras.hasQualityDoc
       ? [
           "- `docs/quality/code-quality.md` — the project's code-quality rules: mechanical checks, judgment rules, accepted deviations. Read it before writing or auditing code.",
+        ]
+      : []),
+    ...(extras.hasJourneys
+      ? [
+          "- `docs/journeys/<journey>.md` — user intentions and journeys, anchored to the code. `docs/journeys/README.md` is the generated index.",
         ]
       : []),
     "",

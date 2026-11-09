@@ -13,7 +13,6 @@ that none of them works from stale or private instructions.
 
 ## Render the harness into the project
 
-requires: engine
 creates: generated-file, manifest
 anchors: src/cli/init.ts, src/cli/plan-render.ts, src/render.ts, tests/integration/init.test.ts
 spec: ../spec/coding-agent-harness.md#8-composition-umbrella--skills--commands
@@ -35,20 +34,19 @@ anchors: src/cli/managed-paths.ts, src/cli/update-manifest.ts, tests/integration
 
 ### Change the engines
 
-requires: manifest, engine
+requires: manifest
 creates: generated-file
 anchors: src/cli/init.ts, tests/integration/init.test.ts
 
 ## Try a skill before proposing it upstream
 
-requires: override, manifest
+requires: manifest
 creates: generated-file
 anchors: src/loader.ts, src/render.ts, tests/integration/update.test.ts
 spec: ../spec/coding-agent-harness.md#11-gitignored-overrides
 
 ## Version the team's own skills with the project
 
-requires: skill
 creates: generated-file
 anchors: src/loader.ts, src/cli/plan-render.ts
 spec: ../spec/coding-agent-harness.md#912-optional-pillars
