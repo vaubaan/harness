@@ -5,8 +5,8 @@
 > codex-cli / opencode) is immediately productive in it, and provides
 > the skills that *keep alive* the project's **doc**: 6 mandatory
 > pillars (README.md at the root + spec + decisions + handbook + tests +
-> workflow under `docs/`) and 2 optional ones (skills and quality, see
-> §9.1.2).
+> workflow under `docs/`) and 3 optional ones (skills and quality, see
+> §9.1.2; journeys, see §9.1.3).
 
 ## 0. Vocabulary
 
@@ -36,13 +36,23 @@ The harness reasons with these words:
     `integration-tests.md` and `e2e-tests.md`,
   - **workflow** (operational process, "how we work") —
     `docs/workflow/`, one required file: `coding-workflow.md` (CI,
-    env variants, PR process or direct-push, branches, release).
+    env variants, PR process or direct-push, branches, release),
+  - **journeys** (what the user does and wants, at every scale,
+    anchored to the code) — `docs/journeys/`, optional (see §9.1.3).
 - **Doc-skill** — cross-cutting doc-maintenance skill (see §7).
   Invocable by the agent or by the human via slash-command.
 - **Override** — a local, gitignored customization of the dropped
   harness (adding, disabling or replacing a skill or command, see §11).
 - **Manifest** — `.harness-manifest.json`, generated: what the harness
   wrote, for which engines, with fingerprints (see §13.1).
+- **Generated file** — a file the harness rendered and records in the
+  manifest; owned by the harness until edited or preserved (see §13.1).
+- **Preserved file** — a generated path the operator keeps as the
+  project's own (`--preserve`); excluded from future renders.
+- **Journey** — a file of `docs/journeys/`: one level-1 user intention
+  and every node below it, down to the leaves the code realizes.
+- **Anchor** — a pointer from a journey leaf to the code and tests that
+  realize it; the `tracks:` syntax, per leaf (see §9.1.3).
 
 ### 0.1 Position
 
@@ -182,7 +192,7 @@ node_modules/@vaubaan/harness/
 ├── skills/      # the 8 doc-skills (§7)
 ├── commands/    # one command per writer and audit skill
 ├── templates/   # readme, spec, decision, handbook, integration-tests,
-│                # e2e-tests, coding-workflow, code-quality (§9.2)
+│                # e2e-tests, coding-workflow, code-quality, journey (§9.2)
 └── (CLI, renderers, parser, linters)
 ```
 
@@ -211,7 +221,8 @@ The harness writes nothing under `.codex/`: Codex reads its skills from
 ```
 project/
 ├── README.md                         # ← COMMITTED (README pillar, root)
-├── docs/                             # ← COMMITTED (the other pillars)
+├── docs/                             # ← COMMITTED (the other pillars;
+│                                     #   docs/journeys/README.md is generated, §9.1.3)
 ├── AGENTS.md, CLAUDE.md, .<engine>/  # ← COMMITTED (generated)
 ├── .harness-manifest.json            # ← COMMITTED (generated)
 ├── .gitignore                        # contains .harness-overrides/ and .vaubaan/
@@ -349,6 +360,7 @@ The harness ships no agent persona and no code-quality audit (see
 | `workflow-writer`           | Updates `docs/workflow/coding-workflow.md`. Reads the repo's CI/CD config, the package manifest scripts and the branch/PR config, proposes the required sections (CI / env / PR / branches / release) and the optional ones (languages). |
 | `readme-writer`             | Maintains `README.md` at the root. Syncs the links to the other pillars; makes sure pitch + quick start stay up to date vs the code. |
 | `drift-detector`            | Detects code ↔ doc divergences.                                                                                      |
+| `journey-writer`            | Writes or updates `docs/journeys/<slug>.md` one node at a time (§9.1.3): greenfield (three questions) or mature (reads the code's entry points, proposes anchored leaves). `/story <intent>` adds a `proposed` leaf with its acceptance criteria before any code. |
 
 Their evolution is versioned by the package version. Only the
 `engines:` and `requires:` constraints (§4.2) filter a skill out of an
@@ -372,8 +384,11 @@ for all the named engines:
   sections: the project map (where each pillar lives, including the
   optional ones when present), the doc-first rule, the checks (run
   `lint` before committing, never edit a generated file by hand) and a
-  compact list of the doc-skills with their slash-command when one
-  exists. The engines discover skills natively.
+  compact list of the doc-skills with their slash-commands when they
+  exist. When `docs/journeys/` holds a journey, the map lists it and the
+  doc-first rule adds one line: a visible change of behavior starts
+  with `/story`, never with the code (§9.1.3). The engines discover
+  skills natively.
 - **`CLAUDE.md`** at the root if claude-code is included, reduced to
   the `@AGENTS.md` import.
 
@@ -396,7 +411,10 @@ project/
     ├── workflow/
     │   └── coding-workflow.md        # required
     ├── skills/<id>.skill.md          # OPTIONAL (see §9.1.2)
-    └── quality/code-quality.md       # OPTIONAL (see §9.1.2)
+    ├── quality/code-quality.md       # OPTIONAL (see §9.1.2)
+    └── journeys/                     # OPTIONAL (see §9.1.3)
+        ├── README.md                 # index, generated
+        └── <slug>.md                 # one level-1 intention, no numbering
 ```
 
 - The `README` pillar lives at the root (universal convention of
@@ -426,8 +444,9 @@ one (see
 
 ### 9.1.2 Optional pillars
 
-Two pillars are added to the six mandatory ones. Their absence is
-never an error; their presence commits to a form contract.
+Three pillars are added to the six mandatory ones (the third, journeys,
+has its own section, §9.1.3). Their absence is never an error; their
+presence commits to a form contract.
 
 **`skills/`** — domain skills versioned with the project (a plugin
 recipe, a migration runbook, a review checklist, a team persona):
@@ -464,12 +483,112 @@ When the file exists, `AGENTS.md` lists it in the project map and every
 agent reads it before writing or auditing code. The file declares no
 `tracks:`: like an ADR, it sets a norm and does not follow the code.
 
+### 9.1.3 Journeys
+
+**`journeys/`** — what the user does and wants, at every scale, from a
+level-1 intention to the atomic activity a piece of code realizes. The
+pillar is where a new behavior is specified before it is coded, and the
+backlog of what is decided and not delivered. Decision:
+[journeys-pillar](../decisions/journeys-pillar.md). Absent, nothing
+changes; present, it commits to the form below.
+
+**Layout.** One file `docs/journeys/<slug>.md` per level-1 intention,
+titled verb + object, never a category; slug without numbering (§9.1.1).
+`docs/journeys/README.md` is the index, generated (see *Index* below).
+
+**File.** Strict frontmatter; an unknown field is an error:
+
+- `title` (required) — verb + object.
+- `status` (required) — `proposed | implemented | deprecated`; the
+  default status of the file's nodes.
+- `actors` (required) — the user roles, free but stable in the project.
+- `spec` (required) — one relative path, or a list, to the specs whose
+  vocabulary the journey uses; each path must resolve.
+- `last_reviewed` (required) — date; same semantics as a handbook.
+
+The first paragraph after the title is the journey's user story.
+
+**Nodes.** Every heading of level 2 and deeper is a node; its level is
+the heading depth minus one. A node with no deeper heading below it,
+before the next heading of the same or a higher level, is a **leaf**;
+the others are internal nodes. An internal node may carry one sentence
+of user story; a leaf carries no prose: its title and fields suffice,
+the rule lives in the spec and the how in the handbook.
+
+**Fields.** The lines directly under a heading, blank lines allowed,
+one field per line, `key: value, value`. The block ends at the first
+line that is neither a field, nor a list item of `acceptance:`, nor
+blank. Fenced code is ignored.
+
+| Field                    | On             | Rule                                                                                                                                                                  |
+|--------------------------|----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `status:`                | any node       | Overrides the file status for the node and its descendants. A `proposed` node in an `implemented` journey is the increment in progress.                              |
+| `spec:`                  | any node       | Relative path, optional `#fragment`, to the spec section that holds the rule. The path must resolve.                                                                  |
+| `anchors:`               | leaf           | Paths or globs from the repo root, code and tests, the `tracks:` syntax. Required when the leaf is `implemented`; each must match at least one existing file.         |
+| `acceptance:`            | leaf           | Followed by `- ` list items: observable criteria. Required when the leaf is `proposed`. Removed at delivery: the titles of the anchored tests restate them.           |
+| `requires:` / `creates:` | leaf, optional | Entities (below) the activity needs or produces. The edges of the journey graph. A leaf without `requires:` is an entry point.                                        |
+
+Any other key directly under a heading is an error. A derivable fact
+(`uses:`, `guards:`, depth, coverage) is never declared. A leaf carries
+at least one field; a leaf field on an internal node is an error.
+
+**Entities.** An entity is the kebab-case slug (lowercase, runs of
+non-alphanumeric characters replaced by one hyphen) of a bold term
+opening a bullet in the Vocabulary section of one of the journey's
+specs: the section headed `Vocabulary` or `Vocabulaire`, optionally
+numbered, up to the next heading of the same or a higher level.
+`**Generated file**` gives `generated-file`. No plural, no synonym: a
+missing word is added to the spec first. The language of the entities is
+the language of the spec.
+
+**Statuses.**
+
+- `proposed` — decided, not delivered. Created by `/story`. Carries
+  `acceptance:`, no `anchors:`. The `proposed` nodes are the backlog.
+- `implemented` — delivered, anchors valid. The pull request that
+  delivers adds `anchors:`, writes the tests whose titles restate the
+  criteria, removes `acceptance:`.
+- `deprecated` — withdrawn, kept one release so agents know the
+  intention existed; anchors may disappear; deleted at the next release.
+  No History section, as for an ADR.
+
+A node never returns to `proposed`. A delivered leaf changes only in the
+pull request that delivers the change; between deliveries, a change of
+behavior is a sibling `proposed` leaf, merged into the leaf at delivery.
+A journey is `implemented` as soon as one of its leaves is.
+
+**Index.** `docs/journeys/README.md` is rendered by `init` and `update`
+when at least one journey exists: the whole tree as an indented list,
+one line per node with its effective status, the actors on the journey
+line, a link to each file. It is a generated file: recorded in the
+manifest, committed, covered by `lint:generated-fresh`, removed when no
+journey remains, never edited by hand. A journey that does not parse
+fails the render, like an invalid project skill.
+
+**Umbrella.** When the pillar holds a journey, `AGENTS.md` lists it in
+the project map and the doc-first rule adds: a visible change of
+behavior starts with `/story`, never with the code.
+
+**Linters** (§10.2): `lint:journey-schema`, `lint:journey-anchors`,
+`lint:journey-vocabulary`, `lint:journey-graph`; `lint:tracks-drift`
+treats the union of a journey's anchors as its tracked paths.
+`lint:spec-tech-agnostic` does not apply to the pillar: anchors are code
+paths by construction.
+
+**Not in the pillar.** Size targets (2 to 9 children per node, 40 to
+120 lines per file, split into two journeys beyond) belong to
+`journey-writer` and `doc-audit`, not to a linter. The harness reads no
+source code: capability usage, role guards and unanchored entry points
+are the `drift-detector`'s judgment. Graph analytics (dominance,
+quotient graphs, reports, viewers) are outside the harness; the format
+is parsable by regex so an external tool can produce them.
+
 ### 9.2 Templates (shipped by the harness)
 
-`@vaubaan/harness/templates/{readme,spec,decision,handbook,integration-tests,e2e-tests,coding-workflow,code-quality}.md.tmpl`.
+`@vaubaan/harness/templates/{readme,spec,decision,handbook,integration-tests,e2e-tests,coding-workflow,code-quality,journey}.md.tmpl`.
 The wizards (`readme-writer`, `spec-writer`, `decision-record-writer`,
-`handbook-writer`, `test-plan-writer`, `workflow-writer`) instantiate these
-templates. Minimal format:
+`handbook-writer`, `test-plan-writer`, `workflow-writer`,
+`journey-writer`) instantiate these templates. Minimal format:
 
 - **README.md**: 1-line pitch + What is this (1 §) + Quick start
   (install + run) + Links (docs/spec, docs/handbook, docs/workflow,
@@ -495,6 +614,8 @@ templates. Minimal format:
 - **code-quality.md** (optional pillar): Mechanical checks +
   Project rules + Accepted deviations. No dedicated wizard in v1: the
   file is edited by hand from the template.
+- **journey.md** (optional pillar): frontmatter + user story + nested
+  nodes with their fields (§9.1.3); 40-120 lines.
 
 ### 9.3 Completeness criteria (audited by `doc-audit`)
 
@@ -528,6 +649,11 @@ templates. Minimal format:
   `code-quality.md` **must** exist with its three required sections
   (§9.1.2). Gap → ❌. Content that copies an ADR, a handbook, a tool's
   configuration or generic principles → ⚠️ (pillar boundary).
+- **Journeys (optional pillar)**: if `docs/journeys/` exists: each
+  spec is linked by at least one journey, otherwise → ⚠️ "spec without
+  journey"; each `implemented` leaf anchors at least one test; a
+  `proposed` leaf older than N commits → ⚠️ pending increment; the test
+  titles of a delivered leaf restate its former criteria (judgment).
 - **Cross-link consistency**: a spec has at least one decision, one
   handbook or a mention in the tests; a decision is referenced by at
   least one other doc. Otherwise → orphan.
@@ -587,7 +713,7 @@ filter by pillar or by linter id and choose a text or JSON output.
 | `lint:decision-schema`          | decisions                | Each ADR has the 4 sections Context + Decision + Consequences + Rejected alternatives (regex headers).                                                     | error         |
 | `lint:adr-no-tracks`            | decisions                | No ADR declares a non-empty `tracks:` (an ADR states a decision, it does not follow the code).                                                          | error         |
 | `lint:frontmatter-tracks`       | handbook, tests, workflow | Each file declares `tracks: [...]` in frontmatter and all tracked paths exist in the repo.                                                               | error         |
-| `lint:tracks-drift`             | handbook, tests, workflow | The doc file is older than its tracked files by more than N commits (configurable).                                                                      | warning       |
+| `lint:tracks-drift`             | handbook, tests, workflow, journeys | The doc file is older than its tracked files by more than N commits (configurable). For a journey, the tracked paths are the union of its anchors.        | warning       |
 | `lint:spec-tech-agnostic`       | spec                     | Blocklist of tech keywords (frameworks, runtimes, infra providers — effective list in the source code) **forbidden** in `spec/` files.                   | error         |
 | `lint:spec-has-content`         | spec                     | `docs/spec/` contains at least one `.md` file (warns if the directory exists but is empty).                                                              | warning       |
 | `lint:cross-links`              | all                      | All relative Markdown links resolve to an existing file.                                                                                                 | error         |
@@ -595,6 +721,10 @@ filter by pillar or by linter id and choose a text or JSON output.
 | `lint:gitignore-harness`        | repo root                | `.gitignore` excludes `.harness-overrides/` and `.vaubaan/`, and ignores none of the generated paths (`AGENTS.md`, `CLAUDE.md`, engine folders, manifest). | error         |
 | `lint:quality-schema`           | quality (optional)       | If `docs/quality/` exists: `code-quality.md` exists and contains the 3 required sections (regex headers). No effect if the directory is absent.           | error         |
 | `lint:generated-fresh`          | repo root                | When a manifest exists: every generated file equals the current render for the recorded engines and overrides; none is missing or stale.                 | error         |
+| `lint:journey-schema`           | journeys (optional)      | If `docs/journeys/` exists: strict frontmatter; known node fields, leaf fields on leaves only; an `implemented` leaf has `anchors:`, a `proposed` leaf has `acceptance:`; a leaf has at least one field; `spec` paths resolve. No effect if the directory is absent. | error |
+| `lint:journey-anchors`          | journeys (optional)      | Every anchor matches at least one existing file (same resolution as `tracks:`), reported at the node's line.                                            | error         |
+| `lint:journey-vocabulary`       | journeys (optional)      | Every entity of `requires:` / `creates:` is a term of the Vocabulary section of a linked spec. Downgraded to a warning when no linked spec has a Vocabulary section. | error |
+| `lint:journey-graph`            | journeys (optional)      | An entity a leaf requires that no leaf of any journey creates: the leaf is unreachable in the doc.                                                       | warning       |
 
 Section headings are matched in English (`Context`, `Decision`,
 `Consequences`, `Rejected alternatives`; `Mechanical checks`, `Project
@@ -768,8 +898,10 @@ agent, following the doc-first rule of `AGENTS.md`, finds the gaps with
 - **Integration**: `init`, `update`, `uninstall` and `check` on target
   directories in various states (empty, existing user files, edited
   generated files, old manifests, unsafe paths); each linter on a
-  passing and a failing fixture; `lint:generated-fresh` passing after
-  `init` and failing after a hand edit.
+  passing and a failing fixture, the journey linters included;
+  `lint:generated-fresh` passing after `init` and failing after a hand
+  edit; the journeys index rendered, updated and removed with the
+  journeys.
 - **E2E**: the packed package installed and run as a user would, per
   engine; an override replacing a shipped skill in the render.
 - **Self-application**: the harness repository is harnessed by itself

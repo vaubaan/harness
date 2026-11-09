@@ -1,0 +1,45 @@
+---
+title: <VERB + OBJECT>
+status: proposed
+actors: [<ACTOR>]
+spec: ../spec/<SUBSYSTEM>.md
+last_reviewed: <DATE>
+---
+
+# <VERB + OBJECT>
+
+As a <actor>, I want <intention> so that <outcome>.
+
+<!--
+One file per level-1 intention; the levels below are nested headings. A
+leaf is a heading with no sub-heading: it carries its fields on the lines
+right under the title, one field per line, values comma-separated, and no
+prose. An internal node may carry one sentence of user story.
+
+Fields of a leaf:
+  requires: / creates:  entities of the linked spec's Vocabulary (kebab-case)
+  anchors:              paths or globs of the code and tests (implemented)
+  acceptance:           observable criteria as a list (proposed)
+  status:               proposed | implemented | deprecated, when it differs
+                        from the file's
+  spec:                 link to the spec section that holds the rule
+
+Targets: 2-9 children per node, 40-120 lines per file. Longer: split into
+two journeys. The rule lives in the spec, the how in the handbook.
+-->
+
+## <Verb + object>
+
+requires: <entity>
+creates: <entity>
+anchors: <path or glob>, <path or glob>
+
+## <Verb + object>
+
+### <Verb + object>
+
+status: proposed
+requires: <entity>
+acceptance:
+- <observable criterion>
+- <observable criterion>

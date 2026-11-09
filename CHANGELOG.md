@@ -5,6 +5,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+The optional `docs/journeys/` pillar: what the user does and wants, at every scale, anchored to the code. Decision: [journeys-pillar](docs/decisions/journeys-pillar.md); contract: spec §9.1.3.
+
+### Added
+- Spec §9.1.3 and the `journeys-pillar` decision: one file per level-1 intention, nested nodes, leaves with `anchors:`, `requires:` / `creates:` (entities of the spec vocabulary) and `acceptance:`; statuses `proposed` → `implemented` → `deprecated`.
+- Template `journey.md.tmpl`.
+- The harness's own journeys: `harness-a-project`, `keep-docs-honest`.
+
 ## [2.1.0] — 2026-10-27
 
 Docs say only what the code does not. The writer skills now apply a content test and a size target to every pillar, so an agent reads less and finds the rule in force. Decision: [a decision file holds a structural decision in force](docs/decisions/decisions-as-current-state.md).
