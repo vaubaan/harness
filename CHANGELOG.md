@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- Journeys vocabulary: a node with no deeper heading is a **story** (was *leaf*). Spec §9.1.3, skills, template and linter messages updated. No format change.
+- `@vaubaan/harness/parser`: `LEAF_FIELDS` is now `STORY_FIELDS` and `JourneyNode.isLeaf` is now `JourneyNode.isStory`.
+
 ## [2.2.0] — 2026-11-09
 
 The optional `docs/journeys/` pillar: what the user does and wants, at every scale, anchored to the code. Decision: [journeys-pillar](docs/decisions/journeys-pillar.md); contract: spec §9.1.3.

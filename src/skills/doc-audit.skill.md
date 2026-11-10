@@ -151,16 +151,16 @@ vocabulary; you judge what they cannot.
 - ⚠️ **Spec without journey**: a `docs/spec/*.md` file that no journey
   links in its `spec:` frontmatter. The subsystem has rules but no
   documented user activity.
-- ⚠️ **Leaf without a test**: an `implemented` leaf none of whose
+- ⚠️ **Story without a test**: an `implemented` story none of whose
   `anchors:` is a test file (by the project's test conventions, see
   `docs/tests/`).
-- ⚠️ **Pending increment**: a `proposed` leaf whose journey has not
+- ⚠️ **Pending increment**: a `proposed` story whose journey has not
   changed for more than N commits (default 10). List them: they are the
   backlog nobody delivered.
-- ⚠️ **Criteria lost at delivery**: the tests anchored by a leaf
+- ⚠️ **Criteria lost at delivery**: the tests anchored by a story
   delivered in the recent history (`git log` on the journey) do not
   restate its former `acceptance:` items in their titles.
-- ❌ **Pillar drift**: a leaf carrying prose that states a business rule
+- ❌ **Pillar drift**: a story carrying prose that states a business rule
   (→ `spec/`) or how the code works (→ `handbook/`); a field the linter
   does not know is already an error.
 
@@ -181,7 +181,7 @@ This is *the* critical point where docs drift. Heuristics:
   paraphrases generic principles (SOLID, Clean Code), what lengthily
   justifies a structural decision (→ ADR) or describes the
   implementation (→ handbook).
-- journeys/ (if present) must stay intention + pointers → flag a leaf
+- journeys/ (if present) must stay intention + pointers → flag a story
   that explains a rule or an implementation.
 - Any architectural choice mentioned in a commit without an ADR → flag
   (see "Implicit decisions").
@@ -244,8 +244,8 @@ invent empty sections):
 ## Journeys (optional — section omitted if docs/journeys/ is absent)
 
 - ⚠️ docs/spec/<name>.md — no journey links it
-- ⚠️ docs/journeys/<slug>.md › <leaf title> — implemented, no test anchor
-- ⚠️ docs/journeys/<slug>.md › <leaf title> — proposed for N commits
+- ⚠️ docs/journeys/<slug>.md › <story title> — implemented, no test anchor
+- ⚠️ docs/journeys/<slug>.md › <story title> — proposed for N commits
 
 ## Cross-link consistency
 

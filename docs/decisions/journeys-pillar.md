@@ -21,7 +21,7 @@ agnostic to the project's language.
 ## Decision
 
 An optional pillar `docs/journeys/`: one Markdown file per level-1 user
-intention, nested headings for the levels below, leaves anchored to the code
+intention, nested headings for the levels below, stories anchored to the code
 with `anchors:` (the `tracks:` syntax) and linked to the spec vocabulary with
 `requires:` / `creates:`. A node is born `proposed` with acceptance criteria,
 becomes `implemented` in the pull request that delivers it, never goes back.

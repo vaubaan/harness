@@ -22,8 +22,8 @@ export const NODE_FIELDS = [
   "creates",
 ] as const;
 export type NodeField = (typeof NODE_FIELDS)[number];
-/** Fields only a leaf may carry. */
-export const LEAF_FIELDS: ReadonlyArray<NodeField> = [
+/** Fields only a story may carry. */
+export const STORY_FIELDS: ReadonlyArray<NodeField> = [
   "anchors",
   "acceptance",
   "requires",
@@ -43,7 +43,8 @@ export interface JourneyNode {
   line: number;
   /** Index of the parent node in `nodes`, absent for a level-1 node. */
   parent?: number;
-  isLeaf: boolean;
+  /** No deeper heading below it: a story (spec §9.1.3). */
+  isStory: boolean;
   /** Line of each known field the node declares. */
   fieldLines: Partial<Record<NodeField, number>>;
   status?: JourneyStatus;
@@ -60,6 +61,7 @@ export interface JourneyNode {
 export interface JourneyParse {
   meta?: JourneyFrontmatter;
   title: string;
+  /** The journey's user story, the first paragraph after the title; not a story node. */
   story?: string;
   nodes: JourneyNode[];
   errors: JourneyError[];
@@ -142,7 +144,7 @@ function newNode(title: string, level: number, line: number): JourneyNode {
     title,
     level,
     line,
-    isLeaf: true,
+    isStory: true,
     fieldLines: {},
     anchors: [],
     acceptance: [],
@@ -251,7 +253,7 @@ export function parseJourney(relPath: string, text: string): JourneyParse {
     if (parentIndex !== undefined) {
       node.parent = parentIndex;
       const parent = nodes[parentIndex];
-      if (parent) parent.isLeaf = false;
+      if (parent) parent.isStory = false;
     }
     const next = headings[k + 1];
     parseFields(node, lines, h.index + 1, next ? next.index : lines.length, errors);

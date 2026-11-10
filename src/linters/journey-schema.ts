@@ -1,4 +1,4 @@
-import { LEAF_FIELDS, readJourneys } from "../parser/journey.js";
+import { STORY_FIELDS, readJourneys } from "../parser/journey.js";
 import { journeySpecs, resolveSpecPath } from "./journey-util.js";
 import type { LintIssue, Linter } from "./types.js";
 import { fileExists } from "./util.js";
@@ -50,12 +50,12 @@ export const journeySchema: Linter = {
         ) {
           report(`"${node.title}": \`spec:\` does not resolve: ${node.spec}`, node.fieldLines.spec);
         }
-        if (!node.isLeaf) {
-          for (const field of LEAF_FIELDS) {
+        if (!node.isStory) {
+          for (const field of STORY_FIELDS) {
             const line = node.fieldLines[field];
             if (line !== undefined) {
               report(
-                `"${node.title}": \`${field}:\` is a leaf field, this node has children`,
+                `"${node.title}": \`${field}:\` is a story field, this node has children`,
                 line,
               );
             }
@@ -63,14 +63,14 @@ export const journeySchema: Linter = {
           continue;
         }
         if (Object.keys(node.fieldLines).length === 0) {
-          at("a leaf carries at least one field");
+          at("a story carries at least one field");
           continue;
         }
         if (node.effectiveStatus === "implemented" && node.anchors.length === 0) {
-          at("an `implemented` leaf needs `anchors:`");
+          at("an `implemented` story needs `anchors:`");
         }
         if (node.effectiveStatus === "proposed" && node.acceptance.length === 0) {
-          at("a `proposed` leaf needs `acceptance:` with at least one `- ` item");
+          at("a `proposed` story needs `acceptance:` with at least one `- ` item");
         }
       }
     }

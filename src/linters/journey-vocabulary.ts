@@ -40,7 +40,7 @@ export function vocabularyOf(specText: string): Set<string> | undefined {
 }
 
 /**
- * Every entity a journey leaf requires or creates is a term of the
+ * Every entity a journey story requires or creates is a term of the
  * Vocabulary section of one of the journey's specs. Downgraded to one
  * warning per journey when none of its specs has a Vocabulary section.
  */

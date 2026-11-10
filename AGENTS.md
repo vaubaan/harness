@@ -16,7 +16,7 @@ This file describes **how to work in this project**. The **business context** (w
 
 The order is: **understand the docs → fill the gaps → code → update the docs → commit**. If the docs are silent or stale on something you change, fill the gap upfront with the doc-skill writers — not downstream, not after the fact.
 
-- Visible change of behavior → a `proposed` leaf first (`/story <intent>`), never the code first.
+- Visible change of behavior → a `proposed` story first (`/story <intent>`), never the code first.
 - Missing spec for a subsystem you touch → **do not code**, report the gap.
 - Implicit structural decision in your changes → an ADR (`/decision`).
 - Changed feature behavior → update the matching handbook (`/handbook`).

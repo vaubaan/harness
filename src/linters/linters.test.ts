@@ -919,7 +919,7 @@ describe("lint:journey-schema", () => {
   });
   it("reports frontmatter errors", () => {
     writeJourney(
-      "## Leaf\n\nanchors: src/a.ts\n",
+      "## Story\n\nanchors: src/a.ts\n",
       "---\ntitle: X\nstatus: done\ntracks: [a]\n---\n",
     );
     const messages = journeySchema.run(repo.root).map((i) => i.message);
@@ -928,48 +928,48 @@ describe("lint:journey-schema", () => {
     expect(messages.some((m) => /`actors`/.test(m))).toBe(true);
   });
   it("reports unknown and derivable fields at their line", () => {
-    writeJourney("## Leaf\n\nanchors: src/a.ts\nowner: me\nuses: db\n");
+    writeJourney("## Story\n\nanchors: src/a.ts\nowner: me\nuses: db\n");
     const issues = journeySchema.run(repo.root);
     expect(issues.map((i) => [i.line, i.message])).toEqual([
-      [FIRST_NODE_LINE + 3, '"Leaf": unknown field `owner:`'],
-      [FIRST_NODE_LINE + 4, '"Leaf": `uses:` is derivable, never declared'],
+      [FIRST_NODE_LINE + 3, '"Story": unknown field `owner:`'],
+      [FIRST_NODE_LINE + 4, '"Story": `uses:` is derivable, never declared'],
     ]);
   });
-  it("reports a leaf field on an internal node", () => {
+  it("reports a story field on an internal node", () => {
     writeJourney("## Build\n\nanchors: src/a.ts\n\n### Compile\n\nanchors: src/a.ts\n");
     const issues = journeySchema.run(repo.root);
     expect(issues).toHaveLength(1);
     expect(issues[0]).toMatchObject({ severity: "error", line: FIRST_NODE_LINE + 2 });
-    expect(issues[0]?.message).toMatch(/`anchors:` is a leaf field/);
+    expect(issues[0]?.message).toMatch(/`anchors:` is a story field/);
   });
-  it("reports a leaf without any field", () => {
-    writeJourney("## Leaf\n\nJust prose.\n");
+  it("reports a story without any field", () => {
+    writeJourney("## Story\n\nJust prose.\n");
     const issues = journeySchema.run(repo.root);
     expect(issues.map((i) => [i.line, i.message])).toEqual([
-      [FIRST_NODE_LINE, '"Leaf": a leaf carries at least one field'],
+      [FIRST_NODE_LINE, '"Story": a story carries at least one field'],
     ]);
   });
-  it("reports an implemented leaf without anchors and a proposed leaf without acceptance", () => {
+  it("reports an implemented story without anchors and a proposed story without acceptance", () => {
     writeJourney("## Built\n\nrequires: artifact\n\n## Planned\n\nstatus: proposed\nacceptance:\n");
     const messages = journeySchema.run(repo.root).map((i) => i.message);
     expect(messages).toEqual([
-      '"Built": an `implemented` leaf needs `anchors:`',
-      '"Planned": a `proposed` leaf needs `acceptance:` with at least one `- ` item',
+      '"Built": an `implemented` story needs `anchors:`',
+      '"Planned": a `proposed` story needs `acceptance:` with at least one `- ` item',
     ]);
   });
   it("reports spec paths that do not resolve, frontmatter and node", () => {
     writeJourney(
-      "## Leaf\n\nanchors: src/a.ts\nspec: ../spec/missing.md#x\n",
+      "## Story\n\nanchors: src/a.ts\nspec: ../spec/missing.md#x\n",
       JOURNEY_FM.replace("spec: ../spec/system.md", "spec: [../spec/system.md, ../spec/gone.md]"),
     );
     const messages = journeySchema.run(repo.root).map((i) => i.message);
     expect(messages).toEqual([
       "frontmatter `spec` does not resolve: ../spec/gone.md",
-      '"Leaf": `spec:` does not resolve: ../spec/missing.md#x',
+      '"Story": `spec:` does not resolve: ../spec/missing.md#x',
     ]);
   });
   it("reports an invalid node status", () => {
-    writeJourney("## Leaf\n\nstatus: shipped\nanchors: src/a.ts\n");
+    writeJourney("## Story\n\nstatus: shipped\nanchors: src/a.ts\n");
     const issues = journeySchema.run(repo.root);
     expect(issues.map((i) => i.line)).toEqual([FIRST_NODE_LINE + 2]);
     expect(issues[0]?.message).toMatch(/invalid status `shipped`/);
@@ -983,18 +983,18 @@ describe("lint:journey-anchors", () => {
   it("passes when every anchor, path or glob, matches a file", () => {
     repo.write("src/a.ts", "");
     repo.write("src/lib/b.ts", "");
-    writeJourney("## Leaf\n\nanchors: src/a.ts, src/lib/*.ts\n");
+    writeJourney("## Story\n\nanchors: src/a.ts, src/lib/*.ts\n");
     expect(journeyAnchors.run(repo.root)).toEqual([]);
   });
   it("reports each missing anchor at the node line, skipping deprecated nodes", () => {
     repo.write("src/a.ts", "");
     writeJourney(
-      "## Leaf\n\nanchors: src/a.ts, src/gone.ts, src/none/*.ts\n\n## Old\n\nstatus: deprecated\nanchors: src/removed.ts\n",
+      "## Story\n\nanchors: src/a.ts, src/gone.ts, src/none/*.ts\n\n## Old\n\nstatus: deprecated\nanchors: src/removed.ts\n",
     );
     const issues = journeyAnchors.run(repo.root);
     expect(issues.map((i) => [i.severity, i.line, i.message])).toEqual([
-      ["error", FIRST_NODE_LINE, '"Leaf": anchor matches no file: src/gone.ts'],
-      ["error", FIRST_NODE_LINE, '"Leaf": anchor matches no file: src/none/*.ts'],
+      ["error", FIRST_NODE_LINE, '"Story": anchor matches no file: src/gone.ts'],
+      ["error", FIRST_NODE_LINE, '"Story": anchor matches no file: src/none/*.ts'],
     ]);
   });
 });
@@ -1018,12 +1018,12 @@ describe("lint:journey-vocabulary", () => {
   });
   it("passes when every entity is a Vocabulary term of a linked spec", () => {
     repo.write("docs/spec/system.md", SPEC_WITH_VOCABULARY);
-    writeJourney("## Leaf\n\nrequires: source-file\ncreates: artifact, signed-artifact\n");
+    writeJourney("## Story\n\nrequires: source-file\ncreates: artifact, signed-artifact\n");
     expect(journeyVocabulary.run(repo.root)).toEqual([]);
   });
   it("reports an entity outside the Vocabulary at the node line", () => {
     repo.write("docs/spec/system.md", SPEC_WITH_VOCABULARY);
-    writeJourney("## Leaf\n\nrequires: source-files\ncreates: not-a-term\n");
+    writeJourney("## Story\n\nrequires: source-files\ncreates: not-a-term\n");
     const issues = journeyVocabulary.run(repo.root);
     expect(issues.map((i) => [i.severity, i.line])).toEqual([
       ["error", FIRST_NODE_LINE],
@@ -1047,7 +1047,7 @@ describe("lint:journey-graph", () => {
   it("is a no-op without docs/journeys/", () => {
     expect(journeyGraph.run(repo.root)).toEqual([]);
   });
-  it("passes when every required entity is created by a leaf of any journey", () => {
+  it("passes when every required entity is created by a story of any journey", () => {
     writeJourney("## Make\n\ncreates: artifact\n", JOURNEY_FM, "a.md");
     writeJourney("## Use\n\nrequires: artifact\n", JOURNEY_FM, "b.md");
     expect(journeyGraph.run(repo.root)).toEqual([]);
@@ -1059,7 +1059,7 @@ describe("lint:journey-graph", () => {
       [
         "warning",
         FIRST_NODE_LINE,
-        '"Use": entity `artifact` is required here but no leaf creates it',
+        '"Use": entity `artifact` is required here but no story creates it',
       ],
     ]);
   });
