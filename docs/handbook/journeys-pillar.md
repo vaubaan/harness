@@ -16,7 +16,7 @@ last_reviewed: 2026-11-09
 
 # Journeys pillar — handbook
 
-The optional `docs/journeys/`: one file per level-1 user intention, leaves anchored to the code, plus the generated index. Spec: [§9.1.3](../spec/coding-agent-harness.md#913-journeys); decision: [journeys-pillar](../decisions/journeys-pillar.md).
+The optional `docs/journeys/`: one file per level-1 user intent, terminal intents anchored to the code, plus the generated index. Spec: [§9.1.3](../spec/coding-agent-harness.md#913-journeys); decision: [journeys-pillar](../decisions/journeys-pillar.md).
 
 ## Start here
 

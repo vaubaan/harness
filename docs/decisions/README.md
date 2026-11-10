@@ -22,7 +22,7 @@ Rejected alternatives), validated by `lint:decision-schema`
 
 ## Decisions in force
 
-- [An optional journeys pillar holds user intentions anchored to the code](./journeys-pillar.md) — `docs/journeys/`, leaves with `anchors:` and `requires:` / `creates:`, `proposed` → `implemented` in the delivering PR, index rendered; no code parsing, no graph analytics (unreleased).
+- [An optional journeys pillar holds user intents anchored to the code](./journeys-pillar.md) — `docs/journeys/`, terminal intents with `anchors:` and `requires:` / `creates:`, `proposed` → `implemented` in the delivering PR, index rendered; no code parsing, no graph analytics (unreleased).
 - [A decision file holds a structural decision in force](./decisions-as-current-state.md) — admission test, about 40 lines, no History; a replaced decision is deleted (2.1.0).
 - [No agent personas, no code-quality judgment](./no-personas-no-code-judgment.md) — doc-skills only; one working rule in `AGENTS.md`, the team's workflow in `docs/workflow/`, its own personas in `docs/skills/` (2.0.0).
 - [Generated files are committed](./generated-files-committed.md) — `AGENTS.md`, the engine folders and the manifest are versioned; `lint:generated-fresh` fails on a stale or edited copy (2.0.0).

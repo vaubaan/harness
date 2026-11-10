@@ -6,7 +6,7 @@
     "codex-cli",
     "opencode"
   ],
-  "renderedAt": "2026-11-09T20:26:09.869Z",
+  "renderedAt": "2026-11-10T11:56:28.281Z",
   "files": [
     ".agents/skills/decision-record-writer/SKILL.md",
     ".agents/skills/doc-audit/SKILL.md",
@@ -52,10 +52,10 @@
   ],
   "fileHashes": {
     ".claude/skills/decision-record-writer/SKILL.md": "33293e2bc462e7fcac14f439749b4dc7cf5d7ee44849e1cc702d9e71f67c0863",
-    ".claude/skills/doc-audit/SKILL.md": "4736a1699e3ca8f34940cc47ea5eefaf4863dda99a0ec75a6b3be2b78c7b1664",
-    ".claude/skills/drift-detector/SKILL.md": "facfdaa3fd78c491f68ca1c3d409b3f42132dcf4e2dbf6d6535364915ac3b5c8",
-    ".claude/skills/handbook-writer/SKILL.md": "e880706e85b3014e9b8d4081eed9578900170da26fa7c0bf8368c0989a49c48c",
-    ".claude/skills/journey-writer/SKILL.md": "e16fb2b5d61249e0efc1cacd5636ac1c7aa0c299127c06785b391deaf3adee65",
+    ".claude/skills/doc-audit/SKILL.md": "3b60ee1aeb338417de4c008f10c1ac9df3e36c8eec1b997d74b2936b0e5b056c",
+    ".claude/skills/drift-detector/SKILL.md": "ca5278960e38b618c98231c5fa58c92e0e53500ffb0288449ab3e056fddff0a8",
+    ".claude/skills/handbook-writer/SKILL.md": "f516b901a4250eacf6a286ad41b68a18ae6da720ea39052b63c38b9fec98def5",
+    ".claude/skills/journey-writer/SKILL.md": "67f3b2a7257dea49bb9acba7e3509f12b72fd1d4b25c7fd525c980ec0e9a0cbf",
     ".claude/skills/readme-writer/SKILL.md": "f74b22a2692e0e40854f38ef5aa15684bc28f424aed41e509e6ac3dd9fdcb7b9",
     ".claude/skills/spec-writer/SKILL.md": "51a59ce180c495d2dc38fbecf4d929e683b527a2ed06264dfd894173988e1f7e",
     ".claude/skills/test-plan-writer/SKILL.md": "1e8456982e9417bc7f48c04a7b1b33e3cccd6bdcd46d017de39b54c389d7898e",
@@ -67,14 +67,14 @@
     ".claude/commands/journey.md": "11cbe9c8617d38c0916b8779acf02862b5c877d7b02eeaf8a3b83c17eb42d45c",
     ".claude/commands/readme.md": "72361cbe2e4b04cd360b0d6cae3f56081b6e3e783aa37c9c757d316ca853a353",
     ".claude/commands/spec.md": "c704151cc8c054f46798888f5031e47a51be3e702b83bb39c879518376cddf07",
-    ".claude/commands/story.md": "bbc800f9ced5d4a11099d396ce0c17e85efdb8bb69361f80277e8b851a4f66b5",
+    ".claude/commands/story.md": "40188943ad3dec3462e153bf42d8485669b411ee5b9db6ddd1bb7ab7de31c358",
     ".claude/commands/test-plan.md": "719a4bfc8068bd4155725f53b4cb240ffd433423c475b67a09a19d68638e6c0e",
     ".claude/commands/workflow.md": "a430eab2e392e4110de17cfdb1338448ced2d8a6c398be54628eae8721e53f45",
     ".agents/skills/decision-record-writer/SKILL.md": "33293e2bc462e7fcac14f439749b4dc7cf5d7ee44849e1cc702d9e71f67c0863",
-    ".agents/skills/doc-audit/SKILL.md": "4736a1699e3ca8f34940cc47ea5eefaf4863dda99a0ec75a6b3be2b78c7b1664",
-    ".agents/skills/drift-detector/SKILL.md": "facfdaa3fd78c491f68ca1c3d409b3f42132dcf4e2dbf6d6535364915ac3b5c8",
-    ".agents/skills/handbook-writer/SKILL.md": "e880706e85b3014e9b8d4081eed9578900170da26fa7c0bf8368c0989a49c48c",
-    ".agents/skills/journey-writer/SKILL.md": "e16fb2b5d61249e0efc1cacd5636ac1c7aa0c299127c06785b391deaf3adee65",
+    ".agents/skills/doc-audit/SKILL.md": "3b60ee1aeb338417de4c008f10c1ac9df3e36c8eec1b997d74b2936b0e5b056c",
+    ".agents/skills/drift-detector/SKILL.md": "ca5278960e38b618c98231c5fa58c92e0e53500ffb0288449ab3e056fddff0a8",
+    ".agents/skills/handbook-writer/SKILL.md": "f516b901a4250eacf6a286ad41b68a18ae6da720ea39052b63c38b9fec98def5",
+    ".agents/skills/journey-writer/SKILL.md": "67f3b2a7257dea49bb9acba7e3509f12b72fd1d4b25c7fd525c980ec0e9a0cbf",
     ".agents/skills/readme-writer/SKILL.md": "f74b22a2692e0e40854f38ef5aa15684bc28f424aed41e509e6ac3dd9fdcb7b9",
     ".agents/skills/spec-writer/SKILL.md": "51a59ce180c495d2dc38fbecf4d929e683b527a2ed06264dfd894173988e1f7e",
     ".agents/skills/test-plan-writer/SKILL.md": "1e8456982e9417bc7f48c04a7b1b33e3cccd6bdcd46d017de39b54c389d7898e",
@@ -86,11 +86,11 @@
     ".opencode/commands/journey.md": "36dda20bd9b5b2738016897f9967e8afe2026d2729e15b349bc61bf639c64c4f",
     ".opencode/commands/readme.md": "6f19e6dde9b806abe77d98c0b9c1dff194bcb1fc0cb8df6f20f7679c694c554d",
     ".opencode/commands/spec.md": "c809502114670893ec72083d69448439a931207acd8ae69d912b491a553087d1",
-    ".opencode/commands/story.md": "79dbd53a5cc235da24f772e36418c16d8f15b0cb67c28e3d75eb8853fed43f94",
+    ".opencode/commands/story.md": "cc2ce115fd1c33dc9354e72997aa7d97a2257b57e37ef63fc8c44a85d2a65a38",
     ".opencode/commands/test-plan.md": "a08b9037d6fa9dd7baa1ceaf656a395b301e58236ddf17926f79bbd0deb1122c",
     ".opencode/commands/workflow.md": "769b18667fdc004de7293cdf2ea0ddd0491bd3df5a109f943ebe779090a023df",
-    "AGENTS.md": "c2ac024f1f1dd4541ffcb133f84bfa121a1566125d7b45a9ad160a81688be978",
+    "AGENTS.md": "37c09c733898632bf05b8f994ebbcef342a3466e9e7911bb38d64010e1d8f3da",
     "CLAUDE.md": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49",
-    "docs/journeys/README.md": "0dfd06cfef2911c5e6973bd949e98b45635df8e04159b9f95ab30a7c77ef4617"
+    "docs/journeys/README.md": "5ff8c932245e54cadbdd8f69b723eb3f44c3a8b8afc7a4a66fdbc3df404ecec9"
   }
 }

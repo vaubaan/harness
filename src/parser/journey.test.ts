@@ -54,9 +54,9 @@ describe("parseJourney", () => {
     expect(j.story).toBe("As a maintainer, I want to ship so that users get it.");
   });
 
-  it("builds the tree by heading depth, with lines, leaves and parents", () => {
+  it("builds the tree by heading depth, with lines, terminal intents and parents", () => {
     const j = parseJourney("docs/journeys/ship.md", JOURNEY);
-    expect(j.nodes.map((n) => [n.title, n.level, n.isLeaf, n.parent])).toEqual([
+    expect(j.nodes.map((n) => [n.title, n.level, n.isTerminal, n.parent])).toEqual([
       ["Build it", 1, false, undefined],
       ["Compile", 2, true, 0],
       ["Package", 2, true, 0],
@@ -93,21 +93,21 @@ describe("parseJourney", () => {
   });
 
   it("records unknown fields and ends the block at a list item outside acceptance", () => {
-    const text = `${FRONTMATTER}\n# T\n\n## Leaf\n\nuses: db\nanchors: a.ts\n- stray\nguards: admin\n`;
-    const [leaf] = parseJourney("x.md", text).nodes;
-    expect(leaf?.unknownFields).toEqual([{ key: "uses", line: 13 }]);
-    expect(leaf?.anchors).toEqual(["a.ts"]);
+    const text = `${FRONTMATTER}\n# T\n\n## Intent\n\nuses: db\nanchors: a.ts\n- stray\nguards: admin\n`;
+    const [intent] = parseJourney("x.md", text).nodes;
+    expect(intent?.unknownFields).toEqual([{ key: "uses", line: 13 }]);
+    expect(intent?.anchors).toEqual(["a.ts"]);
   });
 
   it("ignores headings and fields in fenced code", () => {
-    const text = `${FRONTMATTER}\n# T\n\n## Leaf\n\nanchors: a.ts\n\n\`\`\`md\n## Not a node\nrequires: x\n\`\`\`\n`;
+    const text = `${FRONTMATTER}\n# T\n\n## Intent\n\nanchors: a.ts\n\n\`\`\`md\n## Not a node\nrequires: x\n\`\`\`\n`;
     const j = parseJourney("x.md", text);
-    expect(j.nodes.map((n) => n.title)).toEqual(["Leaf"]);
+    expect(j.nodes.map((n) => n.title)).toEqual(["Intent"]);
     expect(j.nodes[0]?.requires).toEqual([]);
   });
 
   it("collects frontmatter errors without throwing and still parses the nodes", () => {
-    const text = `---\ntitle: ""\nstatus: done\nactors: []\nowner: me\n---\n\n# T\n\n## Leaf\n\nanchors: a.ts\n`;
+    const text = `---\ntitle: ""\nstatus: done\nactors: []\nowner: me\n---\n\n# T\n\n## Intent\n\nanchors: a.ts\n`;
     const j = parseJourney("x.md", text);
     expect(j.meta).toBeUndefined();
     const messages = j.errors.map((e) => e.message).join("\n");
@@ -136,7 +136,7 @@ describe("parseJourney", () => {
     expect(parseJourney("x.md", "---\ntitle: [\n---\n# T\n").errors[0]?.message).toMatch(
       /invalid frontmatter YAML/,
     );
-    const j = parseJourney("x.md", `${FRONTMATTER}\n# T\n\n## Leaf\n\nstatus: done\n`);
+    const j = parseJourney("x.md", `${FRONTMATTER}\n# T\n\n## Intent\n\nstatus: done\n`);
     expect(j.errors).toEqual([
       { line: 13, message: expect.stringMatching(/invalid status `done`/) },
     ]);
@@ -183,7 +183,7 @@ describe("loadJourneys", () => {
   });
 
   it("throws listing every problem when a journey does not parse; readJourneys does not", () => {
-    write("docs/journeys/bad.md", "---\ntitle: Bad\n---\n# Bad\n\n## Leaf\n\nstatus: done\n");
+    write("docs/journeys/bad.md", "---\ntitle: Bad\n---\n# Bad\n\n## Intent\n\nstatus: done\n");
     expect(() => loadJourneys(root)).toThrow(/docs\/journeys\/bad\.md:1: frontmatter `status`/);
     expect(() => loadJourneys(root)).toThrow(/docs\/journeys\/bad\.md:8: invalid status/);
     expect(readJourneys(root)[0]?.errors.length).toBeGreaterThan(0);
