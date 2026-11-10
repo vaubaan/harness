@@ -1,17 +1,12 @@
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { basename, join } from "node:path";
 import matter from "gray-matter";
-import {
-  JOURNEY_STATUSES,
-  type JourneyFrontmatter,
-  type JourneyStatus,
-  Schemas,
-} from "./schemas.js";
+import { INTENT_STATUSES, type IntentFrontmatter, type IntentStatus, Schemas } from "./schemas.js";
 
-/** The optional journeys pillar (docs/spec/coding-agent-harness.md §9.1.3). */
-export const JOURNEYS_DIR = "docs/journeys";
-/** The generated index of the pillar; never a journey. */
-export const JOURNEYS_INDEX_PATH = `${JOURNEYS_DIR}/README.md`;
+/** The optional intents pillar (docs/spec/coding-agent-harness.md §9.1.3). */
+export const INTENTS_DIR = "docs/intents";
+/** The generated index of the pillar; never an intent file. */
+export const INTENTS_INDEX_PATH = `${INTENTS_DIR}/README.md`;
 
 export const NODE_FIELDS = [
   "status",
@@ -30,12 +25,12 @@ export const TERMINAL_FIELDS: ReadonlyArray<NodeField> = [
   "creates",
 ];
 
-export interface JourneyError {
+export interface IntentError {
   line?: number;
   message: string;
 }
 
-export interface JourneyNode {
+export interface IntentNode {
   title: string;
   /** Heading depth minus one: `##` is level 1. */
   level: number;
@@ -47,7 +42,7 @@ export interface JourneyNode {
   isTerminal: boolean;
   /** Line of each known field the node declares. */
   fieldLines: Partial<Record<NodeField, number>>;
-  status?: JourneyStatus;
+  status?: IntentStatus;
   spec?: string;
   anchors: string[];
   acceptance: string[];
@@ -55,19 +50,19 @@ export interface JourneyNode {
   creates: string[];
   unknownFields: Array<{ key: string; line: number }>;
   /** Nearest `status:` up the tree, else the file status. */
-  effectiveStatus?: JourneyStatus;
+  effectiveStatus?: IntentStatus;
 }
 
-export interface JourneyParse {
-  meta?: JourneyFrontmatter;
+export interface IntentFile {
+  meta?: IntentFrontmatter;
   title: string;
-  story?: string;
-  nodes: JourneyNode[];
-  errors: JourneyError[];
+  statement?: string;
+  nodes: IntentNode[];
+  errors: IntentError[];
 }
 
-export interface ParsedJourney extends JourneyParse {
-  /** Path from the repo root, e.g. `docs/journeys/harness-a-project.md`. */
+export interface ParsedIntentFile extends IntentFile {
+  /** Path from the repo root, e.g. `docs/intents/harness-a-project.md`. */
   path: string;
   /** File name, e.g. `harness-a-project.md`. */
   file: string;
@@ -120,7 +115,7 @@ function bodyStart(lines: ReadonlyArray<string>): number {
   return lines.length;
 }
 
-function parseFrontmatter(text: string, errors: JourneyError[]): JourneyFrontmatter | undefined {
+function parseFrontmatter(text: string, errors: IntentError[]): IntentFrontmatter | undefined {
   let data: Record<string, unknown>;
   try {
     data = matter(text).data;
@@ -129,7 +124,7 @@ function parseFrontmatter(text: string, errors: JourneyError[]): JourneyFrontmat
     errors.push({ line: 1, message: `invalid frontmatter YAML: ${reason}` });
     return undefined;
   }
-  const result = Schemas.Journey.safeParse(data);
+  const result = Schemas.Intent.safeParse(data);
   if (result.success) return result.data;
   for (const issue of result.error.issues) {
     const where = issue.path.length ? ` \`${issue.path.join(".")}\`` : "";
@@ -138,7 +133,7 @@ function parseFrontmatter(text: string, errors: JourneyError[]): JourneyFrontmat
   return undefined;
 }
 
-function newNode(title: string, level: number, line: number): JourneyNode {
+function newNode(title: string, level: number, line: number): IntentNode {
   return {
     title,
     level,
@@ -155,11 +150,11 @@ function newNode(title: string, level: number, line: number): JourneyNode {
 
 /** Reads the field block directly under a heading, up to its first non-field line. */
 function parseFields(
-  node: JourneyNode,
+  node: IntentNode,
   lines: ReadonlyArray<string>,
   from: number,
   to: number,
-  errors: JourneyError[],
+  errors: IntentError[],
 ): void {
   let lastKey: string | undefined;
   for (let i = from; i < to; i++) {
@@ -178,12 +173,12 @@ function parseFields(
       const known = key as NodeField;
       node.fieldLines[known] = lineNo;
       if (known === "status") {
-        if ((JOURNEY_STATUSES as ReadonlyArray<string>).includes(value)) {
-          node.status = value as JourneyStatus;
+        if ((INTENT_STATUSES as ReadonlyArray<string>).includes(value)) {
+          node.status = value as IntentStatus;
         } else {
           errors.push({
             line: lineNo,
-            message: `invalid status \`${value}\` (expected ${JOURNEY_STATUSES.join(" | ")})`,
+            message: `invalid status \`${value}\` (expected ${INTENT_STATUSES.join(" | ")})`,
           });
         }
       } else if (known === "spec") {
@@ -206,12 +201,12 @@ function parseFields(
 }
 
 /**
- * Parses one journey (docs/spec/coding-agent-harness.md §9.1.3). Never
+ * Parses one intent file (docs/spec/coding-agent-harness.md §9.1.3). Never
  * throws: frontmatter and node problems are collected in `errors` and the
  * nodes are parsed regardless, so a linter reports everything at once.
  */
-export function parseJourney(relPath: string, text: string): JourneyParse {
-  const errors: JourneyError[] = [];
+export function parseIntentFile(relPath: string, text: string): IntentFile {
+  const errors: IntentError[] = [];
   const meta = parseFrontmatter(text, errors);
   const lines = maskFencedCode(text.split(/\r?\n/));
   const start = bodyStart(lines);
@@ -223,7 +218,7 @@ export function parseJourney(relPath: string, text: string): JourneyParse {
   }
 
   const h1 = headings.find((h) => h.depth === 1);
-  let story: string | undefined;
+  let statement: string | undefined;
   if (h1) {
     const paragraph: string[] = [];
     for (let i = h1.index + 1; i < lines.length; i++) {
@@ -235,10 +230,10 @@ export function parseJourney(relPath: string, text: string): JourneyParse {
       if (line === MASKED_LINE || parseHeading(line)) break;
       paragraph.push(line.trim());
     }
-    if (paragraph.length) story = paragraph.join(" ");
+    if (paragraph.length) statement = paragraph.join(" ");
   }
 
-  const nodes: JourneyNode[] = [];
+  const nodes: IntentNode[] = [];
   const stack: number[] = [];
   for (const [k, h] of headings.entries()) {
     if (h.depth < 2) continue;
@@ -264,12 +259,12 @@ export function parseJourney(relPath: string, text: string): JourneyParse {
   }
 
   const title = meta?.title ?? h1?.title ?? basename(relPath, ".md");
-  return { ...(meta ? { meta } : {}), title, ...(story ? { story } : {}), nodes, errors };
+  return { ...(meta ? { meta } : {}), title, ...(statement ? { statement } : {}), nodes, errors };
 }
 
-/** Journey files: `docs/journeys/*.md` minus the generated index, sorted by file name. */
-export function listJourneyFiles(targetDir: string): string[] {
-  const dir = join(targetDir, JOURNEYS_DIR);
+/** Intent files: `docs/intents/*.md` minus the generated index, sorted by file name. */
+export function listIntentFiles(targetDir: string): string[] {
+  const dir = join(targetDir, INTENTS_DIR);
   if (!existsSync(dir) || !statSync(dir).isDirectory()) return [];
   return readdirSync(dir)
     .filter((f) => f.endsWith(".md") && f !== "README.md")
@@ -277,29 +272,29 @@ export function listJourneyFiles(targetDir: string): string[] {
     .sort();
 }
 
-/** Parses every journey without throwing; linters read their `errors`. */
-export function readJourneys(targetDir: string): ParsedJourney[] {
-  return listJourneyFiles(targetDir).map((file) => {
-    const path = `${JOURNEYS_DIR}/${file}`;
+/** Parses every intent file without throwing; linters read their `errors`. */
+export function readIntentFiles(targetDir: string): ParsedIntentFile[] {
+  return listIntentFiles(targetDir).map((file) => {
+    const path = `${INTENTS_DIR}/${file}`;
     const text = readFileSync(join(targetDir, path), "utf8");
-    return { path, file, ...parseJourney(path, text) };
+    return { path, file, ...parseIntentFile(path, text) };
   });
 }
 
 /**
- * The journeys the render needs. A journey that does not parse fails the
+ * The intent files the render needs. One that does not parse fails the
  * render, like an invalid project skill: `init`, `update` and
  * `lint:generated-fresh` report it.
  */
-export function loadJourneys(targetDir: string): ParsedJourney[] {
-  const journeys = readJourneys(targetDir);
-  const problems = journeys.flatMap((j) =>
+export function loadIntentFiles(targetDir: string): ParsedIntentFile[] {
+  const intentFiles = readIntentFiles(targetDir);
+  const problems = intentFiles.flatMap((j) =>
     j.errors.map((e) => `  - ${j.path}${e.line !== undefined ? `:${e.line}` : ""}: ${e.message}`),
   );
   if (problems.length) {
     throw new Error(
-      `invalid journeys (run \`npx @vaubaan/harness lint --pillar journeys\`):\n${problems.join("\n")}`,
+      `invalid intents (run \`npx @vaubaan/harness lint --pillar intents\`):\n${problems.join("\n")}`,
     );
   }
-  return journeys;
+  return intentFiles;
 }

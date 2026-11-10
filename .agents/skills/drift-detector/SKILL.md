@@ -39,7 +39,7 @@ the doc content still matches reality.
 1. **Inventory of targets**: all files under `docs/handbook/`,
    `docs/tests/`, `docs/workflow/` that declare a non-empty
    `tracks: [...]` in their frontmatter, and the files under
-   `docs/journeys/` whose nodes declare `anchors:` (`README.md` there is
+   `docs/intents/` whose nodes declare `anchors:` (`README.md` there is
    generated: skip it).
    - **Explicit skip**: `docs/decisions/` is *never* scanned. ADRs
      document decisions frozen in time — their drift is semantically
@@ -66,10 +66,10 @@ the doc content still matches reality.
          exists in the test infrastructure → drift.
        - The workflow doc says "the `lint` job runs on PR", `ci.yml`
          no longer contains this job → drift.
-       - A journey intent anchors a file that no longer exists, or
+       - An intent anchors a file that no longer exists, or
          `requires:` an entity the spec vocabulary no longer defines →
          hard drift.
-       - A journey intent whose anchored code gained a branch (a new
+       - An intent whose anchored code gained a branch (a new
          guard, a new step the user sees) with no node for it → soft
          drift; a `proposed` intent whose code already exists → soft
          drift, suggest passing it `implemented`.
@@ -78,7 +78,7 @@ the doc content still matches reality.
 3. **Reverse cross-check**: for "important" code files (entry point,
    public types, `package.json` scripts), check that they are tracked
    by *at least one* doc (`tracks:`) or anchored by *at least one*
-   journey intent (`anchors:`). Otherwise → ⚠️ "undocumented code". This
+   intent (`anchors:`). Otherwise → ⚠️ "undocumented code". This
    is where unanchored entry points are reported: with judgment, no
    configuration.
 4. **Report**: structured Markdown in a
@@ -94,7 +94,7 @@ the doc content still matches reality.
   - ADR with a non-empty `tracks:` (see `lint:adr-no-tracks`).
   - Mention in the doc of a function / API / command that is gone.
   - Test plan that refers to a test that is gone.
-  - Journey anchor to a deleted file; entity removed from the spec
+  - Intent anchor to a deleted file; entity removed from the spec
     vocabulary.
 - **Soft drift** (⚠️):
   - Doc that describes an earlier state (80 % covered by the current
@@ -102,7 +102,7 @@ the doc content still matches reality.
   - New undocumented feature (the code evolved, the doc did not
     follow).
   - Changed conventions (e.g.: naming, tree structure) not reflected.
-  - Code branch without a journey node; `proposed` intent already coded.
+  - Code branch without an intent node; `proposed` intent already coded.
 - **Not drift**:
   - Stylistic difference (wording, section order).
   - Minor implementation detail absent from the doc (by design: the
@@ -140,7 +140,7 @@ lie about their own scope._
 - ❌ Describes a `resetDb()` fixture — `tests/fixtures/db.ts`
   deleted.
 
-### docs/journeys/<slug>.md
+### docs/intents/<slug>.md
 
 - ❌ Intent "<title>" anchors `src/legacy/old.ts` — file deleted.
 - ❌ Intent "<title>" requires `<entity>` — no longer in the Vocabulary
@@ -160,7 +160,7 @@ lie about their own scope._
 - ⚠️ Mentions the CI job `e2e` — the job was renamed `e2e-tests`
   in `.github/workflows/ci.yml` (commit <sha>).
 
-### docs/journeys/<slug>.md
+### docs/intents/<slug>.md
 
 - ⚠️ Intent "<title>": its anchored `src/foo.ts:88` gained a guard the
   user sees, no node for it.
@@ -170,8 +170,8 @@ lie about their own scope._
 ## Undocumented code (K items)
 
 - ⚠️ `src/new-feature/` (introduced commit <sha>) — no handbook
-  tracks these files and no journey intent anchors them. Suggested:
-  `/handbook new-feature` for the how, `/journey <slug>` for the user
+  tracks these files and no intent anchors them. Suggested:
+  `/handbook new-feature` for the how, `/intent` to map the user
   activity.
 - ⚠️ Script `package.json:deploy:preview` — not mentioned in
   `coding-workflow.md`.
@@ -183,14 +183,14 @@ lie about their own scope._
 3. `/workflow` to resync `coding-workflow.md` vs `ci.yml`.
 4. Write an ADR for change <X> if it was a decision (see
    `/decision`).
-5. `/journey <slug>` to add the missing node or re-anchor the intent.
+5. `/intent` to add the missing node or re-anchor the intent.
 ```
 
 ## Guardrails
 
 - **Fix nothing**. You detect, you list, you recommend. The writers
   (`handbook-writer`, `test-plan-writer`, `workflow-writer`,
-  `journey-writer` via `/journey`) are there to fix.
+  `intent-writer` via `/intent`) are there to fix.
 - **No false positives on details**. If the handbook says "the
   function returns a Result<T, E>" and the code returns `Result<T, E>`
   but with a slightly different T type, that is not hard drift — it

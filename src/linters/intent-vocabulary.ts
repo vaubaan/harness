@@ -1,5 +1,5 @@
-import { maskFencedCode, parseHeading, readJourneys } from "../parser/journey.js";
-import { journeySpecs, resolveSpecPath } from "./journey-util.js";
+import { maskFencedCode, parseHeading, readIntentFiles } from "../parser/intent.js";
+import { intentFileSpecs, resolveSpecPath } from "./intent-util.js";
 import type { LintIssue, Linter } from "./types.js";
 import { fileExists, readText } from "./util.js";
 
@@ -40,25 +40,25 @@ export function vocabularyOf(specText: string): Set<string> | undefined {
 }
 
 /**
- * Every entity a terminal intent of a journey requires or creates is a term of the
- * Vocabulary section of one of the journey's specs. Downgraded to one
- * warning per journey when none of its specs has a Vocabulary section.
+ * Every entity a terminal intent requires or creates is a term of the
+ * Vocabulary section of one of the file's specs. Downgraded to one
+ * warning per intent file when none of its specs has a Vocabulary section.
  */
-export const journeyVocabulary: Linter = {
-  id: "lint:journey-vocabulary",
-  pillars: ["journeys"],
+export const intentVocabulary: Linter = {
+  id: "lint:intent-vocabulary",
+  pillars: ["intents"],
   defaultSeverity: "error",
   suggestedSkills: ["/spec"],
   run(repoRoot: string): LintIssue[] {
     const issues: LintIssue[] = [];
-    for (const journey of readJourneys(repoRoot)) {
-      const used = journey.nodes.flatMap((node) =>
+    for (const intentFile of readIntentFiles(repoRoot)) {
+      const used = intentFile.nodes.flatMap((node) =>
         [...node.requires, ...node.creates].map((entity) => ({ entity, node })),
       );
       if (used.length === 0) continue;
-      // A spec that does not resolve is lint:journey-schema's report.
-      const specs = journeySpecs(journey.meta)
-        .map((spec) => resolveSpecPath(journey.path, spec))
+      // A spec that does not resolve is lint:intent-schema's report.
+      const specs = intentFileSpecs(intentFile.meta)
+        .map((spec) => resolveSpecPath(intentFile.path, spec))
         .filter((path) => fileExists(repoRoot, path));
       if (specs.length === 0) continue;
       const entities = new Set<string>();
@@ -73,7 +73,7 @@ export const journeyVocabulary: Linter = {
         issues.push({
           linter: this.id,
           severity: "warning",
-          file: journey.path,
+          file: intentFile.path,
           message: `no Vocabulary section in ${specs.join(", ")}; entities not checked`,
         });
         continue;
@@ -83,7 +83,7 @@ export const journeyVocabulary: Linter = {
         issues.push({
           linter: this.id,
           severity: "error",
-          file: journey.path,
+          file: intentFile.path,
           line: node.line,
           message: `"${node.title}": entity \`${entity}\` is not a Vocabulary term of ${specs.join(", ")}`,
         });

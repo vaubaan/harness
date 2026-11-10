@@ -1,9 +1,9 @@
 import type { Cmd } from "./parser/cmd.js";
-import { JOURNEYS_INDEX_PATH, type ParsedJourney } from "./parser/journey.js";
+import { INTENTS_INDEX_PATH, type ParsedIntentFile } from "./parser/intent.js";
 import type { Skill } from "./parser/skill.js";
 import { buildUmbrellaBody } from "./renderers/common.js";
 import { getRenderer } from "./renderers/index.js";
-import { buildJourneysIndex } from "./renderers/journeys-index.js";
+import { buildIntentsIndex } from "./renderers/intents-index.js";
 import type { Engine, RenderedFile } from "./types.js";
 
 export interface Harness {
@@ -23,8 +23,8 @@ export interface RenderInput {
   projectSkills?: ReadonlyArray<Skill>;
   /** True when the target project ships `docs/quality/code-quality.md` (optional pillar). */
   hasQualityDoc?: boolean;
-  /** The project's parsed `docs/journeys/*.md` (optional pillar); renders their index. */
-  journeys?: ReadonlyArray<ParsedJourney>;
+  /** The project's parsed `docs/intents/*.md` (optional pillar); renders their index. */
+  intentFiles?: ReadonlyArray<ParsedIntentFile>;
 }
 
 export interface RenderOutput {
@@ -136,7 +136,7 @@ export function render(input: RenderInput): RenderOutput {
     availableCommands: Array.from(exposedCmds.values()),
     hasProjectSkills: (input.projectSkills?.length ?? 0) > 0,
     hasQualityDoc: input.hasQualityDoc === true,
-    hasJourneys: (input.journeys?.length ?? 0) > 0,
+    hasIntents: (input.intentFiles?.length ?? 0) > 0,
   });
   files.push({ path: "AGENTS.md", content: umbrellaContent });
 
@@ -145,9 +145,9 @@ export function render(input: RenderInput): RenderOutput {
     files.push({ path: "CLAUDE.md", content: CLAUDE_MD_STUB });
   }
 
-  // The journeys index is a generated file too, rendered only while a journey exists.
-  if (input.journeys && input.journeys.length > 0) {
-    files.push({ path: JOURNEYS_INDEX_PATH, content: buildJourneysIndex(input.journeys) });
+  // The intents index is a generated file too, rendered only while an intent file exists.
+  if (input.intentFiles && input.intentFiles.length > 0) {
+    files.push({ path: INTENTS_INDEX_PATH, content: buildIntentsIndex(input.intentFiles) });
   }
 
   return { files, warnings };

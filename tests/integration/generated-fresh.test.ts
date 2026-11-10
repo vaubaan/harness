@@ -99,28 +99,26 @@ describe("lint:generated-fresh", () => {
     expect(issues.map((issue) => issue.file)).toEqual([".claude/skills/domain/SKILL.md"]);
   });
 
-  it("covers the journeys index: fresh after init, stale after a journey edit or removal", () => {
-    const journey = (title: string) =>
+  it("covers the intents index: fresh after init, stale after an intent file edit or removal", () => {
+    const intentFile = (title: string) =>
       `---\ntitle: Ship\nstatus: proposed\nactors: [maintainer]\nspec: ../spec/s.md\nlast_reviewed: 2026-11-09\n---\n\n# Ship\n\n## ${title}\n\nacceptance:\n- It ships.\n`;
-    write("docs/journeys/ship.md", journey("Build it"));
+    write("docs/intents/ship.md", intentFile("Build it"));
     install();
     expect(generatedFresh.run(root)).toEqual([]);
-    write("docs/journeys/ship.md", journey("Build it fast"));
-    expect(generatedFresh.run(root).map((issue) => issue.file)).toEqual([
-      "docs/journeys/README.md",
-    ]);
-    unlinkSync(join(root, "docs/journeys/ship.md"));
+    write("docs/intents/ship.md", intentFile("Build it fast"));
+    expect(generatedFresh.run(root).map((issue) => issue.file)).toEqual(["docs/intents/README.md"]);
+    unlinkSync(join(root, "docs/intents/ship.md"));
     const issues = generatedFresh.run(root);
-    expect(issues.map((issue) => issue.file)).toEqual(["AGENTS.md", "docs/journeys/README.md"]);
+    expect(issues.map((issue) => issue.file)).toEqual(["AGENTS.md", "docs/intents/README.md"]);
     expect(issues[1]?.message).toMatch(/stale generated file/);
   });
 
-  it("reports a journey that does not parse as a render failure", () => {
+  it("reports an intent file that does not parse as a render failure", () => {
     install();
-    write("docs/journeys/ship.md", "---\ntitle: Ship\n---\n\n# Ship\n");
+    write("docs/intents/ship.md", "---\ntitle: Ship\n---\n\n# Ship\n");
     const issues = generatedFresh.run(root);
     expect(issues).toHaveLength(1);
-    expect(issues[0]?.message).toMatch(/cannot render the harness: invalid journeys/);
+    expect(issues[0]?.message).toMatch(/cannot render the harness: invalid intents/);
   });
 
   it("reports an invalid manifest instead of crashing", () => {

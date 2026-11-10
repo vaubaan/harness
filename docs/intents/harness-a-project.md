@@ -3,7 +3,7 @@ title: Harness a project
 status: implemented
 actors: [maintainer]
 spec: ../spec/coding-agent-harness.md
-last_reviewed: 2026-11-09
+last_reviewed: 2026-11-10
 ---
 
 # Harness a project

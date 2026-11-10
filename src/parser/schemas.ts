@@ -24,6 +24,8 @@ const CmdArgEnumSchema = z
     type: z.literal("enum"),
     values: z.array(z.string()).min(1),
     default: z.string().optional(),
+    /** False when the command runs without the argument. Defaults to true. */
+    required: z.boolean().optional(),
   })
   .strict();
 
@@ -32,6 +34,8 @@ const CmdArgStringSchema = z
     name: z.string().min(1),
     type: z.literal("string"),
     default: z.string().optional(),
+    /** False when the command runs without the argument. Defaults to true. */
+    required: z.boolean().optional(),
   })
   .strict();
 
@@ -51,26 +55,26 @@ const CmdFrontmatterSchema = z
 
 export type CmdFrontmatter = z.infer<typeof CmdFrontmatterSchema>;
 
-export const JOURNEY_STATUSES = ["proposed", "implemented", "deprecated"] as const;
-export type JourneyStatus = (typeof JOURNEY_STATUSES)[number];
+export const INTENT_STATUSES = ["proposed", "implemented", "deprecated"] as const;
+export type IntentStatus = (typeof INTENT_STATUSES)[number];
 
 // gray-matter parses a bare YAML date (`2026-11-09`) into a Date object.
-const JourneyFrontmatterSchema = z
+const IntentFrontmatterSchema = z
   .object({
     title: z.string().min(1),
-    status: z.enum(JOURNEY_STATUSES),
+    status: z.enum(INTENT_STATUSES),
     actors: z.array(z.string().min(1)).min(1),
     spec: z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]),
     last_reviewed: z.union([z.date(), z.string().min(1)]),
   })
   .strict();
 
-export type JourneyFrontmatter = z.infer<typeof JourneyFrontmatterSchema>;
+export type IntentFrontmatter = z.infer<typeof IntentFrontmatterSchema>;
 
 export const Schemas = {
   Skill: SkillFrontmatterSchema,
   Cmd: CmdFrontmatterSchema,
-  Journey: JourneyFrontmatterSchema,
+  Intent: IntentFrontmatterSchema,
 } as const;
 
 export class ParseError extends Error {

@@ -16,8 +16,8 @@ describe("loadHarness on the stock harness in repo root", () => {
     expect(harness.skills.map((s) => s.meta.id)).not.toContain("clean-code-guardian");
   });
 
-  it("loads 10 commands", () => {
-    expect(harness.cmds.length).toBe(10);
+  it("loads 9 commands", () => {
+    expect(harness.cmds.length).toBe(9);
     expect(harness.cmds.map((c) => c.meta.id)).not.toContain("clean-code");
   });
 

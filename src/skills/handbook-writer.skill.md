@@ -51,9 +51,9 @@ Keep a sentence only if **reading the code would not give it quickly**:
   (`lint:cross-links`).
 - First line after the title: one sentence on the scope, and a link to the
   spec if it exists.
-- When a journey intent anchors the feature (`docs/journeys/`), link it
-  too: the journey says what the user does and where, the handbook says
-  how. Never restate the journey.
+- When an intent anchors the feature (`docs/intents/`), link its file
+  too: the intent says what the user does and where, the handbook says
+  how. Never restate the intent.
 
 ```markdown
 ---

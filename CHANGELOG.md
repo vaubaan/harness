@@ -6,12 +6,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Changed
-- Journeys vocabulary: every heading of a journey is an **intent**; a node with no sub-intent is a *terminal intent* (was *leaf*). Spec §9.1.3, skills, template and linter messages updated. No format change.
-- Parser API: `LEAF_FIELDS` → `TERMINAL_FIELDS`, `JourneyNode.isLeaf` → `isTerminal` (exported through `@vaubaan/harness/parser`).
+- The journeys pillar is the **intents** pillar: `docs/intents/`, one file per level-1 intent, index `docs/intents/README.md`. The word *journey* is gone: every node is an intent, a file is a level-1 intent, its opening paragraph is the intent statement. Skill `intent-writer`; one command `/intent [verb + object]` replaces `/journey` and `/story`; linters `lint:intent-*` replace `lint:journey-*`; `--pillar intents`. Decision: [intents-pillar](docs/decisions/intents-pillar.md).
+- Every heading of an intent file is an **intent**; a node with no sub-intent is a *terminal intent* (was *leaf*). Spec §9.1.3, skills, template and linter messages updated. No format change.
+- Parser API (exported through `@vaubaan/harness/parser`): `JourneyParse` → `IntentFile` (its `story` field → `statement`), `JourneyNode` → `IntentNode` (`isLeaf` → `isTerminal`), `ParsedJourney` → `ParsedIntentFile`, `JourneyError` → `IntentError`, `parseJourney` → `parseIntentFile`, `listJourneyFiles` / `readJourneys` / `loadJourneys` → `listIntentFiles` / `readIntentFiles` / `loadIntentFiles`, `JOURNEYS_DIR` / `JOURNEYS_INDEX_PATH` → `INTENTS_DIR` / `INTENTS_INDEX_PATH`, `JOURNEY_STATUSES` / `JourneyStatus` / `JourneyFrontmatter` → `INTENT_STATUSES` / `IntentStatus` / `IntentFrontmatter`, `Schemas.Journey` → `Schemas.Intent`, `LEAF_FIELDS` → `TERMINAL_FIELDS`.
+
+### Added
+- A command argument may declare `required: false`; Claude Code command files render it, an argument is required by default.
+
+### Migration
+- `git mv docs/journeys docs/intents`, then `update .`; replace `/story` and `/journey` by `/intent` in your own docs; rename `lint:journey-*` ids in any lint config override. `update` carries the recorded index over to `docs/intents/README.md`; run before the move, it removes the old `docs/journeys/README.md` and warns until the folder is moved.
 
 ## [2.2.0] — 2026-11-09
 
-The optional `docs/journeys/` pillar: what the user does and wants, at every scale, anchored to the code. Decision: [journeys-pillar](docs/decisions/journeys-pillar.md); contract: spec §9.1.3.
+The optional `docs/journeys/` pillar: what the user does and wants, at every scale, anchored to the code. Decision: [journeys-pillar, now intents-pillar](docs/decisions/intents-pillar.md); contract: spec §9.1.3.
 
 ### Added
 - Spec §9.1.3 and the `journeys-pillar` decision: one file per level-1 intention, nested nodes, leaves with `anchors:`, `requires:` / `creates:` (entities of the spec vocabulary) and `acceptance:`; statuses `proposed` → `implemented` → `deprecated`.

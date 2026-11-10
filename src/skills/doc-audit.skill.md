@@ -26,7 +26,7 @@ mechanized.
 - Before drafting a plan: we need to know whether the existing docs
   are sound.
 - On explicit request via `/doc-audit [scope]` (scope = `spec`,
-  `decisions`, `handbook`, `tests`, `workflow`, `readme`, `journeys`, or `all`).
+  `decisions`, `handbook`, `tests`, `workflow`, `readme`, `intents`, or `all`).
 
 ## Scope of the 6 pillars
 
@@ -45,8 +45,8 @@ you audit them only if they exist:
 - **skills** — `docs/skills/*.skill.md`: the project's domain skills.
 - **quality** — `docs/quality/code-quality.md`: project-specific
   quality rules.
-- **journeys** — `docs/journeys/*.md`: what the user does and wants,
-  at every scale, anchored to the code (`README.md` there is generated).
+- **intents** — `docs/intents/*.md`: what the user does and wants,
+  at every scale, one tree of intents anchored to the code (`README.md` there is generated).
 
 ## Procedure
 
@@ -144,22 +144,22 @@ Audit **only if `docs/quality/` exists**.
   longer exists in the repo.
 - ⚠️ An accepted deviation with no reason and no link to an ADR.
 
-### Journeys (optional pillar)
-Audit **only if `docs/journeys/` holds a journey**. The linters
-(`lint:journey-*`) already check the grammar, the anchors and the
+### Intents (optional pillar)
+Audit **only if `docs/intents/` holds an intent file**. The linters
+(`lint:intent-*`) already check the grammar, the anchors and the
 vocabulary; you judge what they cannot.
-- ⚠️ **Spec without journey**: a `docs/spec/*.md` file that no journey
-  links in its `spec:` frontmatter. The subsystem has rules but no
+- ⚠️ **Spec without intents**: a `docs/spec/*.md` file that no intent
+  file links in its `spec:` frontmatter. The subsystem has rules but no
   documented user activity.
 - ⚠️ **Terminal intent without a test**: an `implemented` terminal
   intent none of whose
   `anchors:` is a test file (by the project's test conventions, see
   `docs/tests/`).
-- ⚠️ **Pending increment**: a `proposed` intent whose journey has not
+- ⚠️ **Pending increment**: a `proposed` intent whose intent file has not
   changed for more than N commits (default 10). List them: they are the
   backlog nobody delivered.
 - ⚠️ **Criteria lost at delivery**: the tests anchored by an intent
-  delivered in the recent history (`git log` on the journey) do not
+  delivered in the recent history (`git log` on the intent file) do not
   restate its former `acceptance:` items in their titles.
 - ❌ **Pillar drift**: a terminal intent carrying prose that states a business rule
   (→ `spec/`) or how the code works (→ `handbook/`); a field the linter
@@ -182,7 +182,7 @@ This is *the* critical point where docs drift. Heuristics:
   paraphrases generic principles (SOLID, Clean Code), what lengthily
   justifies a structural decision (→ ADR) or describes the
   implementation (→ handbook).
-- journeys/ (if present) must stay intents + pointers → flag an
+- intents/ (if present) must stay intents + pointers → flag an
   intent that explains a rule or an implementation.
 - Any architectural choice mentioned in a commit without an ADR → flag
   (see "Implicit decisions").
@@ -242,11 +242,11 @@ invent empty sections):
 - ❌ section "<section>" missing
 - ⚠️ <cited tool or config file> not found in the repo
 
-## Journeys (optional — section omitted if docs/journeys/ is absent)
+## Intents (optional — section omitted if docs/intents/ is absent)
 
-- ⚠️ docs/spec/<name>.md — no journey links it
-- ⚠️ docs/journeys/<slug>.md › <intent title> — implemented, no test anchor
-- ⚠️ docs/journeys/<slug>.md › <intent title> — proposed for N commits
+- ⚠️ docs/spec/<name>.md — no intent file links it
+- ⚠️ docs/intents/<slug>.md › <intent title> — implemented, no test anchor
+- ⚠️ docs/intents/<slug>.md › <intent title> — proposed for N commits
 
 ## Cross-link consistency
 
@@ -271,7 +271,7 @@ invent empty sections):
 - **Fix nothing**. You audit, you list, you recommend. The writers
   (`spec-writer`, `decision-record-writer`, `handbook-writer`,
   `test-plan-writer`, `workflow-writer`, `readme-writer`,
-  `journey-writer`) are there to fix — not you.
+  `intent-writer`) are there to fix — not you.
 - **Do not re-implement the mechanical linters**. If a check is already
   covered by `vaubaan harness lint` (file presence, frontmatter schema,
   tech keyword regex, cross-links), you may mention it briefly but do

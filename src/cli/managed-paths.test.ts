@@ -25,6 +25,7 @@ describe("assertManagedPaths", () => {
         "AGENTS.md",
         "CLAUDE.md",
         ".harness-manifest.json",
+        "docs/intents/README.md",
         "docs/journeys/README.md",
         ".claude/agents/coding.md",
         ".claude/commands/decision.md",
@@ -64,8 +65,9 @@ describe("assertManagedPaths", () => {
   it.each([
     "README.md",
     "docs/spec/api.md",
+    "docs/intents/ship.md",
+    "docs/intents/sub/README.md",
     "docs/journeys/ship.md",
-    "docs/journeys/sub/README.md",
     ".git/config",
     ".codex/auth.json",
     ".agents/foo.md",

@@ -1,11 +1,11 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { DisableYamlSchema } from "../loader.js";
 import type { Engine, RenderedFile } from "../types.js";
 import { parseYAML } from "../util/yaml.js";
 import { VERSION } from "../version.js";
-import { RELEASED_PATHS, assertManagedPaths } from "./managed-paths.js";
+import { MOVED_PATHS, RELEASED_PATHS, assertManagedPaths } from "./managed-paths.js";
 import { MANIFEST_FILENAME, MANIFEST_VERSION, type Manifest, hashContent } from "./manifest.js";
 import { planInit } from "./plan-render.js";
 import { pruneEmptyDirs } from "./uninstall.js";
@@ -92,6 +92,34 @@ function releaseLegacyPaths(previous: Manifest, warnings: string[]): Manifest {
   return { ...previous, files: previous.files.filter((path) => !released.includes(path)) };
 }
 
+/**
+ * A generated file the project moved along with its folder (`git mv
+ * docs/journeys docs/intents`) keeps its manifest entry and fingerprint at
+ * the new path, so `update` rewrites it instead of reporting a conflict.
+ * One still at its old path stays listed there and is removed.
+ */
+function carryMovedPaths(root: string, previous: Manifest, warnings: string[]): Manifest {
+  let files = previous.files;
+  let fileHashes = previous.fileHashes;
+  for (const [from, to] of MOVED_PATHS) {
+    if (!files.includes(from) || existsSync(join(root, from))) continue;
+    files = [...new Set(files.map((path) => (path === from ? to : path)))];
+    const hash = fileHashes?.[from];
+    if (fileHashes && hash !== undefined) {
+      const { [from]: _moved, ...rest } = fileHashes;
+      fileHashes = { ...rest, [to]: hash };
+    }
+  }
+  const oldDir = join(root, "docs/journeys");
+  if (existsSync(oldDir) && statSync(oldDir).isDirectory() && readdirSync(oldDir).length > 0) {
+    warnings.push(
+      "docs/journeys/ is now docs/intents/: run `git mv docs/journeys docs/intents`, then `npx @vaubaan/harness update .` again",
+    );
+  }
+  if (files === previous.files) return previous;
+  return { ...previous, files, ...(fileHashes ? { fileHashes } : {}) };
+}
+
 /** A Stop hook entry 1.x merged into an engine settings file now points at a no-op. */
 function legacyHookWarnings(root: string): string[] {
   const warnings: string[] = [];
@@ -114,7 +142,7 @@ export function planInstallation(
   const root = resolve(args.targetDir);
   const { engines } = settings;
   const warnings: string[] = [];
-  const previous = releaseLegacyPaths(settings.previous, warnings);
+  const previous = carryMovedPaths(root, releaseLegacyPaths(settings.previous, warnings), warnings);
   const preserved = [
     ...new Set([...(previous.preservedFiles ?? []), ...(args.preserveFiles ?? [])]),
   ].sort();

@@ -5,7 +5,7 @@ invokes_skill: doc-audit
 args:
   - name: scope
     type: enum
-    values: [spec, decisions, handbook, tests, workflow, readme, journeys, all]
+    values: [spec, decisions, handbook, tests, workflow, readme, intents, all]
     default: all
 description: Audits the completeness and freshness of the project docs (selectable scope).
 ---
