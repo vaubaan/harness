@@ -6,7 +6,7 @@
     "codex-cli",
     "opencode"
   ],
-  "renderedAt": "2026-11-10T11:56:28.281Z",
+  "renderedAt": "2026-11-10T11:59:34.526Z",
   "files": [
     ".agents/skills/decision-record-writer/SKILL.md",
     ".agents/skills/doc-audit/SKILL.md",
@@ -55,7 +55,7 @@
     ".claude/skills/doc-audit/SKILL.md": "3b60ee1aeb338417de4c008f10c1ac9df3e36c8eec1b997d74b2936b0e5b056c",
     ".claude/skills/drift-detector/SKILL.md": "ca5278960e38b618c98231c5fa58c92e0e53500ffb0288449ab3e056fddff0a8",
     ".claude/skills/handbook-writer/SKILL.md": "f516b901a4250eacf6a286ad41b68a18ae6da720ea39052b63c38b9fec98def5",
-    ".claude/skills/journey-writer/SKILL.md": "67f3b2a7257dea49bb9acba7e3509f12b72fd1d4b25c7fd525c980ec0e9a0cbf",
+    ".claude/skills/journey-writer/SKILL.md": "3c243d2e1fb7deacd9ac718490c39a09966f3432dac3e582fe9c7e8b8ef39132",
     ".claude/skills/readme-writer/SKILL.md": "f74b22a2692e0e40854f38ef5aa15684bc28f424aed41e509e6ac3dd9fdcb7b9",
     ".claude/skills/spec-writer/SKILL.md": "51a59ce180c495d2dc38fbecf4d929e683b527a2ed06264dfd894173988e1f7e",
     ".claude/skills/test-plan-writer/SKILL.md": "1e8456982e9417bc7f48c04a7b1b33e3cccd6bdcd46d017de39b54c389d7898e",
@@ -74,7 +74,7 @@
     ".agents/skills/doc-audit/SKILL.md": "3b60ee1aeb338417de4c008f10c1ac9df3e36c8eec1b997d74b2936b0e5b056c",
     ".agents/skills/drift-detector/SKILL.md": "ca5278960e38b618c98231c5fa58c92e0e53500ffb0288449ab3e056fddff0a8",
     ".agents/skills/handbook-writer/SKILL.md": "f516b901a4250eacf6a286ad41b68a18ae6da720ea39052b63c38b9fec98def5",
-    ".agents/skills/journey-writer/SKILL.md": "67f3b2a7257dea49bb9acba7e3509f12b72fd1d4b25c7fd525c980ec0e9a0cbf",
+    ".agents/skills/journey-writer/SKILL.md": "3c243d2e1fb7deacd9ac718490c39a09966f3432dac3e582fe9c7e8b8ef39132",
     ".agents/skills/readme-writer/SKILL.md": "f74b22a2692e0e40854f38ef5aa15684bc28f424aed41e509e6ac3dd9fdcb7b9",
     ".agents/skills/spec-writer/SKILL.md": "51a59ce180c495d2dc38fbecf4d929e683b527a2ed06264dfd894173988e1f7e",
     ".agents/skills/test-plan-writer/SKILL.md": "1e8456982e9417bc7f48c04a7b1b33e3cccd6bdcd46d017de39b54c389d7898e",

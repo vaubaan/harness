@@ -19,7 +19,14 @@ a piece of code realizes, and where that code is. It is the entry point
 to a feature: a new behavior is a `proposed` intent here before it is a
 line of code. Every heading is an intent (verb + object); an intent with
 no sub-intent is terminal. Contract: spec §9.1.3 of the harness; the
-rule of an intent lives in `docs/spec/`, the how in `docs/handbook/`, never here.
+rule of an intent lives in `docs/spec/`, the how in `docs/handbook/`,
+never here.
+
+Think OKR tree: every intent is an objective (verb + object, for an
+actor), the acceptance criteria of a terminal intent are its key
+results, its anchors are the initiatives. Write an objective, not a
+category; write a key result you can observe, not one you can argue
+about.
 
 ## Content test
 

@@ -3,7 +3,7 @@ title: Keep the docs honest
 status: implemented
 actors: [maintainer, coding-agent]
 spec: ../spec/coding-agent-harness.md
-last_reviewed: 2026-11-09
+last_reviewed: 2026-11-10
 ---
 
 # Keep the docs honest

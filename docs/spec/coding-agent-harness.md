@@ -499,6 +499,18 @@ backlog of what is decided and not delivered. Decision:
 [journeys-pillar](../decisions/journeys-pillar.md). Absent, nothing
 changes; present, it commits to the form below.
 
+The tree reads like an OKR tree kept in the repo: an intent is an
+objective (qualitative, verb + object, for an actor), the `acceptance:`
+lines of a terminal intent are its key results (observable, later
+restated by test titles), its `anchors:` are the initiatives that
+realize it, and the share of `implemented` terminal intents under a node
+is the objective's progress, read from git instead of reported. Two
+differences: an intent is binary (`proposed` or `implemented`), so a
+numeric key result becomes an acceptance criterion and then a test, not
+a metric tracked over time; and the tree is permanent, it says what the
+product does, while a quarter is the subset of `proposed` intents the
+team picks, which lives in its ticketing tool, not here.
+
 **Layout.** One file `docs/journeys/<slug>.md` per level-1 intent,
 titled verb + object, never a category; slug without numbering (§9.1.1).
 `docs/journeys/README.md` is the index, generated (see *Index* below).
