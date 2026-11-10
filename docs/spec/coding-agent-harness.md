@@ -23,6 +23,12 @@ The harness reasons with these words:
   `*.skill.md` (see §5); rendered per engine.
 - **Command** — slash-command invocable by the human or the agent
   (`/doc-audit`, `/spec`, …). Pivot format `*.cmd.md` (see §6).
+- **Meta database** — `docs/` and the views the harness renders from it:
+  what the code cannot say, in a small fixed set of Markdown files that
+  point to the code for everything else. The **code database** is the
+  rest of the repo: sources, tests, configs. Both are committed; the
+  harness is the schema, the integrity constraints and the views of the
+  meta database, and never reads the code database.
 - **Doc** — umbrella for the persistent artifacts supervised by the
   harness:
   - **README** (`README.md` at the root, outside `docs/`) — entry point
