@@ -424,7 +424,7 @@ npx @vaubaan/harness update .                    # then commit the result
 
 ## Where this is going
 
-Shipped: the optional `docs/journeys/` pillar and its first typed context transaction, `/story`, which writes an increment as a `proposed` leaf before the code and passes it `implemented` when delivered. Decided, not shipped yet: the other transactions (`/decide`, `/refactor`, `/fix`), pointer checks per section, a token budget per file, and `/compact` to rewrite a context that has grown contradictions. The [spec](./docs/spec/coding-agent-harness.md) and the [decisions](./docs/decisions/) say what exists today.
+Shipped: the optional `docs/journeys/` pillar and its first typed context transaction, `/story`, which writes an increment as a `proposed` leaf before the code and passes it `implemented` when delivered. Decided, not shipped yet: the other transactions (`/refactor`, `/fix`), pointer checks per section, a token budget per file, and `/compact` to rewrite a context that has grown contradictions. The [spec](./docs/spec/coding-agent-harness.md) and the [decisions](./docs/decisions/) say what exists today.
 
 ## Documentation
 
