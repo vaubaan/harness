@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.4.0] — 2026-11-10
+
+### Changed
+- The package description on npmjs.com reads *Project context as code*, the tagline the README and its hero already carry (was *Project conventions as code*). No code change.
+
 ## [2.3.1] — 2026-11-10
 
 ### Changed
