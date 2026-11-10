@@ -1,8 +1,11 @@
 # @vaubaan/harness
 
 <p align="center">
-  <strong>Project context as code.</strong><br>
-  A context database for your project, kept in the repo, rendered for your coding agents, linted in CI.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/vaubaan/harness/main/.github/readme/hero-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/vaubaan/harness/main/.github/readme/hero-light.svg">
+  <img alt="Project context as code. A context database for your project, kept in the repo, rendered for your coding agents, linted in CI." src="https://raw.githubusercontent.com/vaubaan/harness/main/.github/readme/hero.svg" width="100%">
+</picture>
 </p>
 
 <p align="center">
@@ -43,21 +46,13 @@ You and your coding agents share a codebase. It holds two databases.
 
 The **code database** is `src/`, the tests, the configs: what the machine runs. The **meta database** is `docs/`: what the code cannot say, kept in a small fixed set of Markdown files that point to the code for everything else. Both personas read and write both. You decide, validate and merge; the agent writes docs and code with judgment; the harness is the schema of the meta database, its integrity constraints and its views.
 
-```mermaid
-flowchart LR
-  H["You<br/>decide, validate, merge"]
-  A["Your coding agents<br/>write docs and code"]
-  subgraph CB["one repository"]
-    direction TB
-    CODE["code database<br/>src · tests · configs"]
-    META["meta database<br/>docs/ and its rendered views"]
-    META -- "tracks · anchors · realized by" --> CODE
-  end
-  X["harness<br/>schema · 19 constraints · views"]
-  H <--> CB
-  A <--> CB
-  X -. "keeps the meta database consistent<br/>with itself and with the code" .-> META
-```
+<p align="center">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/vaubaan/harness/main/.github/readme/two-databases-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/vaubaan/harness/main/.github/readme/two-databases-light.svg">
+  <img alt="You and your coding agents share one repository that holds a code database and a meta database; the harness is the schema, the constraints and the views of the meta database." src="https://raw.githubusercontent.com/vaubaan/harness/main/.github/readme/two-databases.svg" width="100%">
+</picture>
+</p>
 
 Each pillar stores one kind of information the code cannot carry, and links to the code or config that carries the rest. Nothing is written twice: if a paragraph could be deleted without losing anything that is not in the files it points to, it does not belong in the doc.
 
@@ -260,6 +255,14 @@ npx -y @vaubaan/harness init . --engines=claude-code
 # or: --engines=claude-code,codex-cli,opencode
 ```
 
+<p align="center">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/vaubaan/harness/main/.github/readme/terminal-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/vaubaan/harness/main/.github/readme/terminal-light.svg">
+  <img alt="Terminal: init renders 20 files; lint reports a drift warning on a handbook and names the skill that fixes it; CI passes." src="https://raw.githubusercontent.com/vaubaan/harness/main/.github/readme/terminal.svg" width="100%">
+</picture>
+</p>
+
 This writes, for each engine:
 
 ```
@@ -407,15 +410,13 @@ npx @vaubaan/harness uninstall .
 
 ## How it works
 
-```mermaid
-flowchart LR
-  D["docs/<br/>your context, in Markdown"]
-  R["AGENTS.md · .claude/ · .agents/ · .opencode/<br/>rendered for each engine, committed"]
-  E["Claude Code · Codex · OpenCode<br/>read the same context, write the code"]
-  L["vaubaan-harness lint<br/>pre-commit and CI, zero tokens"]
-  D -- "init · update" --> R --> E -- "code and docs" --> L
-  L -. "fails when context and code disagree" .-> D
-```
+<p align="center">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/vaubaan/harness/main/.github/readme/how-it-works-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/vaubaan/harness/main/.github/readme/how-it-works-light.svg">
+  <img alt="docs/ is rendered into AGENTS.md and the engine folders; agents read it and write code and docs; the linter runs in pre-commit and CI and fails when context and code disagree." src="https://raw.githubusercontent.com/vaubaan/harness/main/.github/readme/how-it-works.svg" width="100%">
+</picture>
+</p>
 
 1. **Your docs are the context.** A small, fixed layout under `docs/`. Every file has a template and a writer skill, so you rarely start from a blank page.
 2. **One pivot format, rendered per engine.** Skills and commands land where Claude Code, Codex and OpenCode look for them. `AGENTS.md` is the shared entry point; `CLAUDE.md` just imports it.
@@ -437,6 +438,14 @@ In database terms:
 Eight things you will do with a harnessed project, again and again. Each one is a conversation with your agent, not a form: the slash command is the moment the conversation lands in the repo. Every section follows the same grid: when, what you say, what happens, what the harness checks, what you see at the end.
 
 One word first. In the intents pillar, every heading is an **intent**: what the user wants, verb + object, at every level. The file is the level-1 intent, its headings are sub-intents. An intent with no sub-intent is **terminal**: it carries the fields. Terminal and `proposed`, it is decided and not delivered, the backlog item; terminal and `implemented`, it is delivered and points to its code.
+
+<p align="center">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/vaubaan/harness/main/.github/readme/intent-tree-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/vaubaan/harness/main/.github/readme/intent-tree-light.svg">
+  <img alt="An intent file is a tree: level-1 intent, sub-intents, terminal intents with anchors or acceptance criteria. Read it as an OKR tree whose progress is computed from the repo." src="https://raw.githubusercontent.com/vaubaan/harness/main/.github/readme/intent-tree.svg" width="100%">
+</picture>
+</p>
 
 <a name="specify-a-change-without-a-ticketing-tool"></a>
 <details>
@@ -670,37 +679,13 @@ Never:
 
 The first question is always the same: does the behavior visible to the user change?
 
-```mermaid
-flowchart TB
-  Q0["The user asks for something"]
-  Q5{"A question, not a<br/>request for change?"}
-  Q1{"Does the behavior visible<br/>to the user change?"}
-  Q2{"Does a proposed intent<br/>already exist?"}
-  Q3{"Are the words in the<br/>spec Vocabulary?"}
-  Q4{"A structural choice,<br/>costly to reverse?"}
-  X{"An intent to deliver?"}
-  R["Answer from the docs and the code<br/>Report the gap, invent nothing"]
-  S["/intent: a proposed intent with<br/>acceptance criteria, no code"]
-  SP["/spec first: define the word<br/>then back to /intent"]
-  D["/decision before the code"]
-  C["Code + tests titled after the criteria<br/>intent → implemented with anchors"]
-  F["Code + regression test<br/>handbook if an invariant changed<br/>tracks and anchors if files moved"]
-  E["update . → lint → follow docs/workflow"]
-  Q0 --> Q5
-  Q5 -- yes --> R
-  Q5 -- no --> Q1
-  Q1 -- yes --> Q2
-  Q2 -- no --> Q3
-  Q3 -- yes --> S
-  Q3 -- no --> SP --> S
-  S -- "the user validates" --> Q4
-  Q2 -- yes --> Q4
-  Q1 -- no --> Q4
-  Q4 -- yes --> D --> X
-  Q4 -- no --> X
-  X -- yes --> C --> E
-  X -- no --> F --> E
-```
+<p align="center">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/vaubaan/harness/main/.github/readme/agent-decision-tree-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/vaubaan/harness/main/.github/readme/agent-decision-tree-light.svg">
+  <img alt="Decision tree: a question is answered from the docs; a visible change starts with a proposed intent and spec vocabulary; a costly choice starts with an ADR; every path ends with update, lint and the team workflow." src="https://raw.githubusercontent.com/vaubaan/harness/main/.github/readme/agent-decision-tree.svg" width="100%">
+</picture>
+</p>
 
 </details>
 
