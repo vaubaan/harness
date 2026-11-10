@@ -1,7 +1,7 @@
 {
   "name": "@vaubaan/harness",
-  "version": "2.3.1",
-  "description": "Project conventions as code for Claude Code, Codex and OpenCode — skills, agents, commands and linters",
+  "version": "2.4.0",
+  "description": "Project context as code for Claude Code, Codex and OpenCode — skills, agents, commands and linters",
   "type": "module",
   "license": "Apache-2.0",
   "author": "Vaubaan",
