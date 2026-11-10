@@ -5,10 +5,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.3.0] — 2026-11-10
+
 ### Changed
 - The journeys pillar is the **intents** pillar: `docs/intents/`, one file per level-1 intent, index `docs/intents/README.md`. The word *journey* is gone: every node is an intent, a file is a level-1 intent, its opening paragraph is the intent statement. Skill `intent-writer`; one command `/intent [verb + object]` replaces `/journey` and `/story`; linters `lint:intent-*` replace `lint:journey-*`; `--pillar intents`. Decision: [intents-pillar](docs/decisions/intents-pillar.md).
 - Every heading of an intent file is an **intent**; a node with no sub-intent is a *terminal intent* (was *leaf*). Spec §9.1.3, skills, template and linter messages updated. No format change.
 - Parser API (exported through `@vaubaan/harness/parser`): `JourneyParse` → `IntentFile` (its `story` field → `statement`), `JourneyNode` → `IntentNode` (`isLeaf` → `isTerminal`), `ParsedJourney` → `ParsedIntentFile`, `JourneyError` → `IntentError`, `parseJourney` → `parseIntentFile`, `listJourneyFiles` / `readJourneys` / `loadJourneys` → `listIntentFiles` / `readIntentFiles` / `loadIntentFiles`, `JOURNEYS_DIR` / `JOURNEYS_INDEX_PATH` → `INTENTS_DIR` / `INTENTS_INDEX_PATH`, `JOURNEY_STATUSES` / `JourneyStatus` / `JourneyFrontmatter` → `INTENT_STATUSES` / `IntentStatus` / `IntentFrontmatter`, `Schemas.Journey` → `Schemas.Intent`, `LEAF_FIELDS` → `TERMINAL_FIELDS`.
+
+- README rebuilt around the model *two personas, one codebase, two databases*: the meta database (`docs/` and its rendered views) next to the code database; Set up, Day to day and For your agent guides, folded; the loop and the pillar examples as Mermaid and folded blocks. Spec §0 defines **Meta database** and **code database**; §9.1.3 reads the intent tree as an OKR tree.
 
 ### Added
 - A command argument may declare `required: false`; Claude Code command files render it, an argument is required by default.
