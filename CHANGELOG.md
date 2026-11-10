@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- Journeys vocabulary: every heading of a journey is an **intent**; a node with no sub-intent is a *terminal intent* (was *leaf*). Spec §9.1.3, skills, template and linter messages updated. No format change.
+- Parser API: `LEAF_FIELDS` → `TERMINAL_FIELDS`, `JourneyNode.isLeaf` → `isTerminal` (exported through `@vaubaan/harness/parser`).
+
 ## [2.2.0] — 2026-11-09
 
 The optional `docs/journeys/` pillar: what the user does and wants, at every scale, anchored to the code. Decision: [journeys-pillar](docs/decisions/journeys-pillar.md); contract: spec §9.1.3.

@@ -10,13 +10,13 @@ This file describes **how to work in this project**. The **business context** (w
 - `docs/decisions/<slug>.md` — ADRs: structural choices and rejected alternatives.
 - `docs/tests/integration-tests.md` & `e2e-tests.md` — test scope, stack, conventions, known gaps.
 - `docs/workflow/coding-workflow.md` — CI, branches, PR, release. How this team works: follow it.
-- `docs/journeys/<journey>.md` — user intentions and journeys, anchored to the code. `docs/journeys/README.md` is the generated index.
+- `docs/journeys/<journey>.md` — user intents and journeys, anchored to the code. `docs/journeys/README.md` is the generated index.
 
 ## Doc-first
 
 The order is: **understand the docs → fill the gaps → code → update the docs → commit**. If the docs are silent or stale on something you change, fill the gap upfront with the doc-skill writers — not downstream, not after the fact.
 
-- Visible change of behavior → a `proposed` leaf first (`/story <intent>`), never the code first.
+- Visible change of behavior → a `proposed` intent first (`/story <intent>`), never the code first.
 - Missing spec for a subsystem you touch → **do not code**, report the gap.
 - Implicit structural decision in your changes → an ADR (`/decision`).
 - Changed feature behavior → update the matching handbook (`/handbook`).
@@ -34,7 +34,7 @@ The files the harness generates (`AGENTS.md`, `CLAUDE.md`, the `.claude/`, `.age
 - `doc-audit` (`/doc-audit`) — Audits the completeness and freshness of the docs (6 pillars: README,
 - `drift-detector` (`/drift`) — Detects code ↔ doc drift. For each doc file that declares a
 - `handbook-writer` (`/handbook`) — Writes or updates `docs/handbook/<slug>.md`: only what an agent cannot
-- `journey-writer` (`/journey`, `/story`) — Writes or updates `docs/journeys/<slug>.md`: the user intentions of
+- `journey-writer` (`/journey`, `/story`) — Writes or updates `docs/journeys/<slug>.md`: the user intents of
 - `readme-writer` (`/readme`) — Maintains `README.md` at the repo root. Syncs the links to the other
 - `spec-writer` (`/spec`) — Human-guided wizard to write or update a `docs/spec/<name>.md`
 - `test-plan-writer` (`/test-plan`) — Updates `docs/tests/integration-tests.md` and/or

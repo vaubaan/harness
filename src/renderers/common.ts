@@ -139,7 +139,7 @@ export function buildUmbrellaBody(extras: UmbrellaExtras): string {
       : []),
     ...(extras.hasJourneys
       ? [
-          "- `docs/journeys/<journey>.md` — user intentions and journeys, anchored to the code. `docs/journeys/README.md` is the generated index.",
+          "- `docs/journeys/<journey>.md` — user intents and journeys, anchored to the code. `docs/journeys/README.md` is the generated index.",
         ]
       : []),
     "",
@@ -149,7 +149,7 @@ export function buildUmbrellaBody(extras: UmbrellaExtras): string {
     "",
     ...(extras.hasJourneys
       ? [
-          "- Visible change of behavior → a `proposed` leaf first (`/story <intent>`), never the code first.",
+          "- Visible change of behavior → a `proposed` intent first (`/story <intent>`), never the code first.",
         ]
       : []),
     "- Missing spec for a subsystem you touch → **do not code**, report the gap.",

@@ -66,19 +66,19 @@ the doc content still matches reality.
          exists in the test infrastructure → drift.
        - The workflow doc says "the `lint` job runs on PR", `ci.yml`
          no longer contains this job → drift.
-       - A journey leaf anchors a file that no longer exists, or
+       - A journey intent anchors a file that no longer exists, or
          `requires:` an entity the spec vocabulary no longer defines →
          hard drift.
-       - A journey leaf whose anchored code gained a branch (a new
+       - A journey intent whose anchored code gained a branch (a new
          guard, a new step the user sees) with no node for it → soft
-         drift; a `proposed` leaf whose code already exists → soft
+         drift; a `proposed` intent whose code already exists → soft
          drift, suggest passing it `implemented`.
      - **Syntactic consistency**: do the mentioned signatures /
        types / commands match?
 3. **Reverse cross-check**: for "important" code files (entry point,
    public types, `package.json` scripts), check that they are tracked
    by *at least one* doc (`tracks:`) or anchored by *at least one*
-   journey leaf (`anchors:`). Otherwise → ⚠️ "undocumented code". This
+   journey intent (`anchors:`). Otherwise → ⚠️ "undocumented code". This
    is where unanchored entry points are reported: with judgment, no
    configuration.
 4. **Report**: structured Markdown in a
@@ -102,7 +102,7 @@ the doc content still matches reality.
   - New undocumented feature (the code evolved, the doc did not
     follow).
   - Changed conventions (e.g.: naming, tree structure) not reflected.
-  - Code branch without a journey node; `proposed` leaf already coded.
+  - Code branch without a journey node; `proposed` intent already coded.
 - **Not drift**:
   - Stylistic difference (wording, section order).
   - Minor implementation detail absent from the doc (by design: the
@@ -142,8 +142,8 @@ lie about their own scope._
 
 ### docs/journeys/<slug>.md
 
-- ❌ Leaf "<title>" anchors `src/legacy/old.ts` — file deleted.
-- ❌ Leaf "<title>" requires `<entity>` — no longer in the Vocabulary
+- ❌ Intent "<title>" anchors `src/legacy/old.ts` — file deleted.
+- ❌ Intent "<title>" requires `<entity>` — no longer in the Vocabulary
   of `docs/spec/<subsystem>.md`.
 
 ## Soft drift (M items)
@@ -162,15 +162,15 @@ lie about their own scope._
 
 ### docs/journeys/<slug>.md
 
-- ⚠️ Leaf "<title>": its anchored `src/foo.ts:88` gained a guard the
+- ⚠️ Intent "<title>": its anchored `src/foo.ts:88` gained a guard the
   user sees, no node for it.
-- ⚠️ Leaf "<title>" is `proposed` but `src/bar.ts` already realizes it
+- ⚠️ Intent "<title>" is `proposed` but `src/bar.ts` already realizes it
   — pass it `implemented`.
 
 ## Undocumented code (K items)
 
 - ⚠️ `src/new-feature/` (introduced commit <sha>) — no handbook
-  tracks these files and no journey leaf anchors them. Suggested:
+  tracks these files and no journey intent anchors them. Suggested:
   `/handbook new-feature` for the how, `/journey <slug>` for the user
   activity.
 - ⚠️ Script `package.json:deploy:preview` — not mentioned in
@@ -183,7 +183,7 @@ lie about their own scope._
 3. `/workflow` to resync `coding-workflow.md` vs `ci.yml`.
 4. Write an ADR for change <X> if it was a decision (see
    `/decision`).
-5. `/journey <slug>` to add the missing node or re-anchor the leaf.
+5. `/journey <slug>` to add the missing node or re-anchor the intent.
 ```
 
 ## Guardrails

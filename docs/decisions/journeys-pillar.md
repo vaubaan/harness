@@ -1,17 +1,17 @@
 ---
-title: An optional journeys pillar holds user intentions anchored to the code
+title: An optional journeys pillar holds user intents anchored to the code
 status: accepted
 date: 2026-11-09
 author: Vaubaan core
 ---
 
-# An optional journeys pillar holds user intentions anchored to the code
+# An optional journeys pillar holds user intents anchored to the code
 
 ## Context
 
 The six pillars say what the project wants, what it settled, how it works,
 how it is tested and shipped. None says what the user does and wants at every
-scale, from a level-1 intention to the atomic activity a handler realizes, nor
+scale, from a level-1 intent to the atomic activity a handler realizes, nor
 where a new behavior is specified before it is coded. The README promised
 typed transactions (`/story`) and a `docs/todo/` pillar for increments; the
 spec stays tech-agnostic and cannot carry pointers to code. The harness reads
@@ -21,8 +21,8 @@ agnostic to the project's language.
 ## Decision
 
 An optional pillar `docs/journeys/`: one Markdown file per level-1 user
-intention, nested headings for the levels below, leaves anchored to the code
-with `anchors:` (the `tracks:` syntax) and linked to the spec vocabulary with
+intent, nested headings for its sub-intents, terminal intents anchored to the
+code with `anchors:` (the `tracks:` syntax) and linked to the spec vocabulary with
 `requires:` / `creates:`. A node is born `proposed` with acceptance criteria,
 becomes `implemented` in the pull request that delivers it, never goes back.
 Four mechanical linters check the form and the anchors; `lint:tracks-drift`

@@ -49,10 +49,17 @@ The harness reasons with these words:
   manifest; owned by the harness until edited or preserved (see §13.1).
 - **Preserved file** — a generated path the operator keeps as the
   project's own (`--preserve`); excluded from future renders.
-- **Journey** — a file of `docs/journeys/`: one level-1 user intention
-  and every node below it, down to the leaves the code realizes.
-- **Anchor** — a pointer from a journey leaf to the code and tests that
-  realize it; the `tracks:` syntax, per leaf (see §9.1.3).
+- **Journey** — a file of `docs/journeys/`: one level-1 user intent
+  and every intent below it, down to the terminal intents the code
+  realizes.
+- **Intent** — a heading of a journey: what the user wants, verb +
+  object, at any level; the file is the level-1 intent. An intent with
+  no sub-intent is terminal: it carries the fields and is born
+  `proposed` with acceptance criteria, `implemented` when delivered with
+  anchors.
+- **Anchor** — a pointer from a terminal intent of a journey to the code
+  and tests that realize it; the `tracks:` syntax, per terminal intent
+  (see §9.1.3).
 
 ### 0.1 Position
 
@@ -360,7 +367,7 @@ The harness ships no agent persona and no code-quality audit (see
 | `workflow-writer`           | Updates `docs/workflow/coding-workflow.md`. Reads the repo's CI/CD config, the package manifest scripts and the branch/PR config, proposes the required sections (CI / env / PR / branches / release) and the optional ones (languages). |
 | `readme-writer`             | Maintains `README.md` at the root. Syncs the links to the other pillars; makes sure pitch + quick start stay up to date vs the code. |
 | `drift-detector`            | Detects code ↔ doc divergences.                                                                                      |
-| `journey-writer`            | Writes or updates `docs/journeys/<slug>.md` one node at a time (§9.1.3): greenfield (three questions) or mature (reads the code's entry points, proposes anchored leaves). `/story <intent>` adds a `proposed` leaf with its acceptance criteria before any code. |
+| `journey-writer`            | Writes or updates `docs/journeys/<slug>.md` one node at a time (§9.1.3): greenfield (three questions) or mature (reads the code's entry points, proposes anchored terminal intents). `/story <intent>` adds a `proposed` intent with its acceptance criteria before any code. |
 
 Their evolution is versioned by the package version. Only the
 `engines:` and `requires:` constraints (§4.2) filter a skill out of an
@@ -414,7 +421,7 @@ project/
     ├── quality/code-quality.md       # OPTIONAL (see §9.1.2)
     └── journeys/                     # OPTIONAL (see §9.1.3)
         ├── README.md                 # index, generated
-        └── <slug>.md                 # one level-1 intention, no numbering
+        └── <slug>.md                 # one level-1 intent, no numbering
 ```
 
 - The `README` pillar lives at the root (universal convention of
@@ -486,13 +493,25 @@ agent reads it before writing or auditing code. The file declares no
 ### 9.1.3 Journeys
 
 **`journeys/`** — what the user does and wants, at every scale, from a
-level-1 intention to the atomic activity a piece of code realizes. The
+level-1 intent to the atomic activity a piece of code realizes. The
 pillar is where a new behavior is specified before it is coded, and the
 backlog of what is decided and not delivered. Decision:
 [journeys-pillar](../decisions/journeys-pillar.md). Absent, nothing
 changes; present, it commits to the form below.
 
-**Layout.** One file `docs/journeys/<slug>.md` per level-1 intention,
+The tree reads like an OKR tree kept in the repo: an intent is an
+objective (qualitative, verb + object, for an actor), the `acceptance:`
+lines of a terminal intent are its key results (observable, later
+restated by test titles), its `anchors:` are the initiatives that
+realize it, and the share of `implemented` terminal intents under a node
+is the objective's progress, read from git instead of reported. Two
+differences: an intent is binary (`proposed` or `implemented`), so a
+numeric key result becomes an acceptance criterion and then a test, not
+a metric tracked over time; and the tree is permanent, it says what the
+product does, while a quarter is the subset of `proposed` intents the
+team picks, which lives in its ticketing tool, not here.
+
+**Layout.** One file `docs/journeys/<slug>.md` per level-1 intent,
 titled verb + object, never a category; slug without numbering (§9.1.1).
 `docs/journeys/README.md` is the index, generated (see *Index* below).
 
@@ -508,29 +527,32 @@ titled verb + object, never a category; slug without numbering (§9.1.1).
 
 The first paragraph after the title is the journey's user story.
 
-**Nodes.** Every heading of level 2 and deeper is a node; its level is
-the heading depth minus one. A node with no deeper heading below it,
-before the next heading of the same or a higher level, is a **leaf**;
-the others are internal nodes. An internal node may carry one sentence
-of user story; a leaf carries no prose: its title and fields suffice,
-the rule lives in the spec and the how in the handbook.
+**Nodes.** Every heading of level 2 and deeper is a node, and every node
+is an intent (verb + object): the file is the level-1 intent, each
+deeper heading a sub-intent. Its level is the heading depth minus one.
+An intent with no deeper heading below it, before the next heading of
+the same or a higher level, is a **terminal intent**; the others are
+internal nodes. An internal node may carry one sentence of user story;
+a terminal intent carries no prose: its title and fields suffice, the
+rule lives in the spec and the how in the handbook.
 
 **Fields.** The lines directly under a heading, blank lines allowed,
 one field per line, `key: value, value`. The block ends at the first
 line that is neither a field, nor a list item of `acceptance:`, nor
 blank. Fenced code is ignored.
 
-| Field                    | On             | Rule                                                                                                                                                                  |
-|--------------------------|----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `status:`                | any node       | Overrides the file status for the node and its descendants. A `proposed` node in an `implemented` journey is the increment in progress.                              |
-| `spec:`                  | any node       | Relative path, optional `#fragment`, to the spec section that holds the rule. The path must resolve.                                                                  |
-| `anchors:`               | leaf           | Paths or globs from the repo root, code and tests, the `tracks:` syntax. Required when the leaf is `implemented`; each must match at least one existing file.         |
-| `acceptance:`            | leaf           | Followed by `- ` list items: observable criteria. Required when the leaf is `proposed`. Removed at delivery: the titles of the anchored tests restate them.           |
-| `requires:` / `creates:` | leaf, optional | Entities (below) the activity needs from another activity, or produces. The edges of the journey graph. What comes from outside the project (an operator's input, an external system) is not declared: the leaf is an entry point. |
+| Field                    | On              | Rule                                                                                                                                                                  |
+|--------------------------|-----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `status:`                | any node        | Overrides the file status for the node and its descendants. A `proposed` node in an `implemented` journey is the increment in progress.                              |
+| `spec:`                  | any node        | Relative path, optional `#fragment`, to the spec section that holds the rule. The path must resolve.                                                                  |
+| `anchors:`               | terminal intent | Paths or globs from the repo root, code and tests, the `tracks:` syntax. Required when the intent is `implemented`; each must match at least one existing file.       |
+| `acceptance:`            | terminal intent | Followed by `- ` list items: observable criteria. Required when the intent is `proposed`. Removed at delivery: the titles of the anchored tests restate them.         |
+| `requires:` / `creates:` | terminal intent, optional | Entities (below) the activity needs from another activity, or produces. The edges of the journey graph. What comes from outside the project (an operator's input, an external system) is not declared: the intent is an entry point. |
 
 Any other key directly under a heading is an error. A derivable fact
-(`uses:`, `guards:`, depth, coverage) is never declared. A leaf carries
-at least one field; a leaf field on an internal node is an error.
+(`uses:`, `guards:`, depth, coverage) is never declared. A terminal
+intent carries at least one field; a field of a terminal intent on an
+internal node is an error.
 
 **Entities.** An entity is the kebab-case slug (lowercase, runs of
 non-alphanumeric characters replaced by one hyphen) of a bold term
@@ -549,13 +571,13 @@ the language of the spec.
   delivers adds `anchors:`, writes the tests whose titles restate the
   criteria, removes `acceptance:`.
 - `deprecated` — withdrawn, kept one release so agents know the
-  intention existed; anchors may disappear; deleted at the next release.
+  intent existed; anchors may disappear; deleted at the next release.
   No History section, as for an ADR.
 
-A node never returns to `proposed`. A delivered leaf changes only in the
+A node never returns to `proposed`. A delivered intent changes only in the
 pull request that delivers the change; between deliveries, a change of
-behavior is a sibling `proposed` leaf, merged into the leaf at delivery.
-A journey is `implemented` as soon as one of its leaves is.
+behavior is a sibling `proposed` intent, merged into it at delivery. A
+journey is `implemented` as soon as one of its terminal intents is.
 
 **Index.** `docs/journeys/README.md` is rendered by `init` and `update`
 when at least one journey exists: the whole tree as an indented list,
@@ -651,9 +673,10 @@ The wizards (`readme-writer`, `spec-writer`, `decision-record-writer`,
   configuration or generic principles → ⚠️ (pillar boundary).
 - **Journeys (optional pillar)**: if `docs/journeys/` exists: each
   spec is linked by at least one journey, otherwise → ⚠️ "spec without
-  journey"; each `implemented` leaf anchors at least one test; a
-  `proposed` leaf older than N commits → ⚠️ pending increment; the test
-  titles of a delivered leaf restate its former criteria (judgment).
+  journey"; each `implemented` terminal intent anchors at least one
+  test; a `proposed` intent older than N commits → ⚠️ pending increment;
+  the test titles of a delivered intent restate its former criteria
+  (judgment).
 - **Cross-link consistency**: a spec has at least one decision, one
   handbook or a mention in the tests; a decision is referenced by at
   least one other doc. Otherwise → orphan.
@@ -721,10 +744,10 @@ filter by pillar or by linter id and choose a text or JSON output.
 | `lint:gitignore-harness`        | repo root                | `.gitignore` excludes `.harness-overrides/` and `.vaubaan/`, and ignores none of the generated paths (`AGENTS.md`, `CLAUDE.md`, engine folders, manifest). | error         |
 | `lint:quality-schema`           | quality (optional)       | If `docs/quality/` exists: `code-quality.md` exists and contains the 3 required sections (regex headers). No effect if the directory is absent.           | error         |
 | `lint:generated-fresh`          | repo root                | When a manifest exists: every generated file equals the current render for the recorded engines and overrides; none is missing or stale.                 | error         |
-| `lint:journey-schema`           | journeys (optional)      | If `docs/journeys/` exists: strict frontmatter; known node fields, leaf fields on leaves only; an `implemented` leaf has `anchors:`, a `proposed` leaf has `acceptance:`; a leaf has at least one field; `spec` paths resolve. No effect if the directory is absent. | error |
+| `lint:journey-schema`           | journeys (optional)      | If `docs/journeys/` exists: strict frontmatter; known node fields, the fields of a terminal intent on terminal intents only; an `implemented` terminal intent has `anchors:`, a `proposed` one has `acceptance:`; a terminal intent has at least one field; `spec` paths resolve. No effect if the directory is absent. | error |
 | `lint:journey-anchors`          | journeys (optional)      | Every anchor matches at least one existing file (same resolution as `tracks:`), reported at the node's line.                                            | error         |
 | `lint:journey-vocabulary`       | journeys (optional)      | Every entity of `requires:` / `creates:` is a term of the Vocabulary section of a linked spec. Downgraded to a warning when no linked spec has a Vocabulary section. | error |
-| `lint:journey-graph`            | journeys (optional)      | An entity a leaf requires that no leaf of any journey creates: the leaf is unreachable in the doc.                                                       | warning       |
+| `lint:journey-graph`            | journeys (optional)      | An entity a terminal intent requires that no terminal intent of any journey creates: the intent is unreachable in the doc.                              | warning       |
 
 Section headings are matched in English (`Context`, `Decision`,
 `Consequences`, `Rejected alternatives`; `Mechanical checks`, `Project

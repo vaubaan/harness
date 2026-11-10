@@ -11,8 +11,8 @@ export type { ParsedFile } from "./common.js";
 export {
   JOURNEYS_DIR,
   JOURNEYS_INDEX_PATH,
-  LEAF_FIELDS,
   NODE_FIELDS,
+  TERMINAL_FIELDS,
   listJourneyFiles,
   loadJourneys,
   maskFencedCode,

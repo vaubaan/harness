@@ -22,8 +22,8 @@ export const NODE_FIELDS = [
   "creates",
 ] as const;
 export type NodeField = (typeof NODE_FIELDS)[number];
-/** Fields only a leaf may carry. */
-export const LEAF_FIELDS: ReadonlyArray<NodeField> = [
+/** Fields only a terminal intent (a node with no sub-intent) may carry. */
+export const TERMINAL_FIELDS: ReadonlyArray<NodeField> = [
   "anchors",
   "acceptance",
   "requires",
@@ -43,7 +43,8 @@ export interface JourneyNode {
   line: number;
   /** Index of the parent node in `nodes`, absent for a level-1 node. */
   parent?: number;
-  isLeaf: boolean;
+  /** True when the node has no sub-intent: a terminal intent. */
+  isTerminal: boolean;
   /** Line of each known field the node declares. */
   fieldLines: Partial<Record<NodeField, number>>;
   status?: JourneyStatus;
@@ -142,7 +143,7 @@ function newNode(title: string, level: number, line: number): JourneyNode {
     title,
     level,
     line,
-    isLeaf: true,
+    isTerminal: true,
     fieldLines: {},
     anchors: [],
     acceptance: [],
@@ -251,7 +252,7 @@ export function parseJourney(relPath: string, text: string): JourneyParse {
     if (parentIndex !== undefined) {
       node.parent = parentIndex;
       const parent = nodes[parentIndex];
-      if (parent) parent.isLeaf = false;
+      if (parent) parent.isTerminal = false;
     }
     const next = headings[k + 1];
     parseFields(node, lines, h.index + 1, next ? next.index : lines.length, errors);

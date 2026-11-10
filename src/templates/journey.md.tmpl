@@ -8,15 +8,16 @@ last_reviewed: <DATE>
 
 # <VERB + OBJECT>
 
-As a <actor>, I want <intention> so that <outcome>.
+As a <actor>, I want <intent> so that <outcome>.
 
 <!--
-One file per level-1 intention; the levels below are nested headings. A
-leaf is a heading with no sub-heading: it carries its fields on the lines
-right under the title, one field per line, values comma-separated, and no
-prose. An internal node may carry one sentence of user story.
+One file per level-1 intent; its sub-intents are nested headings, verb +
+object at every level. A terminal intent is a heading with no sub-heading:
+it carries its fields on the lines right under the title, one field per
+line, values comma-separated, and no prose. An internal node may carry one
+sentence of user story.
 
-Fields of a leaf:
+Fields of a terminal intent:
   requires: / creates:  entities of the linked spec's Vocabulary (kebab-case)
   anchors:              paths or globs of the code and tests (implemented)
   acceptance:           observable criteria as a list (proposed)

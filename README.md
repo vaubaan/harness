@@ -50,7 +50,7 @@ Each pillar stores one kind of information the code cannot carry, and links to t
 | `docs/workflow/`  | What lives outside the repo: approvals, protections, secrets, languages.   | `ci.yml`, build scripts, pre-commit hook.                                                                  |
 | `docs/quality/`   | Optional. The code rules this team holds, and the deviations it accepts.   | The linter and formatter configs that enforce the mechanical part.                                         |
 | `docs/skills/`    | Optional. Domain know-how the agent should load.                           | Whatever the skill needs.                                                                                  |
-| `docs/journeys/`  | Optional. What the user does and wants, at every scale, anchored to the code. | Each leaf's `anchors:`; `requires:`/`creates:` name the spec vocabulary.                                |
+| `docs/journeys/`  | Optional. What the user does and wants, at every scale, anchored to the code. An OKR tree the repo keeps true. | Each terminal intent's `anchors:`; `requires:`/`creates:` name the spec vocabulary.                     |
 
 > [!IMPORTANT]
 > **One rule.** The only working rule the harness imposes, written into `AGENTS.md` for every engine: **understand the context, fill the gaps, code, update the context, commit.**
@@ -256,7 +256,7 @@ jobs:
 /doc-audit      # what is missing or stale
 /spec           # write the spec of a subsystem, guided
 /decision       # turn an implicit choice into an ADR
-/story          # a proposed leaf with acceptance criteria, before the code
+/story          # a proposed intent with acceptance criteria, before the code
 ```
 
 > [!NOTE]
@@ -299,7 +299,7 @@ jobs:
 | `/workflow`   | `workflow-writer`        | Documents CI, environments, PR process, branches, release, languages.                          |
 | `/readme`     | `readme-writer`          | Keeps the README in sync with the code.                                                        |
 | `/journey`    | `journey-writer`         | Writes the user journeys, one anchored node at a time; three questions on a greenfield scope, extraction from the code on a mature one. |
-| `/story`      | `journey-writer`         | Adds a `proposed` leaf with acceptance criteria to the right journey, before any code.         |
+| `/story`      | `journey-writer`         | Adds a `proposed` intent with acceptance criteria to the right journey, before any code.       |
 
 ### Linters
 
@@ -424,7 +424,7 @@ npx @vaubaan/harness update .                    # then commit the result
 
 ## Where this is going
 
-Shipped: the optional `docs/journeys/` pillar and its first typed context transaction, `/story`, which writes an increment as a `proposed` leaf before the code and passes it `implemented` when delivered. Decided, not shipped yet: the other transactions (`/refactor`, `/fix`), pointer checks per section, a token budget per file, and `/compact` to rewrite a context that has grown contradictions. The [spec](./docs/spec/coding-agent-harness.md) and the [decisions](./docs/decisions/) say what exists today.
+Shipped: the optional `docs/journeys/` pillar and its first typed context transaction, `/story`, which writes an increment as a `proposed` intent before the code and passes it `implemented` when delivered. Read it as an OKR tree: intents are objectives, acceptance criteria are key results, anchors are the initiatives, and progress is the share of `implemented` intents, computed from the repo. Decided, not shipped yet: the other transactions (`/refactor`, `/fix`), pointer checks per section, a token budget per file, and `/compact` to rewrite a context that has grown contradictions. The [spec](./docs/spec/coding-agent-harness.md) and the [decisions](./docs/decisions/) say what exists today.
 
 ## Documentation
 
