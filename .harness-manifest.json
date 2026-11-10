@@ -1,12 +1,12 @@
 {
   "version": "6",
-  "harnessVersion": "2.2.0",
+  "harnessVersion": "2.3.0",
   "engines": [
     "claude-code",
     "codex-cli",
     "opencode"
   ],
-  "renderedAt": "2026-11-10T12:16:57.772Z",
+  "renderedAt": "2026-11-10T12:56:17.385Z",
   "files": [
     ".agents/skills/decision-record-writer/SKILL.md",
     ".agents/skills/doc-audit/SKILL.md",
