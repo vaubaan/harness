@@ -13,7 +13,7 @@ export function readText(repoRoot: string, relativePath: string): string {
 }
 
 /**
- * A `tracks:` entry or a journey anchor: a path from the repo root, or a glob
+ * A `tracks:` entry or an intent anchor: a path from the repo root, or a glob
  * (any `*`) that must match at least one file.
  */
 export function trackedPathExists(repoRoot: string, pattern: string): boolean {

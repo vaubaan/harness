@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadHarness, loadOverrides, loadProjectSkills } from "../loader.js";
-import { loadJourneys } from "../parser/journey.js";
+import { loadIntentFiles } from "../parser/intent.js";
 import { type RenderOutput, render } from "../render.js";
 import { ENGINES, type Engine } from "../types.js";
 
@@ -58,7 +58,7 @@ export function planInit(args: RenderPlanArgs): { engines: Engine[]; output: Ren
   const overrides = args.overridesDir ? loadOverrides(args.overridesDir) : undefined;
   const projectSkills = loadProjectSkills(args.targetDir);
   const hasQualityDoc = existsSync(join(args.targetDir, QUALITY_DOC_PATH));
-  const journeys = loadJourneys(args.targetDir);
-  const output = render({ harness, engines, overrides, projectSkills, hasQualityDoc, journeys });
+  const intentFiles = loadIntentFiles(args.targetDir);
+  const output = render({ harness, engines, overrides, projectSkills, hasQualityDoc, intentFiles });
   return { engines, output };
 }

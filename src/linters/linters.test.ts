@@ -12,10 +12,10 @@ import { frontmatterTracks } from "./frontmatter-tracks.js";
 import { gitignoreHarness } from "./gitignore-harness.js";
 import { ALL_LINTERS, formatReportText, runLinters } from "./index.js";
 import type { LintIssue, LintReport } from "./index.js";
-import { journeyAnchors } from "./journey-anchors.js";
-import { journeyGraph } from "./journey-graph.js";
-import { journeySchema } from "./journey-schema.js";
-import { entitySlug, journeyVocabulary, vocabularyOf } from "./journey-vocabulary.js";
+import { intentAnchors } from "./intent-anchors.js";
+import { intentGraph } from "./intent-graph.js";
+import { intentSchema } from "./intent-schema.js";
+import { entitySlug, intentVocabulary, vocabularyOf } from "./intent-vocabulary.js";
 import { orphanDecisions } from "./orphan-decisions.js";
 import { qualitySchema } from "./quality-schema.js";
 import { readmePresence } from "./readme-presence.js";
@@ -473,10 +473,10 @@ describe("lint:gitignore-harness", () => {
       '.gitignore must not contain ".claude/": files the harness generates are committed',
     ]);
   });
-  it("flags an ignored journeys index: it is a generated file", () => {
-    repo.write(".gitignore", ".harness-overrides/\n.vaubaan/\n/docs/journeys/README.md\n");
+  it("flags an ignored intents index: it is a generated file", () => {
+    repo.write(".gitignore", ".harness-overrides/\n.vaubaan/\n/docs/intents/README.md\n");
     expect(gitignoreHarness.run(repo.root).map((i) => i.message)).toEqual([
-      '.gitignore must not contain "docs/journeys/README.md": files the harness generates are committed',
+      '.gitignore must not contain "docs/intents/README.md": files the harness generates are committed',
     ]);
   });
 });
@@ -700,14 +700,14 @@ describe("runLinters aggregator", () => {
     const report = runLinters(repo.root, { only: ["lint:readme-presence"] });
     expect(report.issues.every((i) => i.linter === "lint:readme-presence")).toBe(true);
   });
-  it("exposes ALL_LINTERS with 19 entries, the journey linters before generated-fresh, last", () => {
+  it("exposes ALL_LINTERS with 19 entries, the intent linters before generated-fresh, last", () => {
     expect(ALL_LINTERS).toHaveLength(19);
     expect(ALL_LINTERS.slice(13).map((l) => l.id)).toEqual([
       "lint:quality-schema",
-      "lint:journey-schema",
-      "lint:journey-anchors",
-      "lint:journey-vocabulary",
-      "lint:journey-graph",
+      "lint:intent-schema",
+      "lint:intent-anchors",
+      "lint:intent-vocabulary",
+      "lint:intent-graph",
       "lint:generated-fresh",
     ]);
   });
@@ -870,7 +870,7 @@ describe("lint:tracks-drift", () => {
   });
 });
 
-const JOURNEY_FM = `---
+const INTENT_FM = `---
 title: Ship a thing
 status: implemented
 actors: [maintainer]
@@ -892,106 +892,108 @@ const SPEC_WITH_VOCABULARY = `# System
 - **Not a term** — outside the section.
 `;
 
-function writeJourney(body: string, fm = JOURNEY_FM, name = "ship.md"): void {
+function writeIntentFile(body: string, fm = INTENT_FM, name = "ship.md"): void {
   repo.write(
-    `docs/journeys/${name}`,
+    `docs/intents/${name}`,
     `${fm}\n# Ship a thing\n\nAs a maintainer, I ship.\n\n${body}`,
   );
 }
 
-/** Line of the first heading of `body` in a journey written by `writeJourney`. */
+/** Line of the first heading of `body` in an intent file written by `writeIntentFile`. */
 const FIRST_NODE_LINE = 13;
 
-describe("lint:journey-schema", () => {
+describe("lint:intent-schema", () => {
   beforeEach(() => {
     repo.write("docs/spec/system.md", SPEC_WITH_VOCABULARY);
     repo.write("src/a.ts", "");
   });
 
-  it("is a no-op without docs/journeys/", () => {
-    expect(journeySchema.run(repo.root)).toEqual([]);
+  it("is a no-op without docs/intents/", () => {
+    expect(intentSchema.run(repo.root)).toEqual([]);
   });
-  it("passes a well-formed journey", () => {
-    writeJourney(
-      "## Build\n\nOne sentence of story.\n\n### Compile\n\nanchors: src/a.ts\nspec: ../spec/system.md#2-vision\n\n### Sign\n\nstatus: proposed\nacceptance:\n- It is signed.\n\n## Retire\n\nstatus: deprecated\nrequires: artifact\n",
+  it("passes a well-formed intent file", () => {
+    writeIntentFile(
+      "## Build\n\nOne sentence of statement.\n\n### Compile\n\nanchors: src/a.ts\nspec: ../spec/system.md#2-vision\n\n### Sign\n\nstatus: proposed\nacceptance:\n- It is signed.\n\n## Retire\n\nstatus: deprecated\nrequires: artifact\n",
     );
-    expect(journeySchema.run(repo.root)).toEqual([]);
+    expect(intentSchema.run(repo.root)).toEqual([]);
   });
   it("reports frontmatter errors", () => {
-    writeJourney(
+    writeIntentFile(
       "## Intent\n\nanchors: src/a.ts\n",
       "---\ntitle: X\nstatus: done\ntracks: [a]\n---\n",
     );
-    const messages = journeySchema.run(repo.root).map((i) => i.message);
+    const messages = intentSchema.run(repo.root).map((i) => i.message);
     expect(messages.some((m) => /`status`/.test(m))).toBe(true);
     expect(messages.some((m) => /tracks/.test(m))).toBe(true);
     expect(messages.some((m) => /`actors`/.test(m))).toBe(true);
   });
   it("reports unknown and derivable fields at their line", () => {
-    writeJourney("## Intent\n\nanchors: src/a.ts\nowner: me\nuses: db\n");
-    const issues = journeySchema.run(repo.root);
+    writeIntentFile("## Intent\n\nanchors: src/a.ts\nowner: me\nuses: db\n");
+    const issues = intentSchema.run(repo.root);
     expect(issues.map((i) => [i.line, i.message])).toEqual([
       [FIRST_NODE_LINE + 3, '"Intent": unknown field `owner:`'],
       [FIRST_NODE_LINE + 4, '"Intent": `uses:` is derivable, never declared'],
     ]);
   });
   it("reports a field of a terminal intent on an internal node", () => {
-    writeJourney("## Build\n\nanchors: src/a.ts\n\n### Compile\n\nanchors: src/a.ts\n");
-    const issues = journeySchema.run(repo.root);
+    writeIntentFile("## Build\n\nanchors: src/a.ts\n\n### Compile\n\nanchors: src/a.ts\n");
+    const issues = intentSchema.run(repo.root);
     expect(issues).toHaveLength(1);
     expect(issues[0]).toMatchObject({ severity: "error", line: FIRST_NODE_LINE + 2 });
     expect(issues[0]?.message).toMatch(/`anchors:` is a field of a terminal intent/);
   });
   it("reports a terminal intent without any field", () => {
-    writeJourney("## Intent\n\nJust prose.\n");
-    const issues = journeySchema.run(repo.root);
+    writeIntentFile("## Intent\n\nJust prose.\n");
+    const issues = intentSchema.run(repo.root);
     expect(issues.map((i) => [i.line, i.message])).toEqual([
       [FIRST_NODE_LINE, '"Intent": a terminal intent carries at least one field'],
     ]);
   });
   it("reports an implemented intent without anchors and a proposed intent without acceptance", () => {
-    writeJourney("## Built\n\nrequires: artifact\n\n## Planned\n\nstatus: proposed\nacceptance:\n");
-    const messages = journeySchema.run(repo.root).map((i) => i.message);
+    writeIntentFile(
+      "## Built\n\nrequires: artifact\n\n## Planned\n\nstatus: proposed\nacceptance:\n",
+    );
+    const messages = intentSchema.run(repo.root).map((i) => i.message);
     expect(messages).toEqual([
       '"Built": an `implemented` intent needs `anchors:`',
       '"Planned": a `proposed` intent needs `acceptance:` with at least one `- ` item',
     ]);
   });
   it("reports spec paths that do not resolve, frontmatter and node", () => {
-    writeJourney(
+    writeIntentFile(
       "## Intent\n\nanchors: src/a.ts\nspec: ../spec/missing.md#x\n",
-      JOURNEY_FM.replace("spec: ../spec/system.md", "spec: [../spec/system.md, ../spec/gone.md]"),
+      INTENT_FM.replace("spec: ../spec/system.md", "spec: [../spec/system.md, ../spec/gone.md]"),
     );
-    const messages = journeySchema.run(repo.root).map((i) => i.message);
+    const messages = intentSchema.run(repo.root).map((i) => i.message);
     expect(messages).toEqual([
       "frontmatter `spec` does not resolve: ../spec/gone.md",
       '"Intent": `spec:` does not resolve: ../spec/missing.md#x',
     ]);
   });
   it("reports an invalid node status", () => {
-    writeJourney("## Intent\n\nstatus: shipped\nanchors: src/a.ts\n");
-    const issues = journeySchema.run(repo.root);
+    writeIntentFile("## Intent\n\nstatus: shipped\nanchors: src/a.ts\n");
+    const issues = intentSchema.run(repo.root);
     expect(issues.map((i) => i.line)).toEqual([FIRST_NODE_LINE + 2]);
     expect(issues[0]?.message).toMatch(/invalid status `shipped`/);
   });
 });
 
-describe("lint:journey-anchors", () => {
-  it("is a no-op without docs/journeys/", () => {
-    expect(journeyAnchors.run(repo.root)).toEqual([]);
+describe("lint:intent-anchors", () => {
+  it("is a no-op without docs/intents/", () => {
+    expect(intentAnchors.run(repo.root)).toEqual([]);
   });
   it("passes when every anchor, path or glob, matches a file", () => {
     repo.write("src/a.ts", "");
     repo.write("src/lib/b.ts", "");
-    writeJourney("## Intent\n\nanchors: src/a.ts, src/lib/*.ts\n");
-    expect(journeyAnchors.run(repo.root)).toEqual([]);
+    writeIntentFile("## Intent\n\nanchors: src/a.ts, src/lib/*.ts\n");
+    expect(intentAnchors.run(repo.root)).toEqual([]);
   });
   it("reports each missing anchor at the node line, skipping deprecated nodes", () => {
     repo.write("src/a.ts", "");
-    writeJourney(
+    writeIntentFile(
       "## Intent\n\nanchors: src/a.ts, src/gone.ts, src/none/*.ts\n\n## Old\n\nstatus: deprecated\nanchors: src/removed.ts\n",
     );
-    const issues = journeyAnchors.run(repo.root);
+    const issues = intentAnchors.run(repo.root);
     expect(issues.map((i) => [i.severity, i.line, i.message])).toEqual([
       ["error", FIRST_NODE_LINE, '"Intent": anchor matches no file: src/gone.ts'],
       ["error", FIRST_NODE_LINE, '"Intent": anchor matches no file: src/none/*.ts'],
@@ -999,7 +1001,7 @@ describe("lint:journey-anchors", () => {
   });
 });
 
-describe("lint:journey-vocabulary", () => {
+describe("lint:intent-vocabulary", () => {
   it("slugs a term and reads only the Vocabulary section", () => {
     expect(entitySlug("Generated file")).toBe("generated-file");
     expect(entitySlug("  C++ / API key ")).toBe("c-api-key");
@@ -1013,18 +1015,18 @@ describe("lint:journey-vocabulary", () => {
     );
     expect(vocabularyOf("# S\n\n## Vision\n\n- **Term** — x\n")).toBeUndefined();
   });
-  it("is a no-op without docs/journeys/", () => {
-    expect(journeyVocabulary.run(repo.root)).toEqual([]);
+  it("is a no-op without docs/intents/", () => {
+    expect(intentVocabulary.run(repo.root)).toEqual([]);
   });
   it("passes when every entity is a Vocabulary term of a linked spec", () => {
     repo.write("docs/spec/system.md", SPEC_WITH_VOCABULARY);
-    writeJourney("## Intent\n\nrequires: source-file\ncreates: artifact, signed-artifact\n");
-    expect(journeyVocabulary.run(repo.root)).toEqual([]);
+    writeIntentFile("## Intent\n\nrequires: source-file\ncreates: artifact, signed-artifact\n");
+    expect(intentVocabulary.run(repo.root)).toEqual([]);
   });
   it("reports an entity outside the Vocabulary at the node line", () => {
     repo.write("docs/spec/system.md", SPEC_WITH_VOCABULARY);
-    writeJourney("## Intent\n\nrequires: source-files\ncreates: not-a-term\n");
-    const issues = journeyVocabulary.run(repo.root);
+    writeIntentFile("## Intent\n\nrequires: source-files\ncreates: not-a-term\n");
+    const issues = intentVocabulary.run(repo.root);
     expect(issues.map((i) => [i.severity, i.line])).toEqual([
       ["error", FIRST_NODE_LINE],
       ["error", FIRST_NODE_LINE],
@@ -1033,28 +1035,30 @@ describe("lint:journey-vocabulary", () => {
   });
   it("downgrades to one warning when no linked spec has a Vocabulary section", () => {
     repo.write("docs/spec/system.md", "# System\n\n## Vision\n\nText.\n");
-    writeJourney("## A\n\nrequires: x\n\n## B\n\ncreates: y\n");
-    const issues = journeyVocabulary.run(repo.root);
+    writeIntentFile("## A\n\nrequires: x\n\n## B\n\ncreates: y\n");
+    const issues = intentVocabulary.run(repo.root);
     expect(issues).toHaveLength(1);
-    expect(issues[0]).toMatchObject({ severity: "warning", file: "docs/journeys/ship.md" });
+    expect(issues[0]).toMatchObject({ severity: "warning", file: "docs/intents/ship.md" });
     expect(issues[0]?.message).toBe(
       "no Vocabulary section in docs/spec/system.md; entities not checked",
     );
   });
 });
 
-describe("lint:journey-graph", () => {
-  it("is a no-op without docs/journeys/", () => {
-    expect(journeyGraph.run(repo.root)).toEqual([]);
+describe("lint:intent-graph", () => {
+  it("is a no-op without docs/intents/", () => {
+    expect(intentGraph.run(repo.root)).toEqual([]);
   });
-  it("passes when every required entity is created by a terminal intent of any journey", () => {
-    writeJourney("## Make\n\ncreates: artifact\n", JOURNEY_FM, "a.md");
-    writeJourney("## Use\n\nrequires: artifact\n", JOURNEY_FM, "b.md");
-    expect(journeyGraph.run(repo.root)).toEqual([]);
+  it("passes when every required entity is created by a terminal intent of any intent file", () => {
+    writeIntentFile("## Make\n\ncreates: artifact\n", INTENT_FM, "a.md");
+    writeIntentFile("## Use\n\nrequires: artifact\n", INTENT_FM, "b.md");
+    expect(intentGraph.run(repo.root)).toEqual([]);
   });
   it("warns at the node line when nothing creates a required entity", () => {
-    writeJourney("## Use\n\nrequires: artifact, source-file\n\n## Make\n\ncreates: source-file\n");
-    const issues = journeyGraph.run(repo.root);
+    writeIntentFile(
+      "## Use\n\nrequires: artifact, source-file\n\n## Make\n\ncreates: source-file\n",
+    );
+    const issues = intentGraph.run(repo.root);
     expect(issues.map((i) => [i.severity, i.line, i.message])).toEqual([
       [
         "warning",
@@ -1065,12 +1069,12 @@ describe("lint:journey-graph", () => {
   });
 });
 
-describe("lint:tracks-drift on journeys", () => {
-  it("treats the union of a journey's anchors as its tracked paths", () => {
+describe("lint:tracks-drift on intent files", () => {
+  it("treats the union of an intent file's anchors as its tracked paths", () => {
     repo.initGit();
     repo.write("src/a.ts", "v0");
     repo.write("src/b.ts", "v0");
-    writeJourney("## A\n\nanchors: src/a.ts\n\n## B\n\nanchors: src/b.ts, src/a.ts\n");
+    writeIntentFile("## A\n\nanchors: src/a.ts\n\n## B\n\nanchors: src/b.ts, src/a.ts\n");
     repo.commit("init");
     for (let i = 1; i <= 6; i++) {
       repo.write("src/a.ts", `a${i}`);
@@ -1079,14 +1083,14 @@ describe("lint:tracks-drift on journeys", () => {
     }
     const issues = tracksDrift.run(repo.root);
     expect(issues).toHaveLength(1);
-    expect(issues[0]?.file).toBe("docs/journeys/ship.md");
+    expect(issues[0]?.file).toBe("docs/intents/ship.md");
     expect(issues[0]?.message).toContain("12 commits");
   });
-  it("ignores a journey without anchors and the generated index", () => {
+  it("ignores an intent file without anchors and the generated index", () => {
     repo.initGit();
     repo.write("src/a.ts", "v0");
-    writeJourney("## A\n\nstatus: proposed\nacceptance:\n- x\n");
-    repo.write("docs/journeys/README.md", "# Journeys\n\nanchors: src/a.ts\n");
+    writeIntentFile("## A\n\nstatus: proposed\nacceptance:\n- x\n");
+    repo.write("docs/intents/README.md", "# Intents\n\nanchors: src/a.ts\n");
     repo.commit("init");
     for (let i = 1; i <= 11; i++) {
       repo.write("src/a.ts", `a${i}`);
@@ -1094,14 +1098,14 @@ describe("lint:tracks-drift on journeys", () => {
     }
     expect(tracksDrift.run(repo.root)).toEqual([]);
   });
-  it("is selected by --pillar=journeys with the four journey linters", () => {
-    const ids = ALL_LINTERS.filter((l) => l.pillars.includes("journeys")).map((l) => l.id);
+  it("is selected by --pillar=intents with the four intent linters", () => {
+    const ids = ALL_LINTERS.filter((l) => l.pillars.includes("intents")).map((l) => l.id);
     expect(ids).toEqual([
       "lint:tracks-drift",
-      "lint:journey-schema",
-      "lint:journey-anchors",
-      "lint:journey-vocabulary",
-      "lint:journey-graph",
+      "lint:intent-schema",
+      "lint:intent-anchors",
+      "lint:intent-vocabulary",
+      "lint:intent-graph",
     ]);
   });
 });

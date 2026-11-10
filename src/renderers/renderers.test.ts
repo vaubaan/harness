@@ -74,6 +74,22 @@ describe("claudeCodeRenderer", () => {
     expect(result.files[0]?.content).toMatch(/trigger: \/doc-audit/);
   });
 
+  it("renders `required: false` on an optional argument, and nothing on a required one", () => {
+    const optional = CMD_SRC.replace(
+      "    default: all\n",
+      "    default: all\n    required: false\n",
+    );
+    const optionalContent = r.renderCmd(parseCmd("doc-audit.cmd.md", optional)).files[0]?.content;
+    expect(optionalContent).toContain(
+      "args:\n  - name: scope\n    type: enum\n    values:\n      - spec\n      - all\n    default: all\n    required: false\n",
+    );
+    expect(r.renderCmd(parseCmd("doc-audit.cmd.md", CMD_SRC)).files[0]?.content).not.toMatch(
+      /required/,
+    );
+    const opencode = getRenderer("opencode").renderCmd(parseCmd("doc-audit.cmd.md", optional));
+    expect(opencode.files[0]?.content).toMatch(/^---\ndescription: Audit doc scope\.\n---\n/);
+  });
+
   it("renders skill that requires multi-step (supported on claude-code)", () => {
     const skill = parseSkill("m.skill.md", SKILL_MULTI_STEP);
     const result = r.renderSkill(skill);

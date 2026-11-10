@@ -19,7 +19,7 @@ export const FORBIDDEN_GITIGNORE_ENTRIES: ReadonlyArray<string> = [
   ".agents/",
   ".opencode/",
   ".harness-manifest.json",
-  "docs/journeys/README.md",
+  "docs/intents/README.md",
 ];
 
 /** Non-empty, non-comment lines, with a leading `/` and a trailing `/` normalized away. */

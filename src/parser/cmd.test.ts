@@ -45,6 +45,25 @@ body
     expect(cmd.meta.args).toBeUndefined();
   });
 
+  it("accepts an optional argument, required by default", () => {
+    const src = (required: string) => `---
+id: intent
+trigger: /intent
+invokes_skill: intent-writer
+args:
+  - name: intent
+    type: string
+${required}description: Maps or extends the intent tree.
+---
+body
+`;
+    expect(parseCmd("/i.cmd.md", src("    required: false\n")).meta.args?.[0]?.required).toBe(
+      false,
+    );
+    expect(parseCmd("/i.cmd.md", src("")).meta.args?.[0]?.required).toBeUndefined();
+    expect(() => parseCmd("/i.cmd.md", src("    required: maybe\n"))).toThrow(ParseError);
+  });
+
   it("rejects trigger without leading slash", () => {
     const src = `---
 id: x

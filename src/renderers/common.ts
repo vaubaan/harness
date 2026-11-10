@@ -14,7 +14,7 @@ export interface UmbrellaExtras {
   availableCommands: ReadonlyArray<Cmd>;
   hasProjectSkills?: boolean;
   hasQualityDoc?: boolean;
-  hasJourneys?: boolean;
+  hasIntents?: boolean;
 }
 
 export interface RenderResult {
@@ -80,16 +80,14 @@ export function frontmatterDataForCmd(cmd: Cmd): Record<string, unknown> {
     description: cmd.meta.description,
   };
   if (cmd.meta.args && cmd.meta.args.length > 0) {
-    data.args = cmd.meta.args.map((a) => {
-      if (a.type === "enum") {
-        return a.default !== undefined
-          ? { name: a.name, type: a.type, values: a.values, default: a.default }
-          : { name: a.name, type: a.type, values: a.values };
-      }
-      return a.default !== undefined
-        ? { name: a.name, type: a.type, default: a.default }
-        : { name: a.name, type: a.type };
-    });
+    // `required` is rendered only when false: an argument is required by default.
+    data.args = cmd.meta.args.map((a) => ({
+      name: a.name,
+      type: a.type,
+      ...(a.type === "enum" ? { values: a.values } : {}),
+      ...(a.default !== undefined ? { default: a.default } : {}),
+      ...(a.required === false ? { required: false } : {}),
+    }));
   }
   return data;
 }
@@ -100,8 +98,8 @@ export function frontmatterDataForCmd(cmd: Cmd): Record<string, unknown> {
  * Everything project-specific lives in `README.md` and `docs/`.
  */
 export function buildUmbrellaBody(extras: UmbrellaExtras): string {
-  // One skill may be invoked by several commands (`/journey`, `/story`):
-  // list every trigger, in command order.
+  // One skill may be invoked by several commands: list every trigger, in
+  // command order.
   const triggersBySkill = new Map<string, string[]>();
   for (const c of extras.availableCommands) {
     const triggers = triggersBySkill.get(c.meta.invokes_skill) ?? [];
@@ -137,9 +135,9 @@ export function buildUmbrellaBody(extras: UmbrellaExtras): string {
           "- `docs/quality/code-quality.md` — the project's code-quality rules: mechanical checks, judgment rules, accepted deviations. Read it before writing or auditing code.",
         ]
       : []),
-    ...(extras.hasJourneys
+    ...(extras.hasIntents
       ? [
-          "- `docs/journeys/<journey>.md` — user intents and journeys, anchored to the code. `docs/journeys/README.md` is the generated index.",
+          "- `docs/intents/<intent>.md` — user intents, one tree per level-1 intent, anchored to the code. `docs/intents/README.md` is the generated index.",
         ]
       : []),
     "",
@@ -147,9 +145,9 @@ export function buildUmbrellaBody(extras: UmbrellaExtras): string {
     "",
     "The order is: **understand the docs → fill the gaps → code → update the docs → commit**. If the docs are silent or stale on something you change, fill the gap upfront with the doc-skill writers — not downstream, not after the fact.",
     "",
-    ...(extras.hasJourneys
+    ...(extras.hasIntents
       ? [
-          "- Visible change of behavior → a `proposed` intent first (`/story <intent>`), never the code first.",
+          "- Visible change of behavior → a `proposed` intent first (`/intent <verb + object>`), never the code first.",
         ]
       : []),
     "- Missing spec for a subsystem you touch → **do not code**, report the gap.",

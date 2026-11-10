@@ -9,19 +9,19 @@ export {
 } from "./schemas.js";
 export type { ParsedFile } from "./common.js";
 export {
-  JOURNEYS_DIR,
-  JOURNEYS_INDEX_PATH,
+  INTENTS_DIR,
+  INTENTS_INDEX_PATH,
   NODE_FIELDS,
   TERMINAL_FIELDS,
-  listJourneyFiles,
-  loadJourneys,
+  listIntentFiles,
+  loadIntentFiles,
   maskFencedCode,
-  parseJourney,
-  readJourneys,
-  type JourneyError,
-  type JourneyNode,
-  type JourneyParse,
+  parseIntentFile,
+  readIntentFiles,
+  type IntentError,
+  type IntentNode,
+  type IntentFile,
   type NodeField,
-  type ParsedJourney,
-} from "./journey.js";
-export { JOURNEY_STATUSES, type JourneyFrontmatter, type JourneyStatus } from "./schemas.js";
+  type ParsedIntentFile,
+} from "./intent.js";
+export { INTENT_STATUSES, type IntentFrontmatter, type IntentStatus } from "./schemas.js";

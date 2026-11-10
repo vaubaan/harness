@@ -12,7 +12,7 @@ args:
       - tests
       - workflow
       - readme
-      - journeys
+      - intents
       - all
     default: all
 ---

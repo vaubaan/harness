@@ -132,7 +132,7 @@ describe("lint integration on synthetic repos", () => {
     expect(report.issues.every((i) => i.linter === "lint:spec-tech-agnostic")).toBe(true);
   });
 
-  describe("optional docs/journeys/ pillar", () => {
+  describe("optional docs/intents/ pillar", () => {
     const SPEC = `# System
 
 ## 0. Vocabulary
@@ -145,7 +145,7 @@ describe("lint integration on synthetic repos", () => {
 Build things.
 `;
 
-    const JOURNEY = `---
+    const INTENT_FILE = `---
 title: Ship a thing
 status: implemented
 actors: [maintainer]
@@ -177,66 +177,64 @@ acceptance:
 - The artifact is signed.
 `;
 
-    function bootstrapWithJourney(): void {
+    function bootstrapWithIntentFile(): void {
       bootstrapFullPassingRepo();
       write("docs/spec/system.md", SPEC);
       write("src/write.ts", "");
       write("src/build.ts", "");
-      write("docs/journeys/ship.md", JOURNEY);
+      write("docs/intents/ship.md", INTENT_FILE);
     }
 
-    function journeyIssues(): Array<{ linter: string; severity: string }> {
-      return runLinters(repo).issues.filter((i) => i.linter.startsWith("lint:journey-"));
+    function intentIssues(): Array<{ linter: string; severity: string }> {
+      return runLinters(repo).issues.filter((i) => i.linter.startsWith("lint:intent-"));
     }
 
-    it("stays green with a journey anchored to the code and a spec with a Vocabulary", () => {
-      bootstrapWithJourney();
+    it("stays green with an intent file anchored to the code and a spec with a Vocabulary", () => {
+      bootstrapWithIntentFile();
       const report = runLinters(repo);
       if (report.issues.length) console.log(JSON.stringify(report.issues, null, 2));
       expect(report.issues).toEqual([]);
     });
 
-    it("lint:journey-schema fails on a broken grammar", () => {
-      bootstrapWithJourney();
-      write("docs/journeys/ship.md", JOURNEY.replace("creates: source-file\n", "uses: disk\n"));
+    it("lint:intent-schema fails on a broken grammar", () => {
+      bootstrapWithIntentFile();
+      write("docs/intents/ship.md", INTENT_FILE.replace("creates: source-file\n", "uses: disk\n"));
       const report = runLinters(repo);
       expect(report.summary.pass).toBe(false);
-      expect(journeyIssues().map((i) => i.linter)).toContain("lint:journey-schema");
+      expect(intentIssues().map((i) => i.linter)).toContain("lint:intent-schema");
     });
 
-    it("lint:journey-anchors fails on an anchor that matches no file", () => {
-      bootstrapWithJourney();
-      write("docs/journeys/ship.md", JOURNEY.replace("src/write.ts", "src/gone.ts"));
+    it("lint:intent-anchors fails on an anchor that matches no file", () => {
+      bootstrapWithIntentFile();
+      write("docs/intents/ship.md", INTENT_FILE.replace("src/write.ts", "src/gone.ts"));
       expect(runLinters(repo).summary.pass).toBe(false);
-      expect(journeyIssues().map((i) => i.linter)).toEqual(["lint:journey-anchors"]);
+      expect(intentIssues().map((i) => i.linter)).toEqual(["lint:intent-anchors"]);
     });
 
-    it("lint:journey-vocabulary fails on an entity the spec does not define", () => {
-      bootstrapWithJourney();
-      write("docs/journeys/ship.md", JOURNEY.replace("creates: artifact", "creates: binary"));
+    it("lint:intent-vocabulary fails on an entity the spec does not define", () => {
+      bootstrapWithIntentFile();
+      write("docs/intents/ship.md", INTENT_FILE.replace("creates: artifact", "creates: binary"));
       expect(runLinters(repo).summary.pass).toBe(false);
-      expect(journeyIssues().map((i) => [i.linter, i.severity])).toContainEqual([
-        "lint:journey-vocabulary",
+      expect(intentIssues().map((i) => [i.linter, i.severity])).toContainEqual([
+        "lint:intent-vocabulary",
         "error",
       ]);
     });
 
-    it("lint:journey-graph warns, without failing, when nothing creates a required entity", () => {
-      bootstrapWithJourney();
-      write("docs/journeys/ship.md", JOURNEY.replace("creates: source-file\n", ""));
+    it("lint:intent-graph warns, without failing, when nothing creates a required entity", () => {
+      bootstrapWithIntentFile();
+      write("docs/intents/ship.md", INTENT_FILE.replace("creates: source-file\n", ""));
       const report = runLinters(repo);
       expect(report.summary.pass).toBe(true);
-      expect(journeyIssues()).toMatchObject([
-        { linter: "lint:journey-graph", severity: "warning" },
-      ]);
+      expect(intentIssues()).toMatchObject([{ linter: "lint:intent-graph", severity: "warning" }]);
     });
 
-    it("--pillar=journeys runs only the journey linters and tracks-drift", () => {
-      bootstrapWithJourney();
+    it("--pillar=intents runs only the intent linters and tracks-drift", () => {
+      bootstrapWithIntentFile();
       write("docs/spec/x.md", "Uses React heavily.\n");
-      write("docs/journeys/ship.md", JOURNEY.replace("src/write.ts", "src/gone.ts"));
-      const report = runLinters(repo, { pillar: "journeys" });
-      expect(report.issues.map((i) => i.linter)).toEqual(["lint:journey-anchors"]);
+      write("docs/intents/ship.md", INTENT_FILE.replace("src/write.ts", "src/gone.ts"));
+      const report = runLinters(repo, { pillar: "intents" });
+      expect(report.issues.map((i) => i.linter)).toEqual(["lint:intent-anchors"]);
     });
   });
 });

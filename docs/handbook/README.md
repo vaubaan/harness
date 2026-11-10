@@ -9,6 +9,6 @@ What the code of `@vaubaan/harness` does not say: entry points, cross-file invar
 - [Overrides loading](./overrides-loading.md) — `.harness-overrides/` merge order and its traps.
 - [Project skills](./project-skills.md) — `docs/skills/` rendered alongside the built-in skills.
 - [Quality pillar](./quality-pillar.md) — the optional `docs/quality/code-quality.md`.
-- [Journeys pillar](./journeys-pillar.md) — the optional `docs/journeys/`: grammar, linters, the generated index.
+- [Intents pillar](./intents-pillar.md) — the optional `docs/intents/`: grammar, linters, the generated index.
 - [File lifecycle](./uninstall.md) — path checks, `init` re-runs, `uninstall`.
 - [Updating a project](./project-update.md) — manifest migrations, backup and rollback, 1.x leftovers.

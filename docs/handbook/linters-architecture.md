@@ -9,9 +9,9 @@ tracks:
   - src/linters/tracks-drift.ts
   - src/linters/gitignore-harness.ts
   - src/linters/generated-fresh.ts
-  - src/linters/journey-*.ts
+  - src/linters/intent-*.ts
   - src/cli/check.ts
-last_reviewed: 2026-11-09
+last_reviewed: 2026-11-10
 ---
 
 # Linters architecture — handbook
@@ -32,13 +32,13 @@ The mechanical linters run by `vaubaan-harness lint`, in CI and in a git pre-com
 - Only errors fail the run (`pass = errors === 0`); warnings never change the exit code. A crashing linter becomes one `<internal>` error and the others still run.
 - The JSON report carries `version: 1`; changing its shape means bumping it.
 - `check` and `lint:gitignore-harness` share the same gitignore lists (`missingGitignoreEntries`, `forbiddenGitignoreEntries`): change them in one place.
-- `tracks:` entries and journey anchors resolve the same way, through `trackedPathExists` in `util.ts`: a path from the repo root, or a glob that must match a file.
-- An optional pillar's linters are no-ops when its directory is absent (`quality-schema`, the `journey-*` linters, see [journeys pillar](./journeys-pillar.md)).
+- `tracks:` entries and intent anchors resolve the same way, through `trackedPathExists` in `util.ts`: a path from the repo root, or a glob that must match a file.
+- An optional pillar's linters are no-ops when its directory is absent (`quality-schema`, the `intent-*` linters, see [intents pillar](./intents-pillar.md)).
 
 ## Traps
 
 - `listMarkdown` skips every `README.md`: pillar READMEs are never linted for content or `tracks:`. Use `listAllMarkdown` when a linter must see them.
-- `tracks-drift` also covers `docs/journeys/`, where the tracked paths are the union of a journey's anchors. It measures from the doc's last **commit**, not from `last_reviewed` (no linter reads that field), and sums commits per tracked file: one commit touching five tracked files counts five. A per-doc `driftThreshold:` raises or lowers the default of 10.
+- `tracks-drift` also covers `docs/intents/`, where the tracked paths are the union of an intent file's anchors. It measures from the doc's last **commit**, not from `last_reviewed` (no linter reads that field), and sums commits per tracked file: one commit touching five tracked files counts five. A per-doc `driftThreshold:` raises or lowers the default of 10.
 - The git helpers swallow errors: outside a git repo, or in a shallow CI clone, `tracks-drift` silently reports nothing.
 - `generated-fresh` ignores `preservedFiles` and the paths 1.x released (`RELEASED_PATHS`); a file the manifest lists but no longer renders is reported as stale only if it still exists.
 - `lint.ignore` in the cosmiconfig `harness` config (e.g. `package.json`) only widens the glob ignores of `cross-links` and `orphan-decisions`; it does not silence a linter.

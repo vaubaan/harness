@@ -5,8 +5,20 @@ const MANAGED_FILES = new Set([
   "AGENTS.md",
   "CLAUDE.md",
   ".harness-manifest.json",
-  // Index of the optional journeys pillar, rendered while a journey exists.
+  // Index of the optional intents pillar, rendered while an intent file exists.
+  "docs/intents/README.md",
+  // Its 2.2 location, kept managed so `update` can remove it (see MOVED_PATHS).
   "docs/journeys/README.md",
+]);
+
+/**
+ * Generated files whose path changed. A manifest entry at the old path
+ * follows the file to its new path once the project moved it; while the
+ * file still sits at the old path, `update` removes it there.
+ */
+export const MOVED_PATHS: ReadonlyMap<string, string> = new Map([
+  // 2.3: the journeys pillar became the intents pillar.
+  ["docs/journeys/README.md", "docs/intents/README.md"],
 ]);
 
 /**

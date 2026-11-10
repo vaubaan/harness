@@ -7,10 +7,10 @@ tracks:
   - src/renderers/codex-cli.ts
   - src/renderers/opencode.ts
   - src/renderers/index.ts
-  - src/renderers/journeys-index.ts
+  - src/renderers/intents-index.ts
   - src/parser/schemas.ts
   - src/parser/common.ts
-last_reviewed: 2026-11-09
+last_reviewed: 2026-11-10
 ---
 
 # Renderer pipeline — handbook
@@ -25,8 +25,8 @@ How `*.skill.md` / `*.cmd.md` sources become each engine's native files plus `AG
 
 ## Invariants
 
-- Parse → render is pure: `render()` never touches the disk; `planInit` reads the project's skills, quality doc and journeys and passes them in. Writes, tracking and conflicts belong to the CLI planner ([file lifecycle](./uninstall.md)).
-- Rendered output is skills, commands, `AGENTS.md`, with claude-code only `CLAUDE.md` as the single `@AGENTS.md` line, and, while the project has a journey, `docs/journeys/README.md` ([journeys pillar](./journeys-pillar.md)). No agent, hook, MCP or settings file.
+- Parse → render is pure: `render()` never touches the disk; `planInit` reads the project's skills, quality doc and intent files and passes them in. Writes, tracking and conflicts belong to the CLI planner ([file lifecycle](./uninstall.md)).
+- Rendered output is skills, commands, `AGENTS.md`, with claude-code only `CLAUDE.md` as the single `@AGENTS.md` line, and, while the project has an intent file, `docs/intents/README.md` ([intents pillar](./intents-pillar.md)). No agent, hook, MCP or settings file.
 - Both pivot schemas are `.strict()`: an unknown frontmatter key is a parse error, so a typo fails the build instead of silently dropping a skill.
 - All three engines get YAML frontmatter from one serializer; skills emit `name` (= directory name, per the Agent Skills format) and `description`, OpenCode commands only `description`.
 

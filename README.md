@@ -50,7 +50,7 @@ Each pillar stores one kind of information the code cannot carry, and links to t
 | `docs/workflow/`  | What lives outside the repo: approvals, protections, secrets, languages.   | `ci.yml`, build scripts, pre-commit hook.                                                                  |
 | `docs/quality/`   | Optional. The code rules this team holds, and the deviations it accepts.   | The linter and formatter configs that enforce the mechanical part.                                         |
 | `docs/skills/`    | Optional. Domain know-how the agent should load.                           | Whatever the skill needs.                                                                                  |
-| `docs/journeys/`  | Optional. What the user does and wants, at every scale, anchored to the code. An OKR tree the repo keeps true. | Each terminal intent's `anchors:`; `requires:`/`creates:` name the spec vocabulary.                     |
+| `docs/intents/`   | Optional. What the user does and wants, at every scale: one tree of intents, anchored to the code. An OKR tree the repo keeps true. | Each terminal intent's `anchors:`; `requires:`/`creates:` name the spec vocabulary.                     |
 
 > [!IMPORTANT]
 > **One rule.** The only working rule the harness imposes, written into `AGENTS.md` for every engine: **understand the context, fill the gaps, code, update the context, commit.**
@@ -76,7 +76,7 @@ acme-billing/
     ├── tests/e2e-tests.md
     ├── workflow/coding-workflow.md
     ├── quality/code-quality.md    # optional
-    ├── journeys/                  # optional: send-an-invoice.md, README.md (rendered index)
+    ├── intents/                   # optional: send-an-invoice.md, README.md (rendered index)
     └── skills/tax-rules.skill.md  # optional
 ```
 
@@ -253,10 +253,10 @@ jobs:
 **4. Open your agent and let it fill the gaps.**
 
 ```
-/doc-audit      # what is missing or stale
-/spec           # write the spec of a subsystem, guided
-/decision       # turn an implicit choice into an ADR
-/story          # a proposed intent with acceptance criteria, before the code
+/doc-audit                # what is missing or stale
+/spec                     # write the spec of a subsystem, guided
+/decision                 # turn an implicit choice into an ADR
+/intent <verb + object>   # a proposed intent with acceptance criteria, before the code
 ```
 
 > [!NOTE]
@@ -286,7 +286,7 @@ jobs:
 
 ### Skills
 
-**9 skills**, each with a slash command. A skill never says *when* to do something. It says *how* to write or check one pillar.
+**9 skills, 9 commands**: each skill has a slash command. A skill never says *when* to do something. It says *how* to write or check one pillar.
 
 | Command       | Skill                    | What it does                                                                                   |
 | ------------- | ------------------------ | ---------------------------------------------------------------------------------------------- |
@@ -298,8 +298,7 @@ jobs:
 | `/test-plan`  | `test-plan-writer`       | Keeps integration and e2e test plans up to date.                                               |
 | `/workflow`   | `workflow-writer`        | Documents CI, environments, PR process, branches, release, languages.                          |
 | `/readme`     | `readme-writer`          | Keeps the README in sync with the code.                                                        |
-| `/journey`    | `journey-writer`         | Writes the user journeys, one anchored node at a time; three questions on a greenfield scope, extraction from the code on a mature one. |
-| `/story`      | `journey-writer`         | Adds a `proposed` intent with acceptance criteria to the right journey, before any code.       |
+| `/intent`     | `intent-writer`          | `/intent <verb + object>` adds a `proposed` intent with acceptance criteria, before any code. Without an argument, maps or extends the tree of intents, one anchored node at a time: three questions on a greenfield scope, extraction from the code on a mature one. |
 
 ### Linters
 
@@ -320,7 +319,7 @@ jobs:
 | `gitignore-harness`                  | Overrides and reports are ignored; generated files are not.         |
 | `generated-fresh`                    | Committed generated files match the current render.                 |
 | `quality-schema`                     | `docs/quality/code-quality.md` has its sections, if you use it.     |
-| `journey-schema`, `journey-anchors`, `journey-vocabulary`, `journey-graph` | Optional `docs/journeys/`: node grammar, anchors exist, entities are spec vocabulary, nothing requires what nothing creates. |
+| `intent-schema`, `intent-anchors`, `intent-vocabulary`, `intent-graph` | Optional `docs/intents/`: node grammar, anchors exist, entities are spec vocabulary, nothing requires what nothing creates. |
 
 </details>
 
@@ -424,7 +423,7 @@ npx @vaubaan/harness update .                    # then commit the result
 
 ## Where this is going
 
-Shipped: the optional `docs/journeys/` pillar and its first typed context transaction, `/story`, which writes an increment as a `proposed` intent before the code and passes it `implemented` when delivered. Read it as an OKR tree: intents are objectives, acceptance criteria are key results, anchors are the initiatives, and progress is the share of `implemented` intents, computed from the repo. Decided, not shipped yet: the other transactions (`/refactor`, `/fix`), pointer checks per section, a token budget per file, and `/compact` to rewrite a context that has grown contradictions. The [spec](./docs/spec/coding-agent-harness.md) and the [decisions](./docs/decisions/) say what exists today.
+Shipped: the optional `docs/intents/` pillar, one tree of intents, and its first typed context transaction, `/intent <verb + object>`, which writes an increment as a `proposed` intent before the code and passes it `implemented` when delivered. Read it as an OKR tree: intents are objectives, acceptance criteria are key results, anchors are the initiatives, and progress is the share of `implemented` intents, computed from the repo. Decided, not shipped yet: the other transactions (`/refactor`, `/fix`), pointer checks per section, a token budget per file, and `/compact` to rewrite a context that has grown contradictions. The [spec](./docs/spec/coding-agent-harness.md) and the [decisions](./docs/decisions/) say what exists today.
 
 ## Documentation
 

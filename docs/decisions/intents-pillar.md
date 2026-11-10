@@ -1,11 +1,11 @@
 ---
-title: An optional journeys pillar holds user intents anchored to the code
+title: An optional intents pillar holds user intents anchored to the code
 status: accepted
 date: 2026-11-09
 author: Vaubaan core
 ---
 
-# An optional journeys pillar holds user intents anchored to the code
+# An optional intents pillar holds user intents anchored to the code
 
 ## Context
 
@@ -13,23 +13,23 @@ The six pillars say what the project wants, what it settled, how it works,
 how it is tested and shipped. None says what the user does and wants at every
 scale, from a level-1 intent to the atomic activity a handler realizes, nor
 where a new behavior is specified before it is coded. The README promised
-typed transactions (`/story`) and a `docs/todo/` pillar for increments; the
+typed transactions (now `/intent`) and a `docs/todo/` pillar for increments; the
 spec stays tech-agnostic and cannot carry pointers to code. The harness reads
 only Markdown, git and the existence of files, which is what keeps it
-agnostic to the project's language.
+agnostic to the project's language. Renamed from *journeys* on 2026-11-10, before any project adopted it: the pillar is one tree of intents and the word implied a sequence of steps.
 
 ## Decision
 
-An optional pillar `docs/journeys/`: one Markdown file per level-1 user
+An optional pillar `docs/intents/`: one Markdown file per level-1 user
 intent, nested headings for its sub-intents, terminal intents anchored to the
 code with `anchors:` (the `tracks:` syntax) and linked to the spec vocabulary with
 `requires:` / `creates:`. A node is born `proposed` with acceptance criteria,
 becomes `implemented` in the pull request that delivers it, never goes back.
 Four mechanical linters check the form and the anchors; `lint:tracks-drift`
 covers the anchors' freshness. The only derived file, the index
-`docs/journeys/README.md`, is rendered by `init` and `update` like `AGENTS.md`
+`docs/intents/README.md`, is rendered by `init` and `update` like `AGENTS.md`
 and covered by `lint:generated-fresh`. The harness parses no source code.
-Contract: [spec §9.1.3](../spec/coding-agent-harness.md#913-journeys).
+Contract: [spec §9.1.3](../spec/coding-agent-harness.md#913-intents).
 
 ## Consequences
 
@@ -41,7 +41,7 @@ Contract: [spec §9.1.3](../spec/coding-agent-harness.md#913-journeys).
   guards, orphan entry points as a CI gate) or to analyze the graph
   (dominance, quotient graphs, a viewer) is outside the pillar and needs its
   own decision.
-- `lint:spec-tech-agnostic` does not apply to `docs/journeys/`: anchors are
+- `lint:spec-tech-agnostic` does not apply to `docs/intents/`: anchors are
   code paths by construction.
 
 ## Rejected alternatives
@@ -52,7 +52,7 @@ Loses the anchors: the spec is tech-agnostic and the linter forbids paths.
 ### One file per node
 Hundreds of files; the tree and its edges become unreadable in a pull request.
 
-### YAML or JSON journeys
+### YAML or JSON intent files
 Outside the Markdown + frontmatter convention every pillar and skill follows.
 
 ### A separate `docs/todo/` pillar
