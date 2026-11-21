@@ -1,5 +1,5 @@
 ---
-name: harness-zero
+name: harness-guide
 description: |
   How to work in a project harnessed by @vaubaan/harness: the reading
   order, which skill answers which request, what to refuse, how to end a
@@ -12,7 +12,7 @@ tags:
   - onboarding
 ---
 
-# Harness Zero
+# Harness Guide
 
 You work in a project harnessed by `@vaubaan/harness`. The repo holds two
 databases: the **code** (sources, tests, configs) and the **context**

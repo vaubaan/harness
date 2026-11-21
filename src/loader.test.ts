@@ -14,7 +14,7 @@ describe("loadHarness on the stock harness in repo root", () => {
   it("loads the 11 doc skills and the 2 harness skills (no code-quality skill)", () => {
     expect(harness.skills.length).toBe(13);
     expect(harness.skills.map((s) => s.meta.id)).toEqual(
-      expect.arrayContaining(["harness-zero", "harness-upgrade"]),
+      expect.arrayContaining(["harness-guide", "harness-upgrade"]),
     );
     expect(harness.skills.map((s) => s.meta.id)).not.toContain("clean-code-guardian");
   });

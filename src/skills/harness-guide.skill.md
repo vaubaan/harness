@@ -1,5 +1,5 @@
 ---
-name: harness-zero
+id: harness-guide
 description: |
   How to work in a project harnessed by @vaubaan/harness: the reading
   order, which skill answers which request, what to refuse, how to end a
@@ -7,12 +7,11 @@ description: |
   (`npx @vaubaan/harness add <pillar>`). Load it at the start of any
   task when you do not know the project's docs, when a doc you would
   need is missing, or when the project outgrows its current docs.
-tags:
-  - harness
-  - onboarding
+engines: [claude-code, codex-cli, opencode]
+tags: [harness, onboarding]
 ---
 
-# Harness Zero
+# Harness Guide
 
 You work in a project harnessed by `@vaubaan/harness`. The repo holds two
 databases: the **code** (sources, tests, configs) and the **context**

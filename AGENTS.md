@@ -12,7 +12,7 @@ This file describes **how to work in this project**. The **business context** (w
 - `docs/workflow/coding-workflow.md` — CI, branches, PR, release. How this team works: follow it.
 - `docs/intents/<intent>.md` — user intents, one tree per level-1 intent, anchored to the code. `docs/intents/README.md` is the generated index.
 
-Not in this project yet: `quality`, `profiles`. A pillar is added the day the project needs it, with `npx @vaubaan/harness add <pillar>`; the `harness-zero` skill says when each one is worth it. Propose it to the human, never create the folder unasked.
+Not in this project yet: `quality`, `profiles`. A pillar is added the day the project needs it, with `npx @vaubaan/harness add <pillar>`; the `harness-guide` skill says when each one is worth it. Propose it to the human, never create the folder unasked.
 
 ## Doc-first
 
@@ -37,8 +37,8 @@ The files the harness generates (`AGENTS.md`, `CLAUDE.md`, the `.claude/`, `.age
 - `doc-audit` (`/doc-audit`) — Audits the completeness and freshness of the docs: the README, the
 - `drift-detector` (`/drift`) — Detects code ↔ doc drift. For each doc file that declares a
 - `handbook-writer` (`/handbook`) — Writes or updates `docs/handbook/<slug>.md`: only what an agent cannot
+- `harness-guide` — How to work in a project harnessed by @vaubaan/harness: the reading
 - `harness-upgrade` (`/harness-upgrade`) — Moves a project to a newer version of @vaubaan/harness: pins the
-- `harness-zero` — How to work in a project harnessed by @vaubaan/harness: the reading
 - `intent-writer` (`/intent`) — Writes or updates `docs/intents/<slug>.md`: the user intents of
 - `lesson-miner` (`/lessons`) — Finds the small patches that reviews keep asking for, in the repo
 - `readme-writer` (`/readme`) — Maintains `README.md` at the repo root. Syncs the links to the other

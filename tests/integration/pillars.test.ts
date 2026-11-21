@@ -15,8 +15,8 @@ const README = "# Project\n\n## What is this\n\nIntro.\n\n## Quick start\n\nInst
 const ALWAYS = [
   "canvas-review",
   "doc-audit",
+  "harness-guide",
   "harness-upgrade",
-  "harness-zero",
   "lesson-miner",
   "readme-writer",
   "spec-writer",
@@ -87,7 +87,7 @@ describe("a project that just started: a README alone", () => {
     expect(umbrella).toContain(
       "Not in this project yet: `decisions`, `handbook`, `tests`, `workflow`, `quality`, `intents`, `profiles`.",
     );
-    expect(umbrella).toMatch(/npx @vaubaan\/harness add <pillar>.*`harness-zero` skill/);
+    expect(umbrella).toMatch(/npx @vaubaan\/harness add <pillar>.*`harness-guide` skill/);
     expect(umbrella).toContain("- Missing spec for a subsystem you touch");
   });
 });

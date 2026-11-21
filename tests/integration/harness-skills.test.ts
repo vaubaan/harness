@@ -11,8 +11,8 @@ const skill = (id: string) => {
   return found;
 };
 
-describe("harness-zero", () => {
-  const zero = skill("harness-zero");
+describe("harness-guide", () => {
+  const zero = skill("harness-guide");
 
   it("is always rendered: it serves no pillar in particular", () => {
     expect(zero.meta.pillars).toBeUndefined();

@@ -37,7 +37,7 @@ How `*.skill.md` / `*.cmd.md` sources become each engine's native files plus `AG
 
 - OpenCode also reads `.claude/skills/` and `.agents/skills/`: `render()` processes it last and omits its own copy of a skill another rendered engine already exposes. Its **command** is still written to `.opencode/commands/`.
 - Codex renders no command at all (custom prompts are deprecated): the skill is invoked by name.
-- `buildUmbrellaBody` holds a line per active pillar and one sentence naming the inactive ones; that sentence mentions `harness-zero` only while the skill is exposed (an override may disable it).
+- `buildUmbrellaBody` holds a line per active pillar and one sentence naming the inactive ones; that sentence mentions `harness-guide` only while the skill is exposed (an override may disable it).
 - Any change to `buildUmbrellaBody` changes the committed `AGENTS.md` of every harnessed project, this repo included: run `update .` here, and expect `lint:generated-fresh` to fail downstream until they update.
 
 ## Debug

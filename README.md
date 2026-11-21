@@ -697,7 +697,7 @@ A dedicated `/compact` is decided and not shipped: it is a `proposed` intent, "R
 
 How a coding agent should react to what the user asks, in a harnessed project. It does not replace `docs/workflow/`, which says how the team organizes itself, nor the skills, which say how to write each pillar. It says which reflex to trigger, and when to trigger none.
 
-Your agent does not need this page: the `harness-zero` skill, rendered into every project, carries the same reflexes, plus the signs that the project is ready for a pillar it does not have yet. A step below that names a pillar the project has not added is skipped, or the agent proposes the pillar.
+Your agent does not need this page: the `harness-guide` skill, rendered into every project, carries the same reflexes, plus the signs that the project is ready for a pillar it does not have yet. A step below that names a pillar the project has not added is skipped, or the agent proposes the pillar.
 
 <a name="before-any-task-the-reading-order"></a>
 <details>
@@ -796,7 +796,7 @@ Warning sign: if finishing requires touching a generated file, disabling a linte
 
 | Command            | Skill                    | Rendered with                      | What it does                                                                                   |
 | ------------------ | ------------------------ | ---------------------------------- | ---------------------------------------------------------------------------------------------- |
-| —                  | `harness-zero`           | always                             | How to work in a harnessed project: reading order, which skill for which request, what to refuse, and when to propose a pillar the project does not have yet. |
+| —                  | `harness-guide`           | always                             | How to work in a harnessed project: reading order, which skill for which request, what to refuse, and when to propose a pillar the project does not have yet. |
 | `/harness-upgrade` | `harness-upgrade`        | always                             | Moves the project to a newer harness version, with the migration notes of every version crossed. |
 | `/doc-audit`       | `doc-audit`              | always                             | Audits completeness and freshness of the active pillars.                                       |
 | `/spec`            | `spec-writer`            | always                             | Writes a tech-agnostic spec, progressively: three questions to start, one section at a time after. |
@@ -933,7 +933,7 @@ npx @vaubaan/harness update .                    # then commit the result
 
 **Do I have to write all of this before I can code?** No. A README is enough to start, and the lint passes on it. The spec comes next; every other pillar waits until you add it. The harness never asks for a document about something your project does not have yet.
 
-**How does the agent know when to suggest a pillar?** `AGENTS.md` names the pillars the project has not added, in one line, and the `harness-zero` skill holds the sign for each: a choice costly to reverse for `decisions`, a trap explained twice for `handbook`, a first release for `workflow`. The agent proposes once, when it sees the sign; you say yes or no.
+**How does the agent know when to suggest a pillar?** `AGENTS.md` names the pillars the project has not added, in one line, and the `harness-guide` skill holds the sign for each: a choice costly to reverse for `decisions`, a trap explained twice for `handbook`, a first release for `workflow`. The agent proposes once, when it sees the sign; you say yes or no.
 
 **Are profiles the same as personas?** A profile is a kind of *user* your product serves, with pains and gains backed by research. The personas the harness does not ship are *agent roles* (reviewer, planner). Different things; hence the different word.
 

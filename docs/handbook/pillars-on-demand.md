@@ -8,7 +8,7 @@ tracks:
   - src/renderers/profiles-index.ts
   - src/linters/profile-schema.ts
   - src/linters/intent-profiles.ts
-  - src/skills/harness-zero.skill.md
+  - src/skills/harness-guide.skill.md
   - src/skills/harness-upgrade.skill.md
   - tests/integration/add.test.ts
   - tests/integration/pillars.test.ts
@@ -24,12 +24,12 @@ What makes a pillar active, how `add` activates one, and the profiles pillar tha
 - [`src/pillars.ts`](../../src/pillars.ts) — `PILLARS`, the one registry: folder, core or not, starter files, next step. `activePillars(root)` is the only definition of "active".
 - [`src/cli/add.ts`](../../src/cli/add.ts) — `addCommand`: starter files, then `updateCommand`.
 - [`src/parser/profile.ts`](../../src/parser/profile.ts) — the profile grammar; [`src/renderers/profiles-index.ts`](../../src/renderers/profiles-index.ts) — the fit, as text.
-- [`src/skills/harness-zero.skill.md`](../../src/skills/harness-zero.skill.md) — the signs that a project needs a pillar; the only place that says *when*.
+- [`src/skills/harness-guide.skill.md`](../../src/skills/harness-guide.skill.md) — the signs that a project needs a pillar; the only place that says *when*.
 
 ## Invariants
 
 - Active means the folder exists, nothing else: no manifest field, no configuration. `planInit` computes it on every render, so `lint:generated-fresh` sees a folder created or deleted by hand.
-- A new pillar is three edits: a `PILLARS` entry, `pillars:` on the skill that serves it, a line in `buildUmbrellaBody`. `harness-zero` must name its `add` command and `ADDABLE_PILLARS` must give it a `next`; two tests fail otherwise.
+- A new pillar is three edits: a `PILLARS` entry, `pillars:` on the skill that serves it, a line in `buildUmbrellaBody`. `harness-guide` must name its `add` command and `ADDABLE_PILLARS` must give it a `next`; two tests fail otherwise.
 - `add` never overwrites: an existing starter file is skipped, so re-running it completes a half-filled pillar.
 - `add` writes starter files outside the managed locations (they are the project's, under `docs/`), so they never enter the manifest and `uninstall` leaves them. Only the two generated indexes are managed files.
 - The pillars `add` accepts are those with a `starters` array, even empty. `skills` has none: dropping a `*.skill.md` is its activation.

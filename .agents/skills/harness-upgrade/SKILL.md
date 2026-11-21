@@ -75,7 +75,7 @@ which is why step 3 comes before step 5.
 - **Rollback** is pinning the previous version and running `update .`
   again; a version's notes say when that is not enough.
 - **Do not adopt new pillars during an upgrade.** A new version may
-  offer some; that is a separate decision (`harness-zero`).
+  offer some; that is a separate decision (`harness-guide`).
 
 ## Migration notes
 
@@ -110,7 +110,7 @@ required.
 - **Programmatic callers of `render()`**: `hasQualityDoc` is replaced by
   `activePillars`.
 - New, nothing to do unless wanted: the `add <pillar>` command, the
-  `profiles` pillar, the `harness-zero` and `harness-upgrade` skills.
+  `profiles` pillar, the `harness-guide` and `harness-upgrade` skills.
 
 ### 2.4, 2.3.1
 

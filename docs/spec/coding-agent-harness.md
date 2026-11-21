@@ -463,7 +463,7 @@ rendered:
 
 | ID                | Role |
 |-------------------|------|
-| `harness-zero`    | How to work in a harnessed project: the reading order, which skill answers which situation, what to refuse, what to do at the end of a task. It lists, for each inactive pillar, the signs that the project now needs it, and has the agent propose `add <pillar>` to the human; it never adds one unasked. |
+| `harness-guide`    | How to work in a harnessed project: the reading order, which skill answers which situation, what to refuse, what to do at the end of a task. It lists, for each inactive pillar, the signs that the project now needs it, and has the agent propose `add <pillar>` to the human; it never adds one unasked. |
 | `harness-upgrade` | Moves a project to a newer harness version: pin the package, preview `update`, resolve the conflicts it lists, apply, lint, then apply the migration notes of every version crossed. The notes are part of the skill: each minor release adds its entry, even "nothing to do". Command `/harness-upgrade`. |
 
 ## 8. Composition: umbrella + skills + commands
@@ -590,7 +590,7 @@ otherwise. Decision:
 - **A check between two pillars runs only while both are active.** An
   optional pillar never makes another one mandatory.
 - **Who proposes.** `AGENTS.md` names the inactive pillars in one line;
-  the `harness-zero` skill (§7.2) holds, for each, the signs that the
+  the `harness-guide` skill (§7.2) holds, for each, the signs that the
   project needs it. The agent proposes, the human decides, `add` does.
 
 **`skills/`** — domain skills versioned with the project (a plugin
@@ -1205,7 +1205,7 @@ and pre-commit hook.
 
 **Bootstrapping the doc of an existing project** is not a CLI: the
 agent, following the doc-first rule of `AGENTS.md` and the
-`harness-zero` skill, proposes the pillars the project is ready for,
+`harness-guide` skill, proposes the pillars the project is ready for,
 finds the gaps of the active ones with `doc-audit` and fills them with
 the writer skills.
 

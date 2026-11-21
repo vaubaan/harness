@@ -54,7 +54,7 @@ You audit the active ones and only those:
 
 **An inactive pillar is never a gap.** Do not list it as missing, do not
 recommend it, omit its section from the report. Whether the project is
-ready for one more pillar is the `harness-zero` skill's question, asked
+ready for one more pillar is the `harness-guide` skill's question, asked
 when the work calls for it, never a finding of the audit.
 
 ## Procedure

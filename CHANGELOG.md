@@ -20,7 +20,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 - `vaubaan-harness add <pillar> [dir]`: activates a pillar. Writes its starter files without overwriting anything, then re-renders so its skill, command and `AGENTS.md` lines appear.
-- The `harness-zero` skill, always rendered: how to work in a harnessed project, and for each inactive pillar the sign that the project now needs it. The agent proposes `add <pillar>`; the human decides.
+- The `harness-guide` skill, always rendered: how to work in a harnessed project, and for each inactive pillar the sign that the project now needs it. The agent proposes `add <pillar>`; the human decides.
 - The `harness-upgrade` skill and `/harness-upgrade`, always rendered: moves a project to a newer version and applies the migration notes of every version crossed. The notes live in the skill; a test fails when the current minor has no entry.
 - The `docs/profiles/` pillar: one file per kind of user, with ranked pains and gains and the evidence behind them (`hypothesis` until validated). An intent's `actors:` are then profiles, and a terminal intent declares `relieves:` / `delivers:`. The generated `docs/profiles/README.md` shows which intent serves which pain and which pain nothing relieves. Linters `lint:profile-schema` and `lint:intent-profiles`; written by `intent-writer`, audited by `doc-audit`. Decision: [profiles-pillar](docs/decisions/profiles-pillar.md); spec §9.1.4.
 - Templates `profile`, `decisions-index`, `handbook-index`.

@@ -37,7 +37,7 @@ spec: ../spec/coding-agent-harness.md#912-active-pillars
 ### Be told when a pillar is worth adding
 
 requires: pillar
-anchors: src/skills/harness-zero.skill.md, src/renderers/common.ts, tests/integration/pillars.test.ts
+anchors: src/skills/harness-guide.skill.md, src/renderers/common.ts, tests/integration/pillars.test.ts
 spec: ../spec/coding-agent-harness.md#72-harness-skills
 
 ## Keep the render current

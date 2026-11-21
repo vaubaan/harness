@@ -164,7 +164,7 @@ export function buildUmbrellaBody(extras: UmbrellaExtras): string {
       inactive.length > 0,
       "",
       `Not in this project yet: ${inactive.join(", ")}. A pillar is added the day the project needs it, with \`npx @vaubaan/harness add <pillar>\`${
-        exposes("harness-zero") ? "; the `harness-zero` skill says when each one is worth it" : ""
+        exposes("harness-guide") ? "; the `harness-guide` skill says when each one is worth it" : ""
       }. Propose it to the human, never create the folder unasked.`,
     ),
     "",
