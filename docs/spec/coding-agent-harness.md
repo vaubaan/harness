@@ -1026,10 +1026,14 @@ The meta database gets a view; Markdown stays the only source. Decision:
 - Every node has a stable id, its domain (§0.2), its source file and
   line. A lint issue attaches to the deepest node of its file at or
   above its line, otherwise to the file node.
-- The view lays the graph out on a canvas, one frame per pillar, and
-  offers views over it: the state of the context, the intent tree, the
-  vocabulary, the decisions, the linters, the skills. Every card links
-  to its source line.
+- The view lays the graph out on a canvas: a map with one card per
+  document, grouped by pillar, where terms, code paths, alternatives
+  and lint issues are counts on their document's card and only the
+  links between documents are drawn. Selecting a card focuses on it:
+  its neighbours of every kind gather around it, the rest fades. Other
+  views answer one question each: the state of the context, the intent
+  tree, the vocabulary, the decisions, the linters, the skills. Every
+  card links to its source line.
 - A **review session** (decision:
   [review-loop](../decisions/review-loop.md)) starts by copying `docs/`
   and `README.md` to `.vaubaan/review/snapshot/`, then serves the view

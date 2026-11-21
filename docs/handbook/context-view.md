@@ -20,7 +20,7 @@ last_reviewed: 2026-11-21
 
 - [`src/view/graph.ts`](../../src/view/graph.ts) — `buildGraph`: one pass per pillar, then skills, rendered files, linters, lessons, lint attachment, drift.
 - [`src/parser/docs.ts`](../../src/parser/docs.ts) — the readers the graph shares with `decision-schema`, `cross-links`, `intent-vocabulary`; `driftOf` lives in `src/linters/tracks-drift.ts` for the same reason.
-- [`src/view/html.ts`](../../src/view/html.ts) — `renderView`: canvas layout, the other views, one detail panel per node; [`assets.ts`](../../src/view/assets.ts) holds the inline style and script.
+- [`src/view/html.ts`](../../src/view/html.ts) — `renderView`: the map (`renderCanvas`), one focus layer per document (`renderFocus`), the other views, one detail panel per node; [`assets.ts`](../../src/view/assets.ts) holds the inline style and script.
 - [`src/review/server.ts`](../../src/review/server.ts) — routes, watcher, batches; [`session.ts`](../../src/review/session.ts) — snapshot, restore, archive.
 
 ## Invariants
@@ -28,6 +28,8 @@ last_reviewed: 2026-11-21
 - A fact the view shows comes from a reader a linter uses. Adding a field to the view starts in `src/parser/docs.ts` or a linter, never in `graph.ts` alone.
 - Deterministic bytes: nodes sorted by id, edges by (from, type, to), no timestamp, card ids from a hash of the node id, layout computed in TypeScript. A `Date.now()` or a `Map` iteration over unsorted input in `graph.ts` or `html.ts` breaks the view test.
 - Content is in the markup; the script only toggles classes, pans, zooms and, in a session, swaps `main`, `#side` and `#hs` with the server's fresh render (`replaceChildren`, never `innerHTML`).
+- The map has one card per document; `mapOf` gives the document a node belongs to (its parent chain), and every count, link and diff on a card aggregates its family. A new node type either belongs to a document or stays off the map: never a card of its own.
+- Each document's focus layer is rendered in the page, hidden; selecting a card only toggles classes and zooms to the layer's `data-box`. The page grows with documents × neighbours (about 0.7 MB for this repo).
 - Only the server writes `.vaubaan/review/session.json`; the CLI talks to it over HTTP with the token from `server.json` and `x-harness-author: agent`.
 - `discard` touches exactly the files of `REVIEWED_GLOBS` (`README.md`, `docs/**`), compared by sha256 with the snapshot.
 
@@ -38,6 +40,8 @@ last_reviewed: 2026-11-21
 - `review next` long-polls up to 540 s through `node:http`: `fetch` gives up after 300 s without headers.
 - `history.replaceState` throws on a `file://` page: the static view opened from disk must not depend on it.
 - The "Before" mode of the differences hides added cards and shows removed ones, but a changed card shows its current content; the detail panel has no old version.
+- The map layout is a search: `renderCanvas` tries shelf widths and frame proportions and keeps the one read at the highest zoom on a 16:10 screen. Adding a pillar frame can move every other frame; the view test pins the fit zoom of this repository at 0.7 or more.
+- On a phone the detail panel takes the whole width: a focus is then readable only after closing it.
 - The server binds `127.0.0.1`. When the human's browser runs on another machine (a remote agent), `--host` widens it; the token still applies, the `Host` check is then skipped for `0.0.0.0`.
 - Source links of the static page are `../../<path>`: they resolve only while the page stays in `.vaubaan/view/` of the repo. In a session the server serves `docs/**` and `README.md` read-only for the same links.
 - Tests that run git under the pre-commit hook inherit its `GIT_*` variables; `tests/setup/isolate-git.ts` clears them (see the [integration test plan](../tests/integration-tests.md)).

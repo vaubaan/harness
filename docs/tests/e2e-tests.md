@@ -44,11 +44,10 @@ last_reviewed: 2026-11-21
 - ⚠️ **Engines loading a 2.x render** (spec §4.3) — the last discovery
   checks were made on a 1.x render; to redo on each engine before a
   release that changes the layouts.
-- ⚠️ **The view in real browsers** (spec §10.4) — its script is
-  smoke-tested in a DOM emulator (tabs, selection, links, search), never
-  in a browser: layout, pan and zoom, pinch, and the light and dark
-  themes are checked by hand. Priority: high, before announcing the
-  view.
+- ⚠️ **The view in real browsers** (spec §10.4) — checked by hand in
+  headless Chromium (map, focus, light and dark, 400 px wide) with
+  screenshots; no automated screenshot test, Firefox and Safari not
+  checked, pinch only on paper. Priority: medium.
 - ⚠️ **`review start` as a detached process** (spec §10.4) — the
   integration suite runs the server in-process; the spawn, `server.json`,
   `review next | reply | keep | discard` through the binary were checked

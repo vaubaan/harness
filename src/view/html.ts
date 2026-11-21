@@ -175,229 +175,494 @@ function signature(n: GraphNode): string {
 }
 
 // --------------------------------------------------------------- the canvas
+//
+// A map, not an inventory: one card per document, grouped by pillar, with
+// the links between documents drawn at rest. Terms, code paths, rejected
+// alternatives and lint issues are counts on their document's card.
+// Selecting a card shows its focus layer: every neighbour, grouped by
+// relation, next to the card; the rest of the map fades.
 
-const CARD_W = 250;
-const CARD_H = 78;
-const GAP = 12;
-const FRAME_PAD = 18;
-const FRAME_TOP = 40;
-const COL_GAP = 70;
+const MAP_TYPES: ReadonlyArray<NodeType> = [
+  "readme",
+  "spec",
+  "decision",
+  "handbook",
+  "test-plan",
+  "workflow",
+  "quality",
+  "doc",
+  "intent-file",
+];
+const HARNESS_LINTERS = "harness:linters";
+const HARNESS_SKILLS = "harness:skills";
 
-interface Placed {
-  node: GraphNode;
+const CARD_W = 214;
+const CARD_H = 100;
+const GAP = 10;
+const FRAME_PAD = 14;
+const FRAME_HEAD = 30;
+const FRAME_GAP = 30;
+const ITEM_W = 196;
+const ITEM_H = 34;
+const ITEM_GAP = 6;
+const BLOCK_ROWS = 10;
+const FOCUS_ROW_W = 1100;
+
+interface Box {
   x: number;
   y: number;
   w: number;
-  diff: DiffState;
+  h: number;
 }
 
-interface Frame {
-  key: string;
+/** The map card a node belongs to: itself, its document, or a harness card. */
+function mapOf(ix: Index, id: string): string | undefined {
+  let n = ix.byId.get(id);
+  while (n) {
+    if (MAP_TYPES.includes(n.type)) return n.id;
+    if (n.type === "linter") return HARNESS_LINTERS;
+    if (n.type === "skill" || n.type === "command") return HARNESS_SKILLS;
+    n = n.parent ? ix.byId.get(n.parent) : undefined;
+  }
+  return undefined;
+}
+
+/** A document and everything that belongs to it. */
+function familyOf(ix: Index, docId: string): GraphNode[] {
+  return ix.graph.nodes.filter(
+    (n) => n.id === docId || (n.id !== docId && mapOf(ix, n.id) === docId),
+  );
+}
+
+function worstDiff(states: DiffState[]): DiffState {
+  if (states.includes("del")) return states.every((s) => s === "del") ? "del" : "chg";
+  if (states.includes("add")) return states.every((s) => s === "add") ? "add" : "chg";
+  return states.includes("chg") ? "chg" : undefined;
+}
+
+interface MapFrame {
   title: string;
   domain: "project" | "harness";
-  nodes: GraphNode[];
-  /** Indentation per node, for the intent tree. */
-  indent?: (n: GraphNode) => number;
+  cards: GraphNode[];
 }
 
-function frames(ix: Index, removed: GraphNode[]): Frame[] {
-  const all = [...ix.graph.nodes, ...removed];
+function mapFrames(ix: Index, removed: GraphNode[]): MapFrame[] {
+  const all = [...ix.graph.nodes, ...removed.filter((n) => MAP_TYPES.includes(n.type))];
   const pick = (types: NodeType[]) => all.filter((n) => types.includes(n.type));
-  const intents: GraphNode[] = [];
-  // Depth-first order of the intent tree, files sorted.
-  const children = new Map<string, GraphNode[]>();
-  for (const n of all.filter((x) => x.type === "intent")) {
-    const p = n.parent ?? "";
-    children.set(p, [...(children.get(p) ?? []), n]);
-  }
-  for (const list of children.values())
-    list.sort((a, b) => a.line - b.line || (a.id < b.id ? -1 : 1));
-  const walk = (id: string) => {
-    for (const c of children.get(id) ?? []) {
-      intents.push(c);
-      walk(c.id);
-    }
-  };
-  for (const f of pick(["intent-file"])) {
-    intents.push(f);
-    walk(f.id);
-  }
-  const level = (n: GraphNode) => (n.type === "intent" ? (num(n.attrs.level) ?? 1) : 0);
   return [
-    { key: "intents", title: "Intents", domain: "project", nodes: intents, indent: level },
+    { title: "Intents", domain: "project" as const, cards: pick(["intent-file"]) },
+    { title: "README & spec", domain: "project" as const, cards: pick(["readme", "spec"]) },
+    { title: "Decisions", domain: "project" as const, cards: pick(["decision"]) },
+    { title: "Handbook", domain: "project" as const, cards: pick(["handbook"]) },
     {
-      key: "spec",
-      title: "Spec & vocabulary",
-      domain: "project",
-      nodes: [...pick(["readme", "spec"]), ...pick(["term"])],
-    },
-    { key: "decisions", title: "Decisions", domain: "project", nodes: pick(["decision"]) },
-    { key: "handbook", title: "Handbook", domain: "project", nodes: pick(["handbook"]) },
-    {
-      key: "tests",
       title: "Tests, workflow, quality",
-      domain: "project",
-      nodes: [
-        ...pick(["test-plan"]),
-        ...pick(["known-gap"]),
-        ...pick(["workflow", "quality", "doc"]),
-      ],
+      domain: "project" as const,
+      cards: pick(["test-plan", "workflow", "quality"]),
     },
-    { key: "code", title: "Code pointed to", domain: "project", nodes: pick(["path", "glob"]) },
-    {
-      key: "harness",
-      title: "Harness",
-      domain: "harness",
-      nodes: [...pick(["linter"]), ...pick(["skill"]), ...pick(["command"])],
-    },
-  ].filter((f) => f.nodes.length > 0) as Frame[];
+    { title: "Other docs", domain: "project" as const, cards: pick(["doc"]) },
+  ].filter((f) => f.cards.length > 0);
 }
 
-function cardBody(n: GraphNode, ix: Index): string {
+function count(n: number, one: string, many = `${one}s`): string {
+  return `${n} ${n === 1 ? one : many}`;
+}
+
+/** The summary of a document card: counts of what belongs to it. */
+function mapCardBody(n: GraphNode, ix: Index, family: GraphNode[]): string {
+  const of = (t: NodeType) => family.filter((m) => m.type === t);
   const sub: string[] = [];
   const pills: string[] = [];
   switch (n.type) {
-    case "intent-file":
-    case "intent": {
-      const done = num(n.attrs.done);
-      const total = num(n.attrs.total);
-      if (n.type === "intent" && n.attrs.terminal !== true && total)
-        sub.push(`${done}/${total} delivered`);
-      if (n.type === "intent-file" && total)
-        sub.push(`${done}/${total} terminal intents delivered`);
-      const acceptance = arr(n.attrs.acceptance);
-      if (acceptance.length) sub.push(`${acceptance.length} criteria`);
+    case "intent-file": {
+      const terminals = of("intent").filter((m) => m.attrs.terminal === true);
+      const proposed = terminals.filter((m) => m.attrs.effectiveStatus === "proposed").length;
+      const done = num(n.attrs.done) ?? 0;
+      const total = num(n.attrs.total) ?? terminals.length;
+      sub.push(`${done}/${total} delivered`);
+      if (proposed) pills.push(pill(`${proposed} proposed`, "warn"));
       pills.push(
-        statusPill(
-          str(n.attrs.status) ?? (n.attrs.terminal ? str(n.attrs.effectiveStatus) : undefined),
-        ),
+        total
+          ? `<span class="bar" title="${done}/${total}"><i style="width:${Math.round((done / total) * 100)}%"></i></span>`
+          : "",
       );
       break;
     }
-    case "term": {
-      const req = ix.inOf(n.id, "requires").length;
-      const cre = ix.inOf(n.id, "creates").length;
-      sub.push(`created by ${cre} · required by ${req}`);
-      if (n.attrs.defined === false) pills.push(pill("not in the vocabulary", "err"));
-      else if (req > 0 && cre === 0) pills.push(pill("created by none", "warn"));
+    case "spec":
+      sub.push(`${count(of("term").length, "term")} · ${count(of("section").length, "section")}`);
       break;
-    }
     case "decision": {
       const refs = ix.inOf(n.id, "links-to").length;
-      sub.push(`${ix.outOf(n.id, "contains").length} rejected alternatives`);
+      sub.push(count(of("alternative").length, "alternative"));
       pills.push(pill(`cited ×${refs}`, refs <= 1 ? "warn" : "mut"));
       break;
     }
     case "handbook":
     case "test-plan":
-    case "workflow":
+    case "workflow": {
+      const gaps = of("known-gap").length;
       sub.push(
-        `tracks ${ix.outOf(n.id, "tracks").length}${str(n.attrs.lastReviewed) ? ` · reviewed ${str(n.attrs.lastReviewed)}` : ""}`,
+        `tracks ${count(ix.outOf(n.id, "tracks").length, "path")}${gaps ? ` · ${count(gaps, "known gap")}` : ""}`,
       );
       pills.push(driftPill(n));
       break;
-    case "path":
-    case "glob": {
-      const by = ix.inOf(n.id).length;
-      sub.push(
-        `${n.type === "glob" ? `glob · ${num(n.attrs.matches) ?? 0} files · ` : ""}pointed to by ${by}`,
-      );
-      if (n.attrs.exists === false) pills.push(pill("does not resolve", "err"));
-      break;
     }
-    case "linter":
-      sub.push(arr(n.attrs.pillars).join(", "));
-      pills.push(
-        pill(str(n.attrs.severity) ?? "", str(n.attrs.severity) === "error" ? "err" : "warn"),
-      );
-      pills.push(pill(`${num(n.attrs.issues) ?? 0} issues`, num(n.attrs.issues) ? "err" : "ok"));
-      break;
-    case "skill":
-      sub.push(`${str(n.attrs.layer) ?? ""} · ${num(n.attrs.lines) ?? 0} lines`);
-      if (n.attrs.disabled) pills.push(pill("disabled", "err"));
-      break;
-    case "command":
-      sub.push(`→ ${str(n.attrs.skill) ?? ""}`);
-      break;
-    case "known-gap":
-      sub.push("known gap");
-      pills.push(pill("not tested", "warn"));
-      break;
     default:
       sub.push(n.sourcePath);
   }
-  pills.push(issuesPill(n.issues));
-  return `<span class="t">${md(n.title)}</span><span class="s">${esc(sub.join(" · "))}</span><span class="row">${pills.join("")}</span>`;
+  pills.push(issuesPill(family.flatMap((m) => m.issues)));
+  return `<span class="k">${esc(TYPE_LABEL[n.type])}</span><span class="t">${md(n.title)}</span><span class="s">${esc(sub.join(" · "))}</span><span class="row">${pills.join("")}</span>`;
+}
+
+interface FocusGroup {
+  label: string;
+  items: Array<{ node: GraphNode; note?: string; indent?: number }>;
+}
+
+/** The neighbours of a document, grouped by relation. */
+function focusGroups(ix: Index, doc: GraphNode, family: GraphNode[]): FocusGroup[] {
+  const inFamily = new Set(family.map((n) => n.id));
+  const groups = new Map<
+    string,
+    Map<string, { node: GraphNode; note?: string; indent?: number }>
+  >();
+  const add = (label: string, node: GraphNode | undefined, note?: string, indent?: number) => {
+    if (!node || node.id === doc.id) return;
+    const g = groups.get(label) ?? new Map();
+    if (!g.has(node.id))
+      g.set(node.id, {
+        node,
+        ...(note ? { note } : {}),
+        ...(indent !== undefined ? { indent } : {}),
+      });
+    groups.set(label, g);
+  };
+  /** A neighbour inside another document is shown as that document; terms, and intents using words, stay themselves. */
+  const other = (id: string, keepIntent = false) => {
+    const n = ix.byId.get(id);
+    if (!n) return undefined;
+    if (n.type === "term" || (keepIntent && n.type === "intent")) return n;
+    const m = mapOf(ix, id);
+    return m && m !== HARNESS_LINTERS && m !== HARNESS_SKILLS ? ix.byId.get(m) : n;
+  };
+  // What belongs to the document.
+  const contents: Record<string, NodeType> = {
+    "intent-file": "intent",
+    spec: "term",
+    decision: "alternative",
+    "test-plan": "known-gap",
+  };
+  const child = contents[doc.type];
+  if (child) {
+    const label = {
+      intent: "Intents",
+      term: "Vocabulary",
+      alternative: "Rejected alternatives",
+      "known-gap": "Known gaps",
+    }[child as "intent"];
+    for (const n of family.filter((m) => m.type === child).sort((a, b) => a.line - b.line)) {
+      add(
+        label,
+        n,
+        n.type === "intent" && n.attrs.terminal === true ? str(n.attrs.effectiveStatus) : undefined,
+        n.type === "intent" ? (num(n.attrs.level) ?? 1) - 1 : undefined,
+      );
+    }
+  }
+  for (const m of family) {
+    for (const e of ix.outOf(m.id)) {
+      if (inFamily.has(e.to) || e.type === "contains") continue;
+      const label = {
+        "links-to": "Cites",
+        spec: "Cites",
+        tracks: "Tracks",
+        anchors: "Code anchors",
+        requires: "Uses words",
+        creates: "Uses words",
+      }[e.type as "spec"];
+      if (label)
+        add(
+          label,
+          other(e.to),
+          e.type === "creates" ? "creates" : e.type === "requires" ? "requires" : undefined,
+        );
+    }
+    for (const e of ix.inOf(m.id)) {
+      if (inFamily.has(e.from) || e.type === "contains") continue;
+      const label = {
+        "links-to": "Cited by",
+        spec: "Cited by",
+        requires: "Words used by",
+        creates: "Words used by",
+        checks: "Checked by",
+      }[e.type as "spec"];
+      if (label)
+        add(
+          label,
+          other(e.from, e.type === "requires" || e.type === "creates"),
+          e.type === "creates" ? "creates" : e.type === "requires" ? "requires" : undefined,
+        );
+    }
+  }
+  const order = [
+    "Intents",
+    "Vocabulary",
+    "Rejected alternatives",
+    "Known gaps",
+    "Cites",
+    "Cited by",
+    "Uses words",
+    "Words used by",
+    "Tracks",
+    "Code anchors",
+    "Checked by",
+  ];
+  return order
+    .filter((l) => groups.has(l))
+    .map((label) => ({ label, items: [...(groups.get(label)?.values() ?? [])] }));
+}
+
+function focusItem(
+  it: { node: GraphNode; note?: string; indent?: number },
+  x: number,
+  y: number,
+  diff: Map<string, DiffState>,
+  ix: Index,
+): string {
+  const n = it.node;
+  const isDoc = MAP_TYPES.includes(n.type);
+  const cls = ["fi", `t-${n.type}`, `d-${n.domain}`];
+  const state = isDoc ? worstDiff(familyOf(ix, n.id).map((m) => diff.get(m.id))) : diff.get(n.id);
+  if (state) cls.push(`is-${state}`);
+  if (
+    n.issues.some((i) => i.severity === "error") ||
+    n.attrs.exists === false ||
+    n.attrs.defined === false
+  )
+    cls.push("has-err");
+  const indent = (it.indent ?? 0) * 12;
+  const tone = it.note === "implemented" ? "ok" : it.note === "proposed" ? "warn" : "mut";
+  return `<a class="${cls.join(" ")}" href="#${htmlId(n.id)}" data-n="${htmlId(n.id)}"${isDoc ? ' data-doc="1"' : ""} style="left:${x + indent}px;top:${y}px;width:${ITEM_W - indent}px"><span class="t">${md(n.title)}</span>${it.note === "implemented" || it.note === "proposed" ? `<i class="dot ${tone}" title="${esc(it.note)}"></i>` : it.note ? `<span class="k">${esc(it.note)}</span>` : `<span class="k">${esc(TYPE_LABEL[n.type])}</span>`}</a>`;
+}
+
+function renderFocus(
+  ix: Index,
+  doc: GraphNode,
+  at: Box,
+  family: GraphNode[],
+  diff: Map<string, DiffState>,
+): { html: string; box: Box } {
+  const groups = focusGroups(ix, doc, family);
+  const parts: string[] = [];
+  const lines: string[] = [];
+  const x0 = at.x + at.w + 90;
+  let x = x0;
+  let top = at.y - 20;
+  let rowH = 0;
+  let right = x0;
+  let bottom = at.y + at.h;
+  for (const g of groups) {
+    const cols = Math.ceil(g.items.length / BLOCK_ROWS);
+    const rows = Math.min(BLOCK_ROWS, g.items.length);
+    const w = cols * (ITEM_W + ITEM_GAP) - ITEM_GAP + 2 * 10;
+    const h = 28 + rows * (ITEM_H + ITEM_GAP) + 6;
+    if (x > x0 && x + w > x0 + FOCUS_ROW_W) {
+      x = x0;
+      top += rowH + 24;
+      rowH = 0;
+    }
+    parts.push(
+      `<div class="fb" style="left:${x}px;top:${top}px;width:${w}px;height:${h}px"><span class="fbt">${esc(g.label)} <i>${g.items.length}</i></span></div>`,
+    );
+    g.items.forEach((it, i) => {
+      const col = Math.floor(i / BLOCK_ROWS);
+      const row = i % BLOCK_ROWS;
+      parts.push(
+        focusItem(
+          it,
+          x + 10 + col * (ITEM_W + ITEM_GAP),
+          top + 28 + row * (ITEM_H + ITEM_GAP),
+          diff,
+          ix,
+        ),
+      );
+    });
+    const x1 = at.x + at.w;
+    const y1 = at.y + at.h / 2;
+    const y2 = top + 14;
+    lines.push(`<path d="M${x1} ${y1} C${x1 + 50} ${y1},${x - 50} ${y2},${x} ${y2}"/>`);
+    rowH = Math.max(rowH, h);
+    right = Math.max(right, x + w);
+    bottom = Math.max(bottom, top + h);
+    x += w + 24;
+  }
+  const start = at.y - 20;
+  const box = {
+    x: at.x - 20,
+    y: Math.min(start, at.y) - 20,
+    w: right - at.x + 40,
+    h: bottom - start + 40,
+  };
+  const empty = groups.length
+    ? ""
+    : `<div class="fb fb-empty" style="left:${at.x + at.w + 90}px;top:${at.y}px;width:220px;height:${at.h}px"><span class="fbt">Linked to nothing</span></div>`;
+  return {
+    html: `<div class="focus" data-for="${htmlId(doc.id)}" data-box="${box.x},${box.y},${box.w},${box.h}"><svg class="fl" aria-hidden="true">${lines.join("")}</svg>${parts.join("")}${empty}</div>`,
+    box,
+  };
 }
 
 function renderCanvas(ix: Index, diff: Map<string, DiffState>, removed: GraphNode[]): string {
-  const placed = new Map<string, Placed>();
+  const placed = new Map<string, Box>();
   const frameHtml: string[] = [];
-  let x = 20;
-  let maxH = 0;
-  for (const f of frames(ix, removed)) {
-    const inner: string[] = [];
-    let y = FRAME_TOP;
-    let width = CARD_W;
-    for (const n of f.nodes) {
-      const indent = f.indent ? f.indent(n) * 18 : 0;
-      width = Math.max(width, CARD_W + indent);
-      placed.set(n.id, {
-        node: n,
-        x: x + FRAME_PAD + indent,
-        y: y + 60,
-        w: CARD_W,
-        diff: diff.get(n.id),
-      });
-      y += CARD_H + GAP;
-    }
-    const h = y + FRAME_PAD;
-    maxH = Math.max(maxH, h);
-    frameHtml.push(
-      `<div class="frame f-${f.domain}" style="left:${x}px;top:60px;width:${width + 2 * FRAME_PAD}px;height:${h}px"><span class="ft">${esc(f.title)}</span></div>`,
-    );
-    inner.push("");
-    x += width + 2 * FRAME_PAD + COL_GAP;
-  }
-  const worldW = x;
-  const worldH = maxH + 100;
   const cards: string[] = [];
-  for (const p of placed.values()) {
-    const n = p.node;
-    const cls = ["n", `t-${n.type}`, `d-${n.domain}`];
-    if (p.diff) cls.push(`is-${p.diff}`);
-    if (n.issues.some((i) => i.severity === "error")) cls.push("has-err");
-    const tag = p.diff
-      ? `<span class="diff-tag">${p.diff === "add" ? "added" : p.diff === "chg" ? "changed" : "removed"}</span>`
-      : "";
-    cards.push(
-      `<a class="${cls.join(" ")}" id="c-${htmlId(n.id).slice(2)}" href="#${htmlId(n.id)}" data-n="${htmlId(n.id)}" data-q="${esc(`${n.title} ${n.sourcePath}`.toLowerCase())}" style="left:${p.x}px;top:${p.y}px;width:${p.w}px">${tag}${cardBody(n, ix)}</a>`,
+  const focus: string[] = [];
+  const families = new Map<string, GraphNode[]>();
+  const famOf = (n: GraphNode) => {
+    const f = families.get(n.id) ?? (ix.byId.has(n.id) ? familyOf(ix, n.id) : [n]);
+    families.set(n.id, f);
+    return f;
+  };
+  type Item = { id: string; html: (b: Box) => string };
+  const specs: Array<{ title: string; domain: string; items: Item[] }> = mapFrames(ix, removed).map(
+    (f) => ({
+      title: f.title,
+      domain: f.domain,
+      items: f.cards.map((n) => ({
+        id: n.id,
+        html: (b: Box) => {
+          const family = famOf(n);
+          const state = worstDiff(family.map((m) => diff.get(m.id)));
+          const cls = ["n", `t-${n.type}`, `d-${n.domain}`];
+          if (state) cls.push(`is-${state}`);
+          if (family.some((m) => m.issues.some((i) => i.severity === "error"))) cls.push("has-err");
+          const tag = state
+            ? `<span class="diff-tag">${state === "add" ? "added" : state === "chg" ? "changed" : "removed"}</span>`
+            : "";
+          const q = family
+            .map((m) => m.title)
+            .join(" ")
+            .toLowerCase();
+          if (ix.byId.has(n.id)) focus.push(renderFocus(ix, n, b, family, diff).html);
+          return `<a class="${cls.join(" ")}" id="c-${htmlId(n.id).slice(2)}" href="#${htmlId(n.id)}" data-n="${htmlId(n.id)}" data-q="${esc(`${q} ${n.sourcePath}`.toLowerCase())}" style="left:${b.x}px;top:${b.y}px;width:${b.w}px;height:${b.h}px">${tag}${mapCardBody(n, ix, family)}</a>`;
+        },
+      })),
+    }),
+  );
+  // The harness: two cards that open their views.
+  const linters = ix.of("linter");
+  const skills = ix.of("skill");
+  const lintIssues = linters.reduce((s, l) => s + (num(l.attrs.issues) ?? 0), 0);
+  specs.push({
+    title: "Harness",
+    domain: "harness",
+    items: [
+      {
+        id: HARNESS_LINTERS,
+        html: (b) =>
+          `<a class="n t-harness d-harness" href="#view-linters" data-tab="linters" style="left:${b.x}px;top:${b.y}px;width:${b.w}px;height:${b.h}px"><span class="k">harness</span><span class="t">Linters</span><span class="s">${esc(count(linters.length, "linter"))}</span><span class="row">${pill(`${lintIssues} issues`, lintIssues ? "err" : "ok")}</span></a>`,
+      },
+      {
+        id: HARNESS_SKILLS,
+        html: (b) =>
+          `<a class="n t-harness d-harness" href="#view-skills" data-tab="skills" style="left:${b.x}px;top:${b.y}px;width:${b.w}px;height:${b.h}px"><span class="k">harness</span><span class="t">Skills</span><span class="s">${esc(`${count(skills.length, "skill")} · ${count(ix.of("command").length, "command")}`)}</span><span class="row"></span></a>`,
+      },
+    ],
+  });
+  // Shelf packing of the frames; the layout that is read at the highest zoom
+  // on a 16:10 screen wins. Deterministic: candidates in a fixed order.
+  const layout = (shelfW: number, ratio: number) => {
+    let x = 20;
+    let y = 20;
+    let shelfH = 0;
+    let maxX = 0;
+    const frames = specs.map((f) => {
+      const n = f.items.length;
+      const cols = Math.max(1, Math.min(n, Math.round(Math.sqrt(n * ratio))));
+      const rows = Math.ceil(n / cols);
+      const w = 2 * FRAME_PAD + cols * CARD_W + (cols - 1) * GAP;
+      const h = FRAME_HEAD + FRAME_PAD + rows * CARD_H + (rows - 1) * GAP;
+      if (x > 20 && x + w > shelfW) {
+        x = 20;
+        y += shelfH + FRAME_GAP;
+        shelfH = 0;
+      }
+      const at = { x, y, w, h, cols };
+      x += w + FRAME_GAP;
+      shelfH = Math.max(shelfH, h);
+      maxX = Math.max(maxX, at.x + w);
+      return at;
+    });
+    const W = maxX + 40;
+    const H = y + shelfH + 40;
+    return { frames, W, H, scale: Math.min(1440 / W, 860 / H) };
+  };
+  let best = layout(1640, 1.6);
+  for (const ratio of [0.8, 1.2, 1.6, 2.2, 3]) {
+    for (let shelfW = 1000; shelfW <= 3200; shelfW += 100) {
+      const l = layout(shelfW, ratio);
+      if (l.scale > best.scale + 1e-9) best = l;
+    }
+  }
+  specs.forEach((f, k) => {
+    const at = best.frames[k];
+    if (!at) return;
+    frameHtml.push(
+      `<div class="frame f-${f.domain}" style="left:${at.x}px;top:${at.y}px;width:${at.w}px;height:${at.h}px"><span class="ft">${esc(f.title)} <i>${f.items.length}</i></span></div>`,
     );
+    f.items.forEach((it, i) => {
+      const b = {
+        x: at.x + FRAME_PAD + (i % at.cols) * (CARD_W + GAP),
+        y: at.y + FRAME_HEAD + Math.floor(i / at.cols) * (CARD_H + GAP),
+        w: CARD_W,
+        h: CARD_H,
+      };
+      placed.set(it.id, b);
+      cards.push(it.html(b));
+    });
+  });
+  const worldW = best.W;
+  const worldH = best.H;
+  // Links between documents, one line per pair, at rest.
+  const pairs = new Map<string, { a: string; b: string; n: number }>();
+  for (const e of ix.graph.edges) {
+    if (!["links-to", "spec", "requires", "creates", "suggests", "checks"].includes(e.type))
+      continue;
+    if (e.type === "checks") continue;
+    const a = mapOf(ix, e.from);
+    const b = mapOf(ix, e.to);
+    if (!a || !b || a === b) continue;
+    const [p, q] = a < b ? [a, b] : [b, a];
+    const key = `${p}\u0000${q}`;
+    const cur = pairs.get(key) ?? { a: p, b: q, n: 0 };
+    cur.n += 1;
+    pairs.set(key, cur);
   }
   const edges: string[] = [];
-  for (const e of [...ix.graph.edges].filter((e) => e.type !== "contains")) {
-    const a = placed.get(e.from);
-    const b = placed.get(e.to);
-    if (!a || !b) continue;
-    const forward = a.x <= b.x;
-    const x1 = forward ? a.x + a.w : a.x;
-    const x2 = forward ? b.x : b.x + b.w;
-    const y1 = a.y + CARD_H / 2;
-    const y2 = b.y + CARD_H / 2;
-    const dx = Math.max(40, Math.abs(x2 - x1) / 2);
-    const c1 = forward ? x1 + dx : x1 - dx;
-    const c2 = forward ? x2 - dx : x2 + dx;
+  for (const { a, b, n } of [...pairs.values()].sort((x, y) => (x.a + x.b < y.a + y.b ? -1 : 1))) {
+    const A = placed.get(a);
+    const B = placed.get(b);
+    if (!A || !B) continue;
+    const ax = A.x + A.w / 2;
+    const ay = A.y + A.h / 2;
+    const bx = B.x + B.w / 2;
+    const by = B.y + B.h / 2;
+    const mx = (ax + bx) / 2;
+    const my = (ay + by) / 2 - Math.min(80, Math.abs(bx - ax) / 6);
+    const ida = a.startsWith("harness:") ? a : htmlId(a);
+    const idb = b.startsWith("harness:") ? b : htmlId(b);
     edges.push(
-      `<path class="e-${e.type}" data-a="${htmlId(e.from)}" data-b="${htmlId(e.to)}" d="M${x1} ${y1} C${c1} ${y1},${c2} ${y2},${x2} ${y2}"/>`,
+      `<path class="me" data-a="${ida}" data-b="${idb}" stroke-width="${(1 + Math.log2(n)).toFixed(2)}" d="M${ax} ${ay} Q${mx} ${my} ${bx} ${by}"><title>${n} link${n > 1 ? "s" : ""}</title></path>`,
     );
   }
-  return `<div class="cv" id="cv" data-view="now" tabindex="0" aria-label="Context canvas">
+  return `<div class="cv" id="cv" data-view="now" tabindex="0" aria-label="Context map">
 <div class="cv-world" id="world" style="width:${worldW}px;height:${worldH}px">
-${frameHtml.join("\n")}
 <svg class="edges" width="${worldW}" height="${worldH}" aria-hidden="true">${edges.join("")}</svg>
+${frameHtml.join("\n")}
 ${cards.join("\n")}
+<div class="focus-layers">${focus.join("\n")}</div>
 </div>
-<div class="cv-tools"><button type="button" data-zoom="out" aria-label="Zoom out">−</button><button type="button" data-zoom="fit">Fit</button><button type="button" data-zoom="in" aria-label="Zoom in">+</button><button type="button" data-edges aria-pressed="false" title="Show every link (L)">All links</button></div>
+<p class="cv-hint">Select a card to see what it is linked to. Esc or a click on the background returns to the map.</p>
+<div class="cv-tools"><button type="button" data-zoom="out" aria-label="Zoom out">−</button><button type="button" data-zoom="fit">Fit</button><button type="button" data-zoom="in" aria-label="Zoom in">+</button></div>
 </div>`;
 }
 
@@ -420,7 +685,7 @@ function attrRows(n: GraphNode): string {
   const rows: string[] = [];
   const add = (k: string, v: string) => rows.push(`<dt>${esc(k)}</dt><dd>${v}</dd>`);
   const a = n.attrs;
-  if (str(a.lede)) add("Says", md(str(a.lede) ?? ""));
+  if (str(a.lede) && !str(a.statement)) add("Says", md(str(a.lede) ?? ""));
   if (str(a.statement)) add("Statement", md(str(a.statement) ?? ""));
   if (str(a.definition)) add("Definition", md(str(a.definition) ?? ""));
   if (str(a.decision)) add("Decision", md(str(a.decision) ?? ""));
@@ -544,7 +809,10 @@ function renderDetails(
       const comment = session
         ? `<section class="comments"><h4>Comments</h4>${threads.map((t) => threadHtml(t, ix)).join("")}<form class="comment" data-node="${esc(n.id)}"><label class="sr" for="cm-${htmlId(n.id)}">Comment on this card</label><textarea id="cm-${htmlId(n.id)}" rows="3" placeholder="${n.domain === "harness" ? "Comment: the agent drafts an upstream issue" : "Comment: the agent changes the source"}"></textarea><button type="submit">Add comment</button></form></section>`
         : "";
-      return `<article class="detail" id="${htmlId(n.id)}" data-node="${esc(n.id)}"><header><span class="k">${esc(TYPE_LABEL[n.type])} · ${esc(domainLabel)}</span><h3>${md(n.title)}</h3>${sourceLink(n, prefix)}</header>${issueList(n.issues)}${attrRows(n)}${edgeList(ix, n)}${comment}</article>`;
+      return `<article class="detail" id="${htmlId(n.id)}" data-node="${esc(n.id)}"${(() => {
+        const m = mapOf(ix, n.id);
+        return m && !m.startsWith("harness:") ? ` data-map="${htmlId(m)}"` : "";
+      })()}><header><span class="k">${esc(TYPE_LABEL[n.type])} · ${esc(domainLabel)}</span><h3>${md(n.title)}</h3>${sourceLink(n, prefix)}</header>${issueList(n.issues)}${attrRows(n)}${edgeList(ix, n)}${comment}</article>`;
     })
     .join("\n");
 }

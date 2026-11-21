@@ -138,6 +138,73 @@ describe("context graph", () => {
 });
 
 describe("view", () => {
+  it("shows one card per document, grouped by pillar, on a map that fits one screen", () => {
+    const g = buildGraph(REPO_ROOT, { lint: false, packageDir: PACKAGE_DIR });
+    const html = renderView(g);
+    const docs = g.nodes.filter((n) =>
+      [
+        "readme",
+        "spec",
+        "decision",
+        "handbook",
+        "test-plan",
+        "workflow",
+        "quality",
+        "doc",
+        "intent-file",
+      ].includes(n.type),
+    );
+    const cards = [...html.matchAll(/<a class="n t-([a-z-]+)[^"]*" id="c-/g)].map((m) => m[1]);
+    expect(cards).toHaveLength(docs.length);
+    const world = /id="world" style="width:(\d+)px;height:(\d+)px"/.exec(html);
+    // At 1440 × 860, the fit zoom stays at 0.7 or more: card titles stay at 9 px or more.
+    expect(Math.min(1440 / Number(world?.[1]), 860 / Number(world?.[2]))).toBeGreaterThanOrEqual(
+      0.7,
+    );
+  });
+
+  it("shows terms, code paths, rejected alternatives and lint issues as counts on their document's card", () => {
+    const html = renderView(build());
+    for (const type of ["term", "path", "glob", "alternative", "known-gap", "linter", "skill"]) {
+      expect(html, type).not.toMatch(new RegExp(`<a class="n t-${type}[ "]`));
+    }
+    expect(html).toContain("2 terms · ");
+    expect(html).toContain("1 alternative");
+  });
+
+  it("draws the links between documents at rest, one line per pair of cards with its count", () => {
+    const g = build();
+    const html = renderView(g);
+    const pairs = [...html.matchAll(/<path class="me" data-a="([^"]+)" data-b="([^"]+)"/g)].map(
+      (m) => `${m[1]}|${m[2]}`,
+    );
+    expect(pairs.length).toBeGreaterThan(0);
+    expect(new Set(pairs).size).toBe(pairs.length);
+    const handbook = htmlId("doc:docs/handbook/invoice-pipeline.md");
+    const adr = htmlId("doc:docs/decisions/postgres-over-sqlite.md");
+    expect(pairs.some((p) => p.includes(handbook) && p.includes(adr))).toBe(true);
+  });
+
+  it("selecting a card shows its neighbours around it: what it cites, what cites it, the code it tracks, the words it uses", () => {
+    const html = renderView(build());
+    const layer = (doc: string) => {
+      const start = html.indexOf(`<div class="focus" data-for="${htmlId(doc)}"`);
+      return html.slice(start, html.indexOf('<div class="focus"', start + 10) >>> 0 || undefined);
+    };
+    const handbook = layer("doc:docs/handbook/invoice-pipeline.md");
+    expect(handbook).toContain(">Tracks <i>2</i>");
+    expect(handbook).toContain(`data-n="${htmlId("glob:src/invoicing/**/*.ts")}"`);
+    expect(handbook).toContain(
+      `data-n="${htmlId("doc:docs/decisions/postgres-over-sqlite.md")}" data-doc="1"`,
+    );
+    const intents = layer("doc:docs/intents/send-an-invoice.md");
+    expect(intents).toContain(">Uses words <i>2</i>");
+    expect(intents).toContain(`data-n="${htmlId("path:src/invoicing/issue.ts")}"`);
+    const spec = layer("doc:docs/spec/invoicing.md");
+    expect(spec).toContain(">Vocabulary <i>2</i>");
+    expect(spec).toContain(">Cited by");
+  });
+
   it("opens from disk and makes no network request", () => {
     const html = renderView(build());
     expect(html).not.toMatch(/<(script|link|img|iframe)[^>]+(src|href)="(https?:)?\/\//);
