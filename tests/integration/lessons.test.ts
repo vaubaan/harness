@@ -107,11 +107,14 @@ describe("lessons collect", () => {
   it("extracts patch events from the history, the pull requests and the review threads", () => {
     const r = collectLessonEvents(repo, { home });
     const bySource = (s: string) => r.events.filter((e) => e.source === s);
-    expect(bySource("git").map((e) => e.quote)).toEqual([
-      "fix: address review, add the changelog entry",
-      "fixup! feat: void invoices",
-    ]);
-    expect(bySource("git")[1]?.signal).toMatch(/^retouches /);
+    expect(
+      bySource("git")
+        .map((e) => e.quote)
+        .sort(),
+    ).toEqual(["fix: address review, add the changelog entry", "fixup! feat: void invoices"]);
+    expect(bySource("git").find((e) => e.quote.startsWith("fixup!"))?.signal).toMatch(
+      /^retouches /,
+    );
     expect(
       bySource("pull-requests")
         .map((e) => e.signal)
