@@ -11,13 +11,13 @@ const PACKAGE_DIR = __dirname;
 describe("loadHarness on the stock harness in repo root", () => {
   const harness = loadHarness(PACKAGE_DIR);
 
-  it("loads the 9 doc skills (no code-quality skill)", () => {
-    expect(harness.skills.length).toBe(9);
+  it("loads the 10 doc skills (no code-quality skill)", () => {
+    expect(harness.skills.length).toBe(10);
     expect(harness.skills.map((s) => s.meta.id)).not.toContain("clean-code-guardian");
   });
 
-  it("loads 9 commands", () => {
-    expect(harness.cmds.length).toBe(9);
+  it("loads 10 commands", () => {
+    expect(harness.cmds.length).toBe(10);
     expect(harness.cmds.map((c) => c.meta.id)).not.toContain("clean-code");
   });
 

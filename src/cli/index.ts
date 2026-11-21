@@ -4,10 +4,23 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Command } from "commander";
 import { formatReportText, runLinters } from "../linters/index.js";
+import { startReviewServer } from "../review/server.js";
+import { newToken } from "../review/session.js";
 import { VERSION } from "../version.js";
 import { checkCommand } from "./check.js";
 import { initCommand } from "./init.js";
 import { renderCommand } from "./render.js";
+import {
+  NEXT_EXIT,
+  formatChanges,
+  reviewComment,
+  reviewNext,
+  reviewNote,
+  reviewReply,
+  reviewStart,
+  reviewStatus,
+  reviewStop,
+} from "./review.js";
 import { uninstallCommand } from "./uninstall.js";
 import { updateCommand } from "./update.js";
 import { viewCommand } from "./view.js";
@@ -184,6 +197,151 @@ program
       `graph: ${graph.nodes.length} nodes, ${graph.edges.length} edges → ${result.graphPath}\nview: ${result.htmlPath}\n`,
     );
   });
+
+function collect(value: string, previous: string[]): string[] {
+  return [...previous, value];
+}
+
+function readStdin(): Promise<string> {
+  return new Promise((res) => {
+    let data = "";
+    process.stdin.setEncoding("utf8");
+    process.stdin.on("data", (c) => {
+      data += c;
+    });
+    process.stdin.on("end", () => res(data));
+  });
+}
+
+const review = program
+  .command("review")
+  .description(
+    "Review session: the view follows the docs live, comments go to the agent; nothing is committed",
+  );
+
+review
+  .command("start")
+  .description("Snapshot docs/ and README.md, start the local review server, print its URL")
+  .argument("[dir]", "project directory", ".")
+  .option("--port <port>", "port to listen on (default: a free one)")
+  .option("--host <host>", "interface to bind (default 127.0.0.1; the token still applies)")
+  .option("--resume", "restart the server of a session that was not ended")
+  .option("--foreground", "serve from this process")
+  .action(async (dir: string, opts: Record<string, string | boolean | undefined>) => {
+    const info = await reviewStart({
+      targetDir: dir,
+      ...(typeof opts.port === "string" ? { port: Number(opts.port) } : {}),
+      ...(typeof opts.host === "string" ? { host: opts.host } : {}),
+      resume: opts.resume === true,
+      foreground: opts.foreground === true,
+    });
+    process.stdout.write(`review session live: ${info.url}\n`);
+    if (info.host !== "127.0.0.1" && info.host !== "localhost") {
+      process.stderr.write(
+        `warning: listening on ${info.host}; anyone who reaches it still needs the token in the URL\n`,
+      );
+    }
+    process.stdout.write(
+      "next: `vaubaan-harness review next` waits for comments; end with `review keep` or `review discard`\n",
+    );
+  });
+
+review
+  .command("serve", { hidden: true })
+  .argument("[dir]", "project directory", ".")
+  .option("--port <port>")
+  .option("--host <host>")
+  .action(async (dir: string, opts: Record<string, string | undefined>) => {
+    const s = await startReviewServer({
+      root: resolve(dir),
+      token: newToken(),
+      ...(opts.port ? { port: Number(opts.port) } : {}),
+      ...(opts.host ? { host: opts.host } : {}),
+      onClose: () => process.exit(0),
+    });
+    process.stdout.write(`${s.url}\n`);
+    const stop = () => void s.close().then(() => process.exit(0));
+    process.on("SIGTERM", stop);
+    process.on("SIGINT", stop);
+  });
+
+review
+  .command("next")
+  .description(
+    `Wait for the next batch of comments; exit ${NEXT_EXIT.batch} with JSON, ${NEXT_EXIT.timeout} on timeout (call again), ${NEXT_EXIT.closed} when the review ended`,
+  )
+  .argument("[dir]", "project directory", ".")
+  .option("--timeout <seconds>", "how long to wait", "540")
+  .action(async (dir: string, opts: Record<string, string>) => {
+    const r = await reviewNext(dir, Number(opts.timeout ?? 540));
+    if (r.batch) process.stdout.write(`${JSON.stringify(r.batch, null, 2)}\n`);
+    else process.stdout.write(r.code === NEXT_EXIT.closed ? "review ended\n" : "no comment yet\n");
+    process.exit(r.code);
+  });
+
+review
+  .command("reply")
+  .description("Answer a comment thread as the agent")
+  .argument("<thread>", "thread id, e.g. t3")
+  .option("--body <text>", "the answer; `-` or absent reads stdin")
+  .option("--change <path:line>", "a file and line the answer changed (repeatable)", collect, [])
+  .option("--dir <dir>", "project directory", ".")
+  .action(async (thread: string, opts: { body?: string; change: string[]; dir: string }) => {
+    const body = opts.body && opts.body !== "-" ? opts.body : await readStdin();
+    const changes = opts.change.map((c) => {
+      const i = c.lastIndexOf(":");
+      return i > 0
+        ? { path: c.slice(0, i), line: Number(c.slice(i + 1)) || 0 }
+        : { path: c, line: 0 };
+    });
+    await reviewReply(opts.dir, thread, body, changes);
+    process.stdout.write(`answered ${thread}\n`);
+  });
+
+review
+  .command("comment")
+  .description("Pin a comment to a card as the agent (a question back to the human)")
+  .argument("<node-id>", "graph node id, e.g. doc:docs/spec/x.md")
+  .argument("<text>")
+  .option("--dir <dir>", "project directory", ".")
+  .action(async (nodeId: string, text: string, opts: { dir: string }) => {
+    const t = (await reviewComment(opts.dir, nodeId, text)) as { id: string };
+    process.stdout.write(`${t.id}\n`);
+  });
+
+review
+  .command("note")
+  .description("Say in the session journal why the last change was made")
+  .argument("<text>")
+  .option("--dir <dir>", "project directory", ".")
+  .action(async (text: string, opts: { dir: string }) => {
+    await reviewNote(opts.dir, text);
+  });
+
+review
+  .command("status")
+  .description("The live session: URL, threads, files changed since the start (JSON)")
+  .argument("[dir]", "project directory", ".")
+  .action(async (dir: string) => {
+    process.stdout.write(`${JSON.stringify(await reviewStatus(dir), null, 2)}\n`);
+  });
+
+for (const mode of ["keep", "discard"] as const) {
+  review
+    .command(mode)
+    .description(
+      mode === "keep"
+        ? "End the session, leave the changes in place, uncommitted"
+        : "End the session, restore docs/ and README.md as they were at the start",
+    )
+    .argument("[dir]", "project directory", ".")
+    .action(async (dir: string) => {
+      const r = await reviewStop(dir, mode);
+      process.stdout.write(
+        `${mode === "keep" ? "kept, uncommitted" : "restored"}:\n${formatChanges(r.changes)}\nthreads archived: ${r.archive}\n`,
+      );
+    });
+}
 
 program
   .command("render")

@@ -30,6 +30,7 @@ The files the harness generates (`AGENTS.md`, `CLAUDE.md`, the `.claude/`, `.age
 
 ## Doc-skills
 
+- `canvas-review` (`/canvas`) — Runs a review session of the project's context: opens the view of the
 - `decision-record-writer` (`/decision`) — Writes an ADR under `docs/decisions/<slug>.md`, only for a structural
 - `doc-audit` (`/doc-audit`) — Audits the completeness and freshness of the docs (6 pillars: README,
 - `drift-detector` (`/drift`) — Detects code ↔ doc drift. For each doc file that declares a

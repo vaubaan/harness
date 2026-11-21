@@ -6,8 +6,9 @@
     "codex-cli",
     "opencode"
   ],
-  "renderedAt": "2026-11-21T17:29:18.518Z",
+  "renderedAt": "2026-11-21T17:45:58.425Z",
   "files": [
+    ".agents/skills/canvas-review/SKILL.md",
     ".agents/skills/decision-record-writer/SKILL.md",
     ".agents/skills/doc-audit/SKILL.md",
     ".agents/skills/drift-detector/SKILL.md",
@@ -17,6 +18,7 @@
     ".agents/skills/spec-writer/SKILL.md",
     ".agents/skills/test-plan-writer/SKILL.md",
     ".agents/skills/workflow-writer/SKILL.md",
+    ".claude/commands/canvas.md",
     ".claude/commands/decision.md",
     ".claude/commands/doc-audit.md",
     ".claude/commands/drift.md",
@@ -26,6 +28,7 @@
     ".claude/commands/spec.md",
     ".claude/commands/test-plan.md",
     ".claude/commands/workflow.md",
+    ".claude/skills/canvas-review/SKILL.md",
     ".claude/skills/decision-record-writer/SKILL.md",
     ".claude/skills/doc-audit/SKILL.md",
     ".claude/skills/drift-detector/SKILL.md",
@@ -35,6 +38,7 @@
     ".claude/skills/spec-writer/SKILL.md",
     ".claude/skills/test-plan-writer/SKILL.md",
     ".claude/skills/workflow-writer/SKILL.md",
+    ".opencode/commands/canvas.md",
     ".opencode/commands/decision.md",
     ".opencode/commands/doc-audit.md",
     ".opencode/commands/drift.md",
@@ -49,6 +53,7 @@
     "docs/intents/README.md"
   ],
   "fileHashes": {
+    ".claude/skills/canvas-review/SKILL.md": "acb26d2f88f6f7f2525d848d142a28a4db13ee883ce4a4fee1e2b6f1753bd739",
     ".claude/skills/decision-record-writer/SKILL.md": "33293e2bc462e7fcac14f439749b4dc7cf5d7ee44849e1cc702d9e71f67c0863",
     ".claude/skills/doc-audit/SKILL.md": "568ea91af2da9dfdcc43ed9991dccaa912a4aab48c4f712b90cef3cb2871f48c",
     ".claude/skills/drift-detector/SKILL.md": "5353d9f5502f3f01198c3324204804feb30b64ab1b78b8974734ecf47a2ed7e6",
@@ -58,6 +63,7 @@
     ".claude/skills/spec-writer/SKILL.md": "51a59ce180c495d2dc38fbecf4d929e683b527a2ed06264dfd894173988e1f7e",
     ".claude/skills/test-plan-writer/SKILL.md": "1e8456982e9417bc7f48c04a7b1b33e3cccd6bdcd46d017de39b54c389d7898e",
     ".claude/skills/workflow-writer/SKILL.md": "887275ae7cb527fd1d66ac366817ca733cc07832bcb2de3d4b08f253459e9638",
+    ".claude/commands/canvas.md": "5a9f53ca00dfe410eb850d2bfc9f38f53d754d2b247acc2be55f9ee211516c86",
     ".claude/commands/decision.md": "6e2458cacaaba045b821ab5f4c8e0e82b6dba3b7d101d5eef34e9dbbe1a2b4c0",
     ".claude/commands/doc-audit.md": "9a4039b800481a4899cda25c8a66f593a55ac7a97151aab082dfe0b101fc20dc",
     ".claude/commands/drift.md": "7a79be8a90bf6d4a5e42bab197036e2b4037de010099cda0dc23b281a20d607a",
@@ -67,6 +73,7 @@
     ".claude/commands/spec.md": "c704151cc8c054f46798888f5031e47a51be3e702b83bb39c879518376cddf07",
     ".claude/commands/test-plan.md": "719a4bfc8068bd4155725f53b4cb240ffd433423c475b67a09a19d68638e6c0e",
     ".claude/commands/workflow.md": "a430eab2e392e4110de17cfdb1338448ced2d8a6c398be54628eae8721e53f45",
+    ".agents/skills/canvas-review/SKILL.md": "acb26d2f88f6f7f2525d848d142a28a4db13ee883ce4a4fee1e2b6f1753bd739",
     ".agents/skills/decision-record-writer/SKILL.md": "33293e2bc462e7fcac14f439749b4dc7cf5d7ee44849e1cc702d9e71f67c0863",
     ".agents/skills/doc-audit/SKILL.md": "568ea91af2da9dfdcc43ed9991dccaa912a4aab48c4f712b90cef3cb2871f48c",
     ".agents/skills/drift-detector/SKILL.md": "5353d9f5502f3f01198c3324204804feb30b64ab1b78b8974734ecf47a2ed7e6",
@@ -76,6 +83,7 @@
     ".agents/skills/spec-writer/SKILL.md": "51a59ce180c495d2dc38fbecf4d929e683b527a2ed06264dfd894173988e1f7e",
     ".agents/skills/test-plan-writer/SKILL.md": "1e8456982e9417bc7f48c04a7b1b33e3cccd6bdcd46d017de39b54c389d7898e",
     ".agents/skills/workflow-writer/SKILL.md": "887275ae7cb527fd1d66ac366817ca733cc07832bcb2de3d4b08f253459e9638",
+    ".opencode/commands/canvas.md": "32c5f12a96de4254454188369995beadcf3a375e97e542ceb9dba079511c5d16",
     ".opencode/commands/decision.md": "f03d76dde7048375ca4ab1338ad2b6b536631b28870fe6bd17617537f70faf88",
     ".opencode/commands/doc-audit.md": "0f2d350728badfbecdb4cd2302b7dc97314857a2dd9490639e1110a9a1e00172",
     ".opencode/commands/drift.md": "3aa9b059bd038dd0820e5facbc2e381e6cff6855c66ec4068496478729a5617e",
@@ -85,7 +93,7 @@
     ".opencode/commands/spec.md": "c809502114670893ec72083d69448439a931207acd8ae69d912b491a553087d1",
     ".opencode/commands/test-plan.md": "a08b9037d6fa9dd7baa1ceaf656a395b301e58236ddf17926f79bbd0deb1122c",
     ".opencode/commands/workflow.md": "769b18667fdc004de7293cdf2ea0ddd0491bd3df5a109f943ebe779090a023df",
-    "AGENTS.md": "3f52d9c172326f40b609989492d094e48b01e5638ada4f6cbb01e860eee9b77c",
+    "AGENTS.md": "3c70d0d36dcbee4482110be57ac2fa635d9e6e14d1338b97f612636d10ef831e",
     "CLAUDE.md": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49",
     "docs/intents/README.md": "ced06c55fd30a658f1ad9cd679488c425b9c86d8073ebd9e9175d65e7af48df5"
   }
