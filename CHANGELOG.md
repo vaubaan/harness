@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+- `lint:intent-vocabulary` reads the Vocabulary **table** the spec template writes (first cell of each row, header and `<PLACEHOLDER>` rows skipped), not only `- **term**` bullets: a spec written from the template had no recognized term.
+- The test suite no longer writes into the repository being committed when the pre-commit hook runs it from a git worktree (inherited `GIT_DIR` / `GIT_INDEX_FILE`).
+
 ### Added
 - Contract for the context view, review sessions and lessons from reviews, before any code: spec §0 (*context graph*, *view*, *review session*, *comment*, *lesson*), §0.2 (three domains: harness, project, local), §1.1 (one local server during a review session; conversation histories read only on opt-in), §7, §10.4, §10.5; decisions [context-view](docs/decisions/context-view.md), [review-loop](docs/decisions/review-loop.md), [lessons-from-reviews](docs/decisions/lessons-from-reviews.md); the `proposed` intents of [review-the-context](docs/intents/review-the-context.md).
 

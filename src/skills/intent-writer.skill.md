@@ -98,8 +98,8 @@ Rules the linters enforce (`lint:intent-*`), so apply them as you write:
   on an internal node, or an unknown field, fail the lint.
 - An `implemented` intent has `anchors:` that exist; a `proposed` intent has
   at least one `acceptance:` item.
-- An entity is the kebab-case slug of a bold term opening a bullet in the
-  Vocabulary section of a linked spec (`**Generated file**` →
+- An entity is the kebab-case slug of a bold term opening a bullet, or of
+  the first cell of a table row, in the Vocabulary section of a linked spec (`**Generated file**` →
   `generated-file`). Singular, no synonym. A missing word goes into the
   spec first (`/spec`), never into the intent file as an invention.
 - `spec:` paths resolve. `docs/intents/README.md` is generated: never

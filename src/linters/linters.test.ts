@@ -1015,6 +1015,27 @@ describe("lint:intent-vocabulary", () => {
     );
     expect(vocabularyOf("# S\n\n## Vision\n\n- **Term** — x\n")).toBeUndefined();
   });
+  it("reads the Vocabulary table of the spec template", () => {
+    const spec = [
+      "# S",
+      "",
+      "## 0. Vocabulary",
+      "",
+      "| Term            | Definition |",
+      "|-----------------|------------|",
+      "| Invoice         | A frozen statement. |",
+      "| **Draft**       | Editable. |",
+      "| `Credit note`   | Cancels an invoice. |",
+      "| <TERM_N>        | <DEFINITION_N> |",
+      "",
+      "## 1. Vision",
+      "",
+      "| Not | a term |",
+      "|-----|--------|",
+      "| Vision row | x |",
+    ].join("\n");
+    expect([...(vocabularyOf(spec) ?? [])]).toEqual(["invoice", "draft", "credit-note"]);
+  });
   it("is a no-op without docs/intents/", () => {
     expect(intentVocabulary.run(repo.root)).toEqual([]);
   });

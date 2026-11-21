@@ -6,7 +6,7 @@
     "codex-cli",
     "opencode"
   ],
-  "renderedAt": "2026-11-21T17:15:17.445Z",
+  "renderedAt": "2026-11-21T17:29:18.518Z",
   "files": [
     ".agents/skills/decision-record-writer/SKILL.md",
     ".agents/skills/doc-audit/SKILL.md",
@@ -53,7 +53,7 @@
     ".claude/skills/doc-audit/SKILL.md": "568ea91af2da9dfdcc43ed9991dccaa912a4aab48c4f712b90cef3cb2871f48c",
     ".claude/skills/drift-detector/SKILL.md": "5353d9f5502f3f01198c3324204804feb30b64ab1b78b8974734ecf47a2ed7e6",
     ".claude/skills/handbook-writer/SKILL.md": "f9cdc38ec5190f30006f44f024f16fc82bb034af468df66d2ec4ae878204c0fc",
-    ".claude/skills/intent-writer/SKILL.md": "435482f8739f79f9baf71a1ba8d1a7e283b1f9413f9ed364297931cc371d925e",
+    ".claude/skills/intent-writer/SKILL.md": "b6f980c0ae949035b5c04e15791afeb4a9647557edad5760ed66bda51212d707",
     ".claude/skills/readme-writer/SKILL.md": "f74b22a2692e0e40854f38ef5aa15684bc28f424aed41e509e6ac3dd9fdcb7b9",
     ".claude/skills/spec-writer/SKILL.md": "51a59ce180c495d2dc38fbecf4d929e683b527a2ed06264dfd894173988e1f7e",
     ".claude/skills/test-plan-writer/SKILL.md": "1e8456982e9417bc7f48c04a7b1b33e3cccd6bdcd46d017de39b54c389d7898e",
@@ -71,7 +71,7 @@
     ".agents/skills/doc-audit/SKILL.md": "568ea91af2da9dfdcc43ed9991dccaa912a4aab48c4f712b90cef3cb2871f48c",
     ".agents/skills/drift-detector/SKILL.md": "5353d9f5502f3f01198c3324204804feb30b64ab1b78b8974734ecf47a2ed7e6",
     ".agents/skills/handbook-writer/SKILL.md": "f9cdc38ec5190f30006f44f024f16fc82bb034af468df66d2ec4ae878204c0fc",
-    ".agents/skills/intent-writer/SKILL.md": "435482f8739f79f9baf71a1ba8d1a7e283b1f9413f9ed364297931cc371d925e",
+    ".agents/skills/intent-writer/SKILL.md": "b6f980c0ae949035b5c04e15791afeb4a9647557edad5760ed66bda51212d707",
     ".agents/skills/readme-writer/SKILL.md": "f74b22a2692e0e40854f38ef5aa15684bc28f424aed41e509e6ac3dd9fdcb7b9",
     ".agents/skills/spec-writer/SKILL.md": "51a59ce180c495d2dc38fbecf4d929e683b527a2ed06264dfd894173988e1f7e",
     ".agents/skills/test-plan-writer/SKILL.md": "1e8456982e9417bc7f48c04a7b1b33e3cccd6bdcd46d017de39b54c389d7898e",

@@ -612,8 +612,8 @@ internal node is an error.
 
 **Entities.** An entity is the kebab-case slug (lowercase, runs of
 non-alphanumeric characters replaced by one hyphen) of a bold term
-opening a bullet in the Vocabulary section of one of the intent file's
-specs: the section headed `Vocabulary` or `Vocabulaire`, optionally
+opening a bullet, or of the first cell of a table row, in the Vocabulary
+section of one of the intent file's specs: the section headed `Vocabulary` or `Vocabulaire`, optionally
 numbered, up to the next heading of the same or a higher level.
 `**Generated file**` gives `generated-file`. No plural, no synonym: a
 missing word is added to the spec first. The language of the entities is
