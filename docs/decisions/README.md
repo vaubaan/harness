@@ -22,6 +22,9 @@ Rejected alternatives), validated by `lint:decision-schema`
 
 ## Decisions in force
 
+- [The view is derived on demand, local and self-contained](./context-view.md) — `vaubaan-harness view` renders `.vaubaan/graph.json` and one offline page from the shared parsers and the lint report; Markdown stays the only source (unreleased).
+- [A review session edits the docs in place and a skill runs the loop](./review-loop.md) — snapshot of `docs/` and `README.md`, a local server behind a token, `canvas-review` applies comments; never commits, never starts an engine (unreleased).
+- [Lessons are extracted mechanically, judged by a skill, and land in project pillars](./lessons-from-reviews.md) — `lessons collect` then `lesson-miner`; conversations opt-in; the harness ships the procedure, never the rules (unreleased).
 - [An optional intents pillar holds user intents anchored to the code](./intents-pillar.md) — `docs/intents/`, one tree of intents, terminal intents with `anchors:` and `requires:` / `creates:`, `proposed` → `implemented` in the delivering PR, index rendered; no code parsing, no graph analytics (unreleased).
 - [A decision file holds a structural decision in force](./decisions-as-current-state.md) — admission test, about 40 lines, no History; a replaced decision is deleted (2.1.0).
 - [No agent personas, no code-quality judgment](./no-personas-no-code-judgment.md) — doc-skills only; one working rule in `AGENTS.md`, the team's workflow in `docs/workflow/`, its own personas in `docs/skills/` (2.0.0).

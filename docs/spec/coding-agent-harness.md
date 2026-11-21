@@ -64,6 +64,23 @@ The harness reasons with these words:
 - **Anchor** — a pointer from a terminal intent to the code
   and tests that realize it; the `tracks:` syntax, per terminal intent
   (see §9.1.3).
+- **Context graph** — `.vaubaan/graph.json`: the meta database as one
+  index of nodes (docs, sections, vocabulary terms, intents, decisions,
+  linters, skills, the paths they point to) and typed edges, each node
+  with its domain, its source file and line, and its lint issues.
+  Derived, local, never edited (see §10.4).
+- **View** — a page rendered from the context graph that a human reads
+  instead of the Markdown. Never a source (see §10.4).
+- **Review session** — a bounded period during which the view follows
+  the docs live while the human talks to the agent or comments; it
+  starts from a snapshot of the docs and ends kept or discarded, never
+  committed (see §10.4).
+- **Comment** — a note the human pins to a node of the view during a
+  review session; the agent answers in the same thread with what it
+  changed (see §10.4).
+- **Lesson** — a rule proposed from the patches that reviews keep
+  asking for, with its evidence. Accepted, it becomes a line in a
+  project pillar (see §10.5).
 
 ### 0.1 Position
 
@@ -98,6 +115,28 @@ The harness does not touch secrets, does no network I/O, and assumes
 nothing about the calling environment: it is a pure transformation
 `(catalog, project skills, engines, overrides) → dropped files`.
 
+### 0.2 Domains
+
+Three domains, never mixed:
+
+- **Harness** — the package: the grammar of the pillars, the linters
+  and their defaults, the shipped skills as procedures (how to write,
+  never what), the view and the review server. It holds no rule, word
+  or choice specific to a project and changes through an upstream
+  contribution.
+- **Project** — what the repo commits: `docs/`, `docs/skills/`, the
+  lint configuration, and the generated files as the harness's output,
+  never as a source. The only destination of what a skill writes.
+- **Local** — what one machine keeps out of version control:
+  `.vaubaan/` (context graph, view, review sessions, lesson candidates,
+  reports) and `.harness-overrides/`. Disposable; nothing there is a
+  source of truth.
+
+A review or a lesson about the project lands in a project pillar; one
+about the harness becomes an upstream issue draft, never an edit of a
+generated file. The domain follows where a file lives, not its subject:
+in the harness's own repository, the skill sources are project code.
+
 ## 1. Vision
 
 The **harness** is the subsystem that:
@@ -131,8 +170,12 @@ The **harness** is the subsystem that:
   §11). Knowledge shared by the team goes to `docs/skills/` (§9.1.2);
   a change to the harness itself is an upstream PR.
 - **No runtime daemon.** Skills execute in the engine's process, not in
-  a harness process.
-- **No telemetry.** The CLI only performs local file reads and writes.
+  a harness process. The one harness process that outlives a command is
+  the server of a review session (§10.4), started and stopped with it
+  and reachable only from the local machine.
+- **No telemetry.** The CLI only performs local file reads and writes
+  and serves a review session on the local machine; it calls no network
+  service.
 - **No skills shared across projects** outside the package: a skill is
   either shipped by `@vaubaan/harness` or kept in one project's
   `docs/skills/`.
@@ -143,7 +186,9 @@ The **harness** is the subsystem that:
 - **No engine settings, hook, plugin or MCP configuration.** The harness
   never reads, writes or lists `.claude/settings.json`,
   `.codex/hooks.json`, `.codex/config.toml`, `.mcp.json` or
-  `.opencode/opencode.json`: those are the project's.
+  `.opencode/opencode.json`: those are the project's. An engine's
+  conversation history is read, never written, and only to collect
+  lessons when the project enables that source (§10.5).
 - **No merge.** The harness never merges its content into a file it
   does not own (see §13.1).
 - **No code-quality judgment.** No skill audits code; a project that
@@ -238,7 +283,8 @@ project/
 ├── .harness-manifest.json            # ← COMMITTED (generated)
 ├── .gitignore                        # contains .harness-overrides/ and .vaubaan/
 ├── .harness-overrides/               # ← GITIGNORED (see §11)
-└── .vaubaan/                         # ← GITIGNORED (skill reports)
+└── .vaubaan/                         # ← GITIGNORED (skill reports, context graph,
+                                      #   view, review sessions, lessons)
 ```
 
 The generated files are **committed**, like any generated code: a clone
@@ -372,6 +418,8 @@ The harness ships no agent persona and no code-quality audit (see
 | `workflow-writer`           | Updates `docs/workflow/coding-workflow.md`. Reads the repo's CI/CD config, the package manifest scripts and the branch/PR config, proposes the required sections (CI / env / PR / branches / release) and the optional ones (languages). |
 | `readme-writer`             | Maintains `README.md` at the root. Syncs the links to the other pillars; makes sure pitch + quick start stay up to date vs the code. |
 | `drift-detector`            | Detects code ↔ doc divergences.                                                                                      |
+| `canvas-review`             | Runs a review session (§10.4): opens the view, keeps it live while the human talks or comments, applies each comment to its pillar with that pillar's writer rules, answers in the thread. Writes only to the project domain (§0.2). |
+| `lesson-miner`              | Proposes lessons (§10.5): groups the patch events `lessons collect` extracted, proposes one rule per recurring patch with its evidence, domain and pillar; writes an accepted rule with the pillar's writer rules. |
 | `intent-writer`             | Writes or updates `docs/intents/<slug>.md` one node at a time (§9.1.3): greenfield (three questions) or mature (reads the code's entry points, proposes anchored terminal intents). `/intent <verb + object>` adds a `proposed` intent with its acceptance criteria before any code. |
 
 Their evolution is versioned by the package version. Only the
@@ -793,6 +841,64 @@ own flow). No engine hook is installed. Decision:
 or a file comparison *must* become a linter, and therefore a CI gate;
 the skill keeps the checks that require judgment.
 
+### 10.4 View and review
+
+The meta database gets a view; Markdown stays the only source. Decision:
+[context-view](../decisions/context-view.md).
+
+- `vaubaan-harness view` builds the context graph with the parsers the
+  linters use and attaches the lint report to it, then renders the
+  view: one self-contained page that makes no network request, whose
+  content is in the markup (scripts only for interaction), and whose
+  bytes are identical for an identical tree. It is not a gate: it exits
+  `0` and no linter reads it.
+- Every node has a stable id, its domain (§0.2), its source file and
+  line. A lint issue attaches to the deepest node of its file at or
+  above its line, otherwise to the file node.
+- The view lays the graph out on a canvas, one frame per pillar, and
+  offers views over it: the state of the context, the intent tree, the
+  vocabulary, the decisions, the linters, the skills. Every card links
+  to its source line.
+- A **review session** (decision:
+  [review-loop](../decisions/review-loop.md)) starts by copying `docs/`
+  and `README.md` to `.vaubaan/review/snapshot/`, then serves the view
+  on the local machine behind a random token. Each change of the docs
+  rebuilds the graph and reaches the open view; it shows the docs
+  before, now and the differences, with the lint delta.
+- The human pins comments and hands a batch over to the agent; the
+  agent reads it with `review next` and answers each thread with
+  `review reply`. `review keep` ends the session with the changes left
+  uncommitted; `review discard` restores `docs/` and `README.md` byte
+  for byte, untracked files included. One live session per repo.
+- The `canvas-review` skill runs the loop. A comment on a project doc
+  changes that doc; a comment on a linter or a shipped skill yields an
+  upstream issue draft under `.vaubaan/reports/`; a comment on a
+  generated file changes its source, then `update` runs.
+
+### 10.5 Lessons from reviews
+
+Reviews end in small patches; each recurring one is a rule written
+nowhere. Decision:
+[lessons-from-reviews](../decisions/lessons-from-reviews.md).
+
+- `vaubaan-harness lessons collect` extracts patch events (source,
+  date, files, a one-line quote) into `.vaubaan/lessons/`: from the repo
+  history (fix-up commits, small commits that retouch a recent change
+  with review wording), from pull request data the skill fetched, from
+  the threads review sessions archived and, only for the sources the
+  project enables in its lint configuration, from engine conversation
+  histories. It calls no network service and its output is
+  deterministic.
+- The `lesson-miner` skill groups the events by meaning and proposes a
+  lesson for each group seen at least twice and covered by no rule in
+  force; a rule in force that the patches show is not followed is
+  reported as such. Each lesson names its evidence, its domain and the
+  pillar it would go to, and appears in the view.
+- Nothing is written without the human. An accepted lesson lands in a
+  project pillar (quality, workflow, handbook, test plan, a project
+  skill); a lesson valid for every project becomes an upstream issue
+  draft. Rejected lessons are kept locally so they do not come back.
+
 ## 11. Gitignored overrides
 
 A project can override the harness locally via `.harness-overrides/`
@@ -911,6 +1017,10 @@ files, the project skills and the applicable overrides.
 exists and `.gitignore` covers `.harness-overrides/` and `.vaubaan/`
 without ignoring a generated file, `1` with a diagnostic otherwise.
 
+**View and review**: `vaubaan-harness view`, then
+`vaubaan-harness review start | next | reply | status | keep | discard`
+(§10.4). **Lessons**: `vaubaan-harness lessons collect` (§10.5).
+
 **Lint**: `vaubaan-harness lint` (§10.2), wired into the project's CI
 and pre-commit hook.
 
@@ -941,6 +1051,10 @@ agent, following the doc-first rule of `AGENTS.md`, finds the gaps with
   intent files, and carried over from its 2.2 path.
 - **E2E**: the packed package installed and run as a user would, per
   engine; an override replacing a shipped skill in the render.
+- **View and review**: the context graph on a fixture and on this
+  repository, byte-identical across two runs; no lint result changes
+  when the linters move to the shared parsers; a review session's
+  discard restores modified, created, deleted and untracked docs.
 - **Self-application**: the harness repository is harnessed by itself
   and passes its own linters.
 
@@ -962,5 +1076,13 @@ where it applies.
   `tests/load-tests.md`, `tests/security-tests.md`,
   `workflow/release-workflow.md`, `workflow/incident-workflow.md`. To
   settle when a project has a concrete need.
+- **OQ — Conversation histories of Codex and OpenCode.** Where each
+  engine stores them, and whether their format is stable enough to
+  collect lessons from (§10.5).
+- **OQ — User personas and ordered journeys.** An intent names its
+  actors but nothing defines them, and the intents tree deliberately
+  holds no sequence of steps (§9.1.3). Should actors become defined
+  terms with their needs, and should an ordered path across intents
+  have a place?
 - **OQ — Per-project `doc-audit` config.** Beyond the drift threshold,
   should more knobs be exposed (expected subsystem names, exclusions)?

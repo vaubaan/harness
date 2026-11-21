@@ -5,6 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- Contract for the context view, review sessions and lessons from reviews, before any code: spec §0 (*context graph*, *view*, *review session*, *comment*, *lesson*), §0.2 (three domains: harness, project, local), §1.1 (one local server during a review session; conversation histories read only on opt-in), §7, §10.4, §10.5; decisions [context-view](docs/decisions/context-view.md), [review-loop](docs/decisions/review-loop.md), [lessons-from-reviews](docs/decisions/lessons-from-reviews.md); the `proposed` intents of [review-the-context](docs/intents/review-the-context.md).
+
 ## [2.4.0] — 2026-11-10
 
 ### Changed
