@@ -36,6 +36,7 @@ The files the harness generates (`AGENTS.md`, `CLAUDE.md`, the `.claude/`, `.age
 - `drift-detector` (`/drift`) — Detects code ↔ doc drift. For each doc file that declares a
 - `handbook-writer` (`/handbook`) — Writes or updates `docs/handbook/<slug>.md`: only what an agent cannot
 - `intent-writer` (`/intent`) — Writes or updates `docs/intents/<slug>.md`: the user intents of
+- `lesson-miner` (`/lessons`) — Finds the small patches that reviews keep asking for, in the repo
 - `readme-writer` (`/readme`) — Maintains `README.md` at the repo root. Syncs the links to the other
 - `spec-writer` (`/spec`) — Human-guided wizard to write or update a `docs/spec/<name>.md`
 - `test-plan-writer` (`/test-plan`) — Updates `docs/tests/integration-tests.md` and/or

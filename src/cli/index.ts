@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Command } from "commander";
+import { collectLessonEvents } from "../lessons/collect.js";
 import { formatReportText, runLinters } from "../linters/index.js";
 import { startReviewServer } from "../review/server.js";
 import { newToken } from "../review/session.js";
@@ -342,6 +343,26 @@ for (const mode of ["keep", "discard"] as const) {
       );
     });
 }
+
+program
+  .command("lessons")
+  .description("Lessons from reviews: extract the patch events the lesson-miner skill groups")
+  .command("collect")
+  .description(
+    "Read the history, the pull requests saved in .vaubaan/lessons/prs.json, the archived review threads and the enabled conversation histories; write .vaubaan/lessons/events.json",
+  )
+  .argument("[dir]", "project directory", ".")
+  .option("--sources <list>", "comma-separated sources (default: the configured ones)")
+  .action((dir: string, opts: { sources?: string }) => {
+    const sources = parseList(opts.sources);
+    const r = collectLessonEvents(resolve(dir), sources ? { sources } : {});
+    for (const w of r.warnings) process.stderr.write(`warning: ${w}\n`);
+    const per = new Map<string, number>();
+    for (const e of r.events) per.set(e.source, (per.get(e.source) ?? 0) + 1);
+    process.stdout.write(
+      `${r.events.length} patch events (${r.sources.map((s) => `${s} ${per.get(s) ?? 0}`).join(", ")}) → ${r.path}\n`,
+    );
+  });
 
 program
   .command("render")
