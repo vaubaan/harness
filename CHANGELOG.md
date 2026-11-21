@@ -5,12 +5,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- `vaubaan-harness view`: the context graph (`.vaubaan/graph.json`) and its view (`.vaubaan/view/index.html`), one offline page with a canvas (one frame per pillar, links between docs, code and harness) and the overview, intents, vocabulary, decisions, linters and skills views. Every node has a stable id, a domain (harness, project, local), its source line and its lint issues. Library entry `@vaubaan/harness/view`.
+- Review sessions: `vaubaan-harness review start | next | reply | comment | note | status | keep | discard`. The view served on the local machine behind a token, rebuilt within a second of a doc change, with before / now / differences and the lint delta; comments handed over to the agent in batches; `discard` restores `docs/` and `README.md` byte for byte. Skill `canvas-review`, command `/canvas`.
+- Lessons from reviews: `vaubaan-harness lessons collect` extracts patch events from the history, pull requests the skill saved, archived review threads and, when enabled in `.harnessrc` (`lessons.sources`), Claude Code conversations. Skill `lesson-miner`, command `/lessons`.
+- Handbooks [context-view](docs/handbook/context-view.md) and [lessons](docs/handbook/lessons.md).
+- Contract for the context view, review sessions and lessons from reviews, before any code: spec §0 (*context graph*, *view*, *review session*, *comment*, *lesson*), §0.2 (three domains: harness, project, local), §1.1 (one local server during a review session; conversation histories read only on opt-in), §7, §10.4, §10.5; decisions [context-view](docs/decisions/context-view.md), [review-loop](docs/decisions/review-loop.md), [lessons-from-reviews](docs/decisions/lessons-from-reviews.md); the intents of [review-the-context](docs/intents/review-the-context.md).
+
+### Changed
+- The linters `decision-schema`, `cross-links`, `intent-vocabulary` and `tracks-drift` read through the shared readers of `src/parser/docs.ts`; no change of result.
+
 ### Fixed
 - `lint:intent-vocabulary` reads the Vocabulary **table** the spec template writes (first cell of each row, header and `<PLACEHOLDER>` rows skipped), not only `- **term**` bullets: a spec written from the template had no recognized term.
 - The test suite no longer writes into the repository being committed when the pre-commit hook runs it from a git worktree (inherited `GIT_DIR` / `GIT_INDEX_FILE`).
-
-### Added
-- Contract for the context view, review sessions and lessons from reviews, before any code: spec §0 (*context graph*, *view*, *review session*, *comment*, *lesson*), §0.2 (three domains: harness, project, local), §1.1 (one local server during a review session; conversation histories read only on opt-in), §7, §10.4, §10.5; decisions [context-view](docs/decisions/context-view.md), [review-loop](docs/decisions/review-loop.md), [lessons-from-reviews](docs/decisions/lessons-from-reviews.md); the `proposed` intents of [review-the-context](docs/intents/review-the-context.md).
 
 ## [2.4.0] — 2026-11-10
 

@@ -4,7 +4,7 @@ tracks:
   - tsup.config.ts
   - src/cli/index.ts
   - package.json
-last_reviewed: 2026-10-27
+last_reviewed: 2026-11-21
 ---
 
 # E2E test plan
@@ -44,6 +44,15 @@ last_reviewed: 2026-10-27
 - ⚠️ **Engines loading a 2.x render** (spec §4.3) — the last discovery
   checks were made on a 1.x render; to redo on each engine before a
   release that changes the layouts.
+- ⚠️ **The view in real browsers** (spec §10.4) — its script is
+  smoke-tested in a DOM emulator (tabs, selection, links, search), never
+  in a browser: layout, pan and zoom, pinch, and the light and dark
+  themes are checked by hand. Priority: high, before announcing the
+  view.
+- ⚠️ **`review start` as a detached process** (spec §10.4) — the
+  integration suite runs the server in-process; the spawn, `server.json`,
+  `review next | reply | keep | discard` through the binary were checked
+  by hand on the acme-billing fixture.
 - ⚠️ **`update` applied through the published package**, then a second
   invocation with no change (spec §13.1, updating) — only the dry-run
   preview was checked by hand on real installations.

@@ -6,7 +6,7 @@ tracks:
   - src/cli/update.ts
   - src/cli/plan-render.ts
   - src/cli/index.ts
-last_reviewed: 2026-10-27
+last_reviewed: 2026-11-21
 ---
 
 # Overrides loading — handbook
@@ -29,6 +29,7 @@ How a developer's local `.harness-overrides/` adds, replaces or disables skills 
 
 - `loadOverrides` silently treats an unreadable or mis-shaped `disable.yaml` as "disable nothing". Only the CLI path (`planInstallation`) refuses it with `invalid override selection`; a direct API caller of `render()` gets no error.
 - A recorded or explicit overrides parent whose `.harness-overrides/` has disappeared is an error before any write, not a silent fallback to the stock.
+- `buildGraph` (the view) reads the overrides of the manifest's recorded parent only to show the skill layers (shipped, project, override, disabled); it validates nothing, so a broken `disable.yaml` shows no disabled skill there either.
 - `render` (the preview command) never applies overrides, by design. To preview with overrides, `init` into a scratch directory.
 - `.harness-overrides/` is gitignored (`lint:gitignore-harness`) but what it renders is committed: a personal override lands in the team's generated files and makes `lint:generated-fresh` fail for everyone else. A skill meant for the team goes in `docs/skills/` ([project skills](./project-skills.md)).
 

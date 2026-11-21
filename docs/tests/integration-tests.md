@@ -34,6 +34,13 @@ last_reviewed: 2026-11-21
   `dist/`: the suite does not need a build.
 - Each test works in its own `mkdtempSync` directory, removed in
   `afterEach`; nothing is written in the repository.
+- `tests/fixtures/acme-billing/` is the README's example project, copied
+  into a temporary git repository by the view and review tests. Its
+  `gitignore.txt` becomes `.gitignore` there (a real `.gitignore` would
+  apply to this repository), and `.harnessrc.json` keeps the fixtures out
+  of this repository's own lint.
+- A review test runs the server in-process on a free port with a 50 ms
+  debounce; a test that starts one closes it in `afterEach`.
 - `tests/setup/isolate-git.ts` clears the variables a git hook exports
   (`GIT_DIR`, `GIT_INDEX_FILE`…) before any test: inherited from the
   pre-commit hook, they made the tests' `git init`, `git config` and
@@ -53,6 +60,9 @@ last_reviewed: 2026-11-21
   Low priority: the self-application in CI runs the binary.
 - ⚠️ **Overrides loaded from a real worktree** (spec §11) — only
   temporary projects are used.
+- ⚠️ **Lessons from Codex and OpenCode conversations** (spec §10.5) —
+  only the Claude Code history format is read and tested; the other
+  two are an open question of the spec.
 - ⚠️ **`doc-audit` and the writer skills** (spec §10.1) — skills are
   prompts; their output needs an engine and is judged by review, not by
   the suite.

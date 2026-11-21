@@ -8,7 +8,7 @@ tracks:
   - src/cli/managed-paths.ts
   - src/cli/index.ts
   - tests/integration/update.test.ts
-last_reviewed: 2026-10-27
+last_reviewed: 2026-11-21
 ---
 
 # Updating a project — handbook

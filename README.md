@@ -20,9 +20,10 @@ npx -y @vaubaan/harness init . --engines=claude-code
 
 A few Markdown files hold what the code cannot say and point to the code and configs for everything else. The harness renders them into the native layout of Claude Code, Codex or OpenCode, and lints them so context and code never drift apart.
 
-- **One context, every engine.** Nine skills, one per pillar plus an audit and a drift detector, each with a slash command. Written once for Claude Code, Codex and OpenCode.
+- **One context, every engine.** Eleven skills, one per pillar plus an audit, a drift detector, a review canvas and a lesson miner, each with a slash command. Written once for Claude Code, Codex and OpenCode.
 - **Pointers that stay true.** Handbooks, test plans and intents declare the files they describe. When that code moves and the doc does not, the linter says so.
 - **Checks with zero tokens.** Nineteen mechanical linters run in CI and in your pre-commit hook. No engine hook, no injected turn, no loop. The agent sees a failed command and fixes it.
+- **A view to review it.** `vaubaan-harness view` draws the whole context on one offline canvas. `/canvas` keeps it live while you talk to the agent or comment a card, and nothing is committed until you say so. `/lessons` turns the patches reviews keep asking for into rules.
 
 **Contents**
 
@@ -429,7 +430,7 @@ In database terms:
 | Schema                | The pillars below: one per kind of information. A rule goes to the spec, a why to a decision, a how to a handbook.                                     |
 | Foreign keys          | `tracks:`, `anchors:`, `spec:`, the "realized by" arrows. They point into the code database, and the linter refuses one that does not resolve.         |
 | Integrity constraints | Nineteen linters: shape, pointers, vocabulary, freshness. Run on every commit and pull request, at zero token cost.                                    |
-| Materialized views    | What `update .` renders: `AGENTS.md`, the skills per engine, the intents index. Committed, never edited by hand, refreshed from their source.          |
+| Materialized views    | What `update .` renders: `AGENTS.md`, the skills per engine, the intents index. Committed, never edited by hand, refreshed from their source. And what `view` derives on demand, never committed: the context graph and its canvas. |
 | Transactions          | `/intent <verb + object>`: a typed write that adds a `proposed` intent with its acceptance criteria and leaves the base consistent.                     |
 | Join table            | The intents pillar: the one table that joins both databases, to the code through `anchors:` and to the spec vocabulary through `requires:` / `creates:`. |
 
@@ -745,7 +746,7 @@ Warning sign: if finishing requires touching a generated file, disabling a linte
 
 ### Skills
 
-**9 skills**, nine slash commands. A skill never says *when* to do something. It says *how* to write or check one pillar.
+**11 skills**, eleven slash commands. A skill never says *when* to do something. It says *how* to write or check one pillar.
 
 | Command       | Skill                    | What it does                                                                                   |
 | ------------- | ------------------------ | ---------------------------------------------------------------------------------------------- |
@@ -757,6 +758,8 @@ Warning sign: if finishing requires touching a generated file, disabling a linte
 | `/test-plan`  | `test-plan-writer`       | Keeps integration and e2e test plans up to date.                                               |
 | `/workflow`   | `workflow-writer`        | Documents CI, environments, PR process, branches, release, languages.                          |
 | `/readme`     | `readme-writer`          | Keeps the README in sync with the code.                                                        |
+| `/canvas`     | `canvas-review`          | Opens the live view of the context; you talk or comment cards, the agent changes the docs and answers in the thread. Ends with keep or discard, never a commit. |
+| `/lessons`    | `lesson-miner`           | Finds the patches reviews keep asking for and proposes the rule that prevents each, with its evidence, in the right pillar. |
 | `/intent`     | `intent-writer`          | `/intent <verb + object>` proposes an intent with its acceptance criteria before any code; with no argument, maps or extends the intent tree: three questions on a greenfield scope, extraction from the code on a mature one. |
 
 ### Linters
@@ -800,6 +803,9 @@ You name your engines; nothing is rendered for a tool you don't use. Add one lat
 | `update [dir]`                        | Re-render with the installed version, keeping your engines. `--dry-run --json` previews.     |
 | `uninstall <dir>`                     | Remove what `init` wrote, leaving your own files in place.                                   |
 | `lint`                                | Run the linters. `--format json`, `--pillar <name>`, `--only <ids>`.                         |
+| `view [dir]`                          | Write the context graph (`.vaubaan/graph.json`) and its offline canvas (`.vaubaan/view/index.html`). |
+| `review start \| next \| reply \| keep \| discard` | A review session: the canvas served locally and live, comments handed to the agent; `discard` restores `docs/` as it was. |
+| `lessons collect [dir]`               | Extract the patch events `/lessons` turns into rules (`.vaubaan/lessons/events.json`).        |
 | `check <dir>`                         | Quick layout check: doc folders and `.gitignore`.                                            |
 | `render --engines=<list> --out <dir>` | Preview the render somewhere harmless.                                                       |
 
@@ -841,6 +847,22 @@ Overrides are personal and disposable. Skills meant for the whole team go in `do
 </details>
 
 <details>
+<summary><b>Lessons from your agent conversations</b></summary>
+
+`/lessons` reads the history, your pull requests and the comments of past review sessions. Agent conversations are often where corrections happen, but they are private: they are read only if you list the source, and quoted one line at a time.
+
+```json
+{
+  "lessons": {
+    "sources": ["claude-code"],
+    "threshold": 2
+  }
+}
+```
+
+</details>
+
+<details>
 <summary><b>Updating</b></summary>
 
 ```bash
@@ -873,7 +895,7 @@ npx @vaubaan/harness update .                    # then commit the result
 
 ## Where this is going
 
-Shipped: the optional `docs/intents/` pillar and its typed context transaction, `/intent <verb + object>`, which writes an increment as a `proposed` intent before the code and passes it `implemented` when delivered. Read it as an OKR tree: intents are objectives, acceptance criteria are key results, anchors are the initiatives, and progress is the share of `implemented` intents, computed from the repo. Decided, not shipped yet: the other transactions (`/refactor`, `/fix`), pointer checks per section, a token budget per file, and `/compact` to rewrite a context that has grown contradictions. The [spec](./docs/spec/coding-agent-harness.md) and the [decisions](./docs/decisions/) say what exists today.
+Shipped: the context view and review sessions (`view`, `/canvas`) and lessons from reviews (`/lessons`); the optional `docs/intents/` pillar and its typed context transaction, `/intent <verb + object>`, which writes an increment as a `proposed` intent before the code and passes it `implemented` when delivered. Read it as an OKR tree: intents are objectives, acceptance criteria are key results, anchors are the initiatives, and progress is the share of `implemented` intents, computed from the repo. Decided, not shipped yet: the other transactions (`/refactor`, `/fix`), pointer checks per section, a token budget per file, and `/compact` to rewrite a context that has grown contradictions. The [spec](./docs/spec/coding-agent-harness.md) and the [decisions](./docs/decisions/) say what exists today.
 
 ## Documentation
 

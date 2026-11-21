@@ -7,7 +7,7 @@ tracks:
   - scripts/copy-content.mjs
   - tsup.config.ts
   - package.json
-last_reviewed: 2026-10-27
+last_reviewed: 2026-11-21
 ---
 
 # CLI package resolution — handbook
@@ -17,7 +17,7 @@ How the CLI and the library find `skills/`, `commands/` and `templates/`, in dev
 ## Start here
 
 - [`src/cli/index.ts`](../../src/cli/index.ts) — `resolvePackageDir()`, used by every CLI command that renders.
-- [`src/cli/plan-render.ts`](../../src/cli/plan-render.ts) — `defaultPackageDir()`, used when a caller passes no `packageDir` (programmatic `init`, `lint:generated-fresh`).
+- [`src/cli/plan-render.ts`](../../src/cli/plan-render.ts) — `defaultPackageDir()`, used when a caller passes no `packageDir` (programmatic `init`, `lint:generated-fresh`, `buildGraph` for the skills of the view).
 - [`scripts/copy-content.mjs`](../../scripts/copy-content.mjs) — the post-build step that copies the Markdown content into `dist/`.
 
 ## Invariants
@@ -28,9 +28,10 @@ How the CLI and the library find `skills/`, `commands/` and `templates/`, in dev
 
 ## Traps
 
-- `tsup` bundles `plan-render.ts` into several entries (`splitting: false`), so its `import.meta.url` is the entry's location: `dist/init.js` finds `dist/skills/` beside it, `dist/cli/index.js` and `dist/linters/index.js` one level up. `defaultPackageDir()` checks for `skills/` next to the module before taking the parent; moving an entry in `tsup.config.ts` breaks it.
+- `tsup` bundles `plan-render.ts` into several entries (`splitting: false`), so its `import.meta.url` is the entry's location: `dist/init.js` finds `dist/skills/` beside it, `dist/cli/index.js`, `dist/linters/index.js` and `dist/view/index.js` one level up. `defaultPackageDir()` checks for `skills/` next to the module before taking the parent; moving an entry in `tsup.config.ts` breaks it.
 - `templates/` is copied but never read by `loadHarness`: the writer skills copy templates from it. It only looks inert.
 - `tsup` cleans `dist/` but `copy-content.mjs` alone does not: a renamed skill survives in `dist/` until a full `npm run build`.
+- `review start` starts its server as `node <process.argv[1]> review serve`: the CLI entry the user ran, through the `.bin` link under `npx`. A caller of the API outside the CLI passes `cliPath`, or `foreground: true`.
 - `--package-dir` exists on `init` and `render` only. `update` always renders with the running package's own content; only its API accepts a fixture `packageDir`.
 
 ## Debug

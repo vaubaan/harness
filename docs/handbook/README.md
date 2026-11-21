@@ -12,3 +12,5 @@ What the code of `@vaubaan/harness` does not say: entry points, cross-file invar
 - [Intents pillar](./intents-pillar.md) — the optional `docs/intents/`: grammar, linters, the generated index.
 - [File lifecycle](./uninstall.md) — path checks, `init` re-runs, `uninstall`.
 - [Updating a project](./project-update.md) — manifest migrations, backup and rollback, 1.x leftovers.
+- [Context view and review sessions](./context-view.md) — the graph, the offline page, the local review server and its traps.
+- [Lessons from reviews](./lessons.md) — what `lessons collect` reads, and why it reads pull requests.
