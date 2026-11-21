@@ -1,6 +1,7 @@
 import { stringify as yamlStringify } from "yaml";
 import type { Cmd } from "../parser/cmd.js";
 import type { Skill } from "../parser/skill.js";
+import { ADDABLE_PILLARS, type PillarId } from "../pillars.js";
 import {
   CAPABILITIES_MATRIX,
   type Capability,
@@ -13,8 +14,8 @@ export interface UmbrellaExtras {
   availableSkills: ReadonlyArray<Skill>;
   availableCommands: ReadonlyArray<Cmd>;
   hasProjectSkills?: boolean;
-  hasQualityDoc?: boolean;
-  hasIntents?: boolean;
+  /** The pillars active in the project: the map and the rules hold a line only for them. */
+  activePillars: ReadonlySet<PillarId>;
 }
 
 export interface RenderResult {
@@ -114,6 +115,10 @@ export function buildUmbrellaBody(extras: UmbrellaExtras): string {
         : `\`${s.meta.id}\``;
     return `- ${label} — ${s.meta.description.split("\n")[0]}`;
   });
+  const has = (pillar: PillarId): boolean => extras.activePillars.has(pillar);
+  const exposes = (id: string): boolean => extras.availableSkills.some((s) => s.meta.id === id);
+  const when = (condition: boolean, ...lines: string[]): string[] => (condition ? lines : []);
+  const inactive = ADDABLE_PILLARS.filter((pillar) => !has(pillar.id)).map((p) => `\`${p.id}\``);
   const sections: string[] = [
     "# How we work",
     "",
@@ -123,37 +128,64 @@ export function buildUmbrellaBody(extras: UmbrellaExtras): string {
     "",
     "- `README.md` — pitch, quick start, scripts. Entry point.",
     "- `docs/spec/<subsystem>.md` — *what* and *why* (tech-agnostic).",
-    "- `docs/handbook/<feature>.md` — what the code does not say: entry points, traps, settings outside the repo, manual procedures.",
-    "- `docs/decisions/<slug>.md` — ADRs: structural choices and rejected alternatives.",
-    "- `docs/tests/integration-tests.md` & `e2e-tests.md` — test scope, stack, conventions, known gaps.",
-    "- `docs/workflow/coding-workflow.md` — CI, branches, PR, release. How this team works: follow it.",
-    ...(extras.hasProjectSkills
-      ? ["- `docs/skills/*.skill.md` — the project's domain skills."]
-      : []),
-    ...(extras.hasQualityDoc
-      ? [
-          "- `docs/quality/code-quality.md` — the project's code-quality rules: mechanical checks, judgment rules, accepted deviations. Read it before writing or auditing code.",
-        ]
-      : []),
-    ...(extras.hasIntents
-      ? [
-          "- `docs/intents/<intent>.md` — user intents, one tree per level-1 intent, anchored to the code. `docs/intents/README.md` is the generated index.",
-        ]
-      : []),
+    ...when(
+      has("handbook"),
+      "- `docs/handbook/<feature>.md` — what the code does not say: entry points, traps, settings outside the repo, manual procedures.",
+    ),
+    ...when(
+      has("decisions"),
+      "- `docs/decisions/<slug>.md` — ADRs: structural choices and rejected alternatives.",
+    ),
+    ...when(
+      has("tests"),
+      "- `docs/tests/integration-tests.md` & `e2e-tests.md` — test scope, stack, conventions, known gaps.",
+    ),
+    ...when(
+      has("workflow"),
+      "- `docs/workflow/coding-workflow.md` — CI, branches, PR, release. How this team works: follow it.",
+    ),
+    ...when(
+      extras.hasProjectSkills === true,
+      "- `docs/skills/*.skill.md` — the project's domain skills.",
+    ),
+    ...when(
+      has("quality"),
+      "- `docs/quality/code-quality.md` — the project's code-quality rules: mechanical checks, judgment rules, accepted deviations. Read it before writing or auditing code.",
+    ),
+    ...when(
+      has("intents"),
+      "- `docs/intents/<intent>.md` — user intents, one tree per level-1 intent, anchored to the code. `docs/intents/README.md` is the generated index.",
+    ),
+    ...when(
+      has("profiles"),
+      "- `docs/profiles/<profile>.md` — who the project serves, their pains and gains. `docs/profiles/README.md` is the generated index: which intent serves which pain.",
+    ),
+    ...when(
+      inactive.length > 0,
+      "",
+      `Not in this project yet: ${inactive.join(", ")}. A pillar is added the day the project needs it, with \`npx @vaubaan/harness add <pillar>\`${
+        exposes("harness-zero") ? "; the `harness-zero` skill says when each one is worth it" : ""
+      }. Propose it to the human, never create the folder unasked.`,
+    ),
     "",
     "## Doc-first",
     "",
     "The order is: **understand the docs → fill the gaps → code → update the docs → commit**. If the docs are silent or stale on something you change, fill the gap upfront with the doc-skill writers — not downstream, not after the fact.",
     "",
-    ...(extras.hasIntents
-      ? [
-          "- Visible change of behavior → a `proposed` intent first (`/intent <verb + object>`), never the code first.",
-        ]
-      : []),
+    ...when(
+      has("intents"),
+      "- Visible change of behavior → a `proposed` intent first (`/intent <verb + object>`), never the code first.",
+    ),
     "- Missing spec for a subsystem you touch → **do not code**, report the gap.",
-    "- Implicit structural decision in your changes → an ADR (`/decision`).",
-    "- Changed feature behavior → update the matching handbook (`/handbook`).",
-    "- Suspected code ↔ doc drift → `/drift` before moving on.",
+    ...when(
+      has("decisions"),
+      "- Implicit structural decision in your changes → an ADR (`/decision`).",
+    ),
+    ...when(
+      has("handbook"),
+      "- Changed feature behavior → update the matching handbook (`/handbook`).",
+    ),
+    ...when(exposes("drift-detector"), "- Suspected code ↔ doc drift → `/drift` before moving on."),
     "",
     "## Checks",
     "",
@@ -162,7 +194,7 @@ export function buildUmbrellaBody(extras: UmbrellaExtras): string {
     "The files the harness generates (`AGENTS.md`, `CLAUDE.md`, the `.claude/`, `.agents/` and `.opencode/` folders, `.harness-manifest.json`) are committed. Never edit them by hand: change their source in `docs/` or `.harness-overrides/`, run `npx @vaubaan/harness update .`, and commit the result. The linter fails when a generated file no longer matches its render.",
   ];
   if (skillLines.length > 0) {
-    sections.push("", "## Doc-skills", "", skillLines.join("\n"));
+    sections.push("", "## Skills", "", skillLines.join("\n"));
   }
   return `${sections.join("\n")}\n`;
 }

@@ -74,6 +74,10 @@ of the harness).
 ## Guardrails
 
 - **Propose, never decide.** Nothing lands in a pillar without the human.
+- **Never create a pillar to hold a lesson.** When the pillar a lesson
+  belongs to is not active in the project, say so in the proposal with
+  its command (`npx @vaubaan/harness add quality`); the human adds it
+  first, or the lesson waits.
 - **Quote, do not copy.** One line per piece of evidence, secrets masked;
   conversation histories stay on the machine.
 - **No rule from one occurrence.** Below the threshold, it waits.

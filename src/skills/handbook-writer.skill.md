@@ -7,6 +7,7 @@ description: |
   the code. Keeps the `tracks: [...]` frontmatter valid for drift detection.
 engines: [claude-code, codex-cli, opencode]
 requires: [multi-step]
+pillars: [handbook]
 tags: [handbook, doc, writer]
 ---
 

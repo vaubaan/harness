@@ -124,6 +124,7 @@ const PILLAR_PATHS: Record<string, ReadonlyArray<string>> = {
   workflow: ["docs/workflow/"],
   quality: ["docs/quality/"],
   intents: ["docs/intents/"],
+  profiles: ["docs/profiles/"],
 };
 
 const RENDERED_SKILL_DIRS = [".claude/skills", ".agents/skills", ".opencode/skills"];

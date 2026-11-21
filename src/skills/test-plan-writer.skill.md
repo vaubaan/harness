@@ -7,6 +7,7 @@ description: |
   truth. Maintains the `tracks: [...]` frontmatter for drift detection.
 engines: [claude-code, codex-cli, opencode]
 requires: [multi-step]
+pillars: [tests]
 tags: [tests, doc, writer]
 ---
 

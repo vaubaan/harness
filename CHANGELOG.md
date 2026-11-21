@@ -5,19 +5,41 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+**Breaking: the next release is 3.0.0.** Pillars are active by presence and only the README is required. A project that has the six former pillars is unaffected; see Migration.
+
+### Changed
+- **Only `README.md` is required.** README and spec are the core; every other pillar (decisions, handbook, tests, workflow, quality, intents, profiles) is active when its folder under `docs/` exists and leaves no trace otherwise: no linter, no skill, no command, no line of `AGENTS.md`. Decision: [pillars-on-demand](docs/decisions/pillars-on-demand.md); spec §9.1.2.
+- Skills are rendered per pillar: a shipped skill declares `pillars:` and is rendered while one of them is active. A project with a README alone receives seven skills instead of thirteen. Project skills and overrides may use the field.
+- `lint:doc-layout` no longer requires any folder; it fails on a pillar folder that holds no file, which git would not record. `lint:cardinal-files` requires the test plans and the workflow only once their folder exists. `lint:spec-has-content` warns when there is no spec at all.
+- `check` requires the README and the `.gitignore` entries, no folder.
+- `AGENTS.md`: the map and the doc-first rules hold a line only for an active pillar; one line names the pillars not added yet. Its last section is titled "Skills".
+- The intents index is rendered while `docs/intents/` exists, even empty; deleting the last intent file no longer removes the pillar, deleting the folder does.
+- `doc-audit` audits the active pillars only and never reports an inactive pillar as a gap.
+- Workflow: a branch is named after what it does, never after a conversation or ticket number alone; a release adds its entry to `harness-upgrade`.
+- The linters `decision-schema`, `cross-links`, `intent-vocabulary` and `tracks-drift` read through the shared readers of `src/parser/docs.ts`; no change of result.
+
 ### Added
+- `vaubaan-harness add <pillar> [dir]`: activates a pillar. Writes its starter files without overwriting anything, then re-renders so its skill, command and `AGENTS.md` lines appear.
+- The `harness-zero` skill, always rendered: how to work in a harnessed project, and for each inactive pillar the sign that the project now needs it. The agent proposes `add <pillar>`; the human decides.
+- The `harness-upgrade` skill and `/harness-upgrade`, always rendered: moves a project to a newer version and applies the migration notes of every version crossed. The notes live in the skill; a test fails when the current minor has no entry.
+- The `docs/profiles/` pillar: one file per kind of user, with ranked pains and gains and the evidence behind them (`hypothesis` until validated). An intent's `actors:` are then profiles, and a terminal intent declares `relieves:` / `delivers:`. The generated `docs/profiles/README.md` shows which intent serves which pain and which pain nothing relieves. Linters `lint:profile-schema` and `lint:intent-profiles`; written by `intent-writer`, audited by `doc-audit`. Decision: [profiles-pillar](docs/decisions/profiles-pillar.md); spec §9.1.4.
+- Templates `profile`, `decisions-index`, `handbook-index`.
 - `vaubaan-harness view`: the context graph (`.vaubaan/graph.json`) and its view (`.vaubaan/view/index.html`), one offline page with a canvas (one frame per pillar, links between docs, code and harness) and the overview, intents, vocabulary, decisions, linters and skills views. Every node has a stable id, a domain (harness, project, local), its source line and its lint issues. Library entry `@vaubaan/harness/view`.
 - Review sessions: `vaubaan-harness review start | next | reply | comment | note | status | keep | discard`. The view served on the local machine behind a token, rebuilt within a second of a doc change, with before / now / differences and the lint delta; comments handed over to the agent in batches; `discard` restores `docs/` and `README.md` byte for byte. Skill `canvas-review`, command `/canvas`.
 - Lessons from reviews: `vaubaan-harness lessons collect` extracts patch events from the history, pull requests the skill saved, archived review threads and, when enabled in `.harnessrc` (`lessons.sources`), Claude Code conversations. Skill `lesson-miner`, command `/lessons`.
 - Handbooks [context-view](docs/handbook/context-view.md) and [lessons](docs/handbook/lessons.md).
 - Contract for the context view, review sessions and lessons from reviews, before any code: spec §0 (*context graph*, *view*, *review session*, *comment*, *lesson*), §0.2 (three domains: harness, project, local), §1.1 (one local server during a review session; conversation histories read only on opt-in), §7, §10.4, §10.5; decisions [context-view](docs/decisions/context-view.md), [review-loop](docs/decisions/review-loop.md), [lessons-from-reviews](docs/decisions/lessons-from-reviews.md); the intents of [review-the-context](docs/intents/review-the-context.md).
 
-### Changed
-- The linters `decision-schema`, `cross-links`, `intent-vocabulary` and `tracks-drift` read through the shared readers of `src/parser/docs.ts`; no change of result.
-
 ### Fixed
 - `lint:intent-vocabulary` reads the Vocabulary **table** the spec template writes (first cell of each row, header and `<PLACEHOLDER>` rows skipped), not only `- **term**` bullets: a spec written from the template had no recognized term.
 - The test suite no longer writes into the repository being committed when the pre-commit hook runs it from a git worktree (inherited `GIT_DIR` / `GIT_INDEX_FILE`).
+
+### Removed
+- The hidden `stop-hook` command, a no-op kept through 2.x for hook entries written by 1.x.
+- `RenderInput.hasQualityDoc`, replaced by `activePillars`.
+
+### Migration
+`/harness-upgrade`, or by hand: `npm i -D @vaubaan/harness@3`, `npx @vaubaan/harness update .`, commit. Nothing else for a project with the six former pillars. Then, if they apply: delete a pillar folder you kept only for the lint and run `update .`; remove a leftover `@vaubaan/harness stop-hook` entry from `.claude/settings.json` or `.codex/hooks.json`, which now fails instead of doing nothing; replace `hasQualityDoc` in a programmatic `render()` call.
 
 ## [2.4.0] — 2026-11-10
 

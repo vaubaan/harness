@@ -183,11 +183,11 @@ describe("initCommand integration — quality pillar", () => {
     expect(umbrella).not.toMatch(/docs\/quality/);
   });
 
-  it("omits the quality line when docs/quality/ has no cardinal file", () => {
+  it("lists the quality pillar as soon as its folder exists: the folder is the switch", () => {
     mkdirSync(join(sandbox, "docs", "quality"), { recursive: true });
     initCommand({ targetDir: sandbox, engines: ["claude-code"], packageDir: PACKAGE_DIR });
     const umbrella = readFileSync(join(sandbox, "AGENTS.md"), "utf8");
-    expect(umbrella).not.toMatch(/docs\/quality/);
+    expect(umbrella).toMatch(/docs\/quality\/code-quality\.md/);
   });
 });
 

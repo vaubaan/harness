@@ -18,10 +18,6 @@ function write(rel: string, content: string): void {
   writeFileSync(full, content);
 }
 
-function mkdir(rel: string): void {
-  mkdirSync(join(repo, rel), { recursive: true });
-}
-
 function bootstrapFullPassingRepo(): void {
   write(
     "README.md",
@@ -40,9 +36,10 @@ Install.
 [workflow](./docs/workflow/coding-workflow.md)
 `,
   );
-  for (const d of ["docs/spec", "docs/decisions", "docs/handbook", "docs/tests", "docs/workflow"]) {
-    mkdir(d);
-  }
+  // Every pillar active, none empty: git records no empty folder.
+  write("docs/spec/system.md", "# System\n");
+  write("docs/decisions/README.md", "# Decisions\n");
+  write("docs/handbook/README.md", "# Handbook\n");
   write("package.json", "{}");
   write(
     "docs/tests/integration-tests.md",
@@ -87,7 +84,10 @@ describe("lint integration on synthetic repos", () => {
   it("returns pass=false on empty repo with errors aggregated", () => {
     const report = runLinters(repo);
     expect(report.summary.pass).toBe(false);
-    expect(report.summary.errors).toBeGreaterThanOrEqual(5);
+    expect(report.issues.filter((i) => i.severity === "error").map((i) => i.linter)).toEqual([
+      "lint:readme-presence",
+      "lint:gitignore-harness",
+    ]);
   });
 
   it("flags spec tech-agnostic violation", () => {

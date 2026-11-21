@@ -6,7 +6,9 @@ description: |
   a time. Greenfield: three questions. Mature: reads the code's entry
   points and proposes anchored terminal intents. `/intent <verb + object>`
   adds a `proposed` intent with its acceptance criteria before any code
-  is written.
+  is written. Also writes the user profiles under `docs/profiles/` (who
+  the project serves, their pains and gains) and names, on an intent,
+  the profile it serves and the pain it relieves.
 tags:
   - intents
   - doc
@@ -52,6 +54,9 @@ split into two level-1 intents; never nest a file in another with a
 
 ## When to invoke you
 
+- The human points to user research (interviews, a synthesis, a value
+  proposition canvas) or asks who the project is for: write or update a
+  profile (see *Profiles* below).
 - `/intent <verb + object>`: a visible change of behavior is about to be
   built. This is the doc-first rule of `AGENTS.md`; nothing is coded
   before the intent exists.
@@ -81,6 +86,8 @@ As a <actor>, I want <intent> so that <outcome>.   ← intent statement
 
 requires: <entity>, <entity>
 creates: <entity>
+relieves: <pain>                   ← only with docs/profiles/
+delivers: <gain>                   ← only with docs/profiles/
 anchors: <path or glob>, <path or glob>
 spec: ../spec/<subsystem>.md#<section>
 
@@ -105,6 +112,61 @@ Rules the linters enforce (`lint:intent-*`), so apply them as you write:
   spec first (`/spec`), never into the intent file as an invention.
 - `spec:` paths resolve. `docs/intents/README.md` is generated: never
   edit it; after any change run `npx @vaubaan/harness update .`.
+
+## Profiles
+
+Only when `docs/profiles/` exists (spec §9.1.4 of the harness). A profile
+is a kind of user the project serves, never an agent role. One file
+`docs/profiles/<slug>.md`; the slug is the name the intents use in
+`actors:`.
+
+```markdown
+---
+title: <Who they are, in a few words>
+status: hypothesis | validated
+evidence: <relative path or URL>      ← required when validated
+last_reviewed: YYYY-MM-DD
+---
+
+# <Who they are>
+
+<One paragraph: who, in what situation.>
+
+## Pains
+
+- **<Name of the pain>** — <what hurts, in the user's terms>
+
+## Gains
+
+- **<Name of the gain>** — <the outcome they hope for>
+```
+
+- **Write from evidence, never from imagination.** Read the research the
+  human points to and propose the profile; they correct. With no
+  research, write a `hypothesis` and say what would validate it. Never
+  set `validated` without an `evidence:` you have read or the human
+  vouches for.
+- **Do not copy the research.** Interview notes hold personal data: the
+  profile links to them, or to their synthesis, and keeps only the pain.
+- **A pain is what the user lives**, not the absence of a feature:
+  "cannot tell which invoices are late", never "no dashboard".
+- **The order is the rank**: the most severe pain first. Ask the human
+  when the research does not say.
+- **3 to 7 pains, 3 to 7 gains, 20 to 40 lines.** A longer list has not
+  been ranked yet.
+- **No jobs section.** What the profile is trying to do is its intents:
+  the level-1 intents that name it in `actors:`.
+- **On every intent you write**, while the pillar is active: `actors:`
+  holds profile slugs, and you ask which pain the intent relieves or
+  which gain it delivers, then write `relieves:` / `delivers:` on the
+  terminal intent with the slugs (`**Context rot**` → `context-rot`).
+  "None" is an answer: say that the intent then serves nobody yet and
+  let the human decide. A pain the research does not hold goes into the
+  profile first, never into the intent as an invention.
+- **Check** with `npx @vaubaan/harness lint --pillar profiles`, then
+  `npx @vaubaan/harness update .`: the generated
+  `docs/profiles/README.md` shows which intent serves which pain, and
+  which pain nothing relieves yet. Never edit it.
 
 ## Procedure
 
@@ -172,4 +234,8 @@ Rules the linters enforce (`lint:intent-*`), so apply them as you write:
   refuses an undefined entity rather than coining one.
 - **Do not commit.** Write the files only; the commit follows the
   project's workflow.
-- **Never edit `docs/intents/README.md`.** It is rendered.
+- **Never edit `docs/intents/README.md` or `docs/profiles/README.md`.**
+  They are rendered.
+- **Never create `docs/profiles/` yourself.** Without the pillar, actors
+  are free strings and `relieves:` / `delivers:` fail the lint. Adding
+  it is the human's decision: `npx @vaubaan/harness add profiles`.

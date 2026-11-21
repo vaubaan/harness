@@ -8,8 +8,9 @@ What the code of `@vaubaan/harness` does not say: entry points, cross-file invar
 - [CLI package resolution](./cli-package-resolution.md) — how the content root is found in `src/` and `dist/`.
 - [Overrides loading](./overrides-loading.md) — `.harness-overrides/` merge order and its traps.
 - [Project skills](./project-skills.md) — `docs/skills/` rendered alongside the built-in skills.
-- [Quality pillar](./quality-pillar.md) — the optional `docs/quality/code-quality.md`.
-- [Intents pillar](./intents-pillar.md) — the optional `docs/intents/`: grammar, linters, the generated index.
+- [Quality pillar](./quality-pillar.md) — `docs/quality/code-quality.md`.
+- [Pillars on demand](./pillars-on-demand.md) — the registry, `add`, what makes a pillar active, the profiles pillar.
+- [Intents pillar](./intents-pillar.md) — `docs/intents/`: grammar, linters, the generated index.
 - [File lifecycle](./uninstall.md) — path checks, `init` re-runs, `uninstall`.
 - [Updating a project](./project-update.md) — manifest migrations, backup and rollback, 1.x leftovers.
 - [Context view and review sessions](./context-view.md) — the graph, the offline page, the local review server and its traps.

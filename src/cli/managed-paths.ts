@@ -5,8 +5,9 @@ const MANAGED_FILES = new Set([
   "AGENTS.md",
   "CLAUDE.md",
   ".harness-manifest.json",
-  // Index of the optional intents pillar, rendered while an intent file exists.
+  // Indexes of the intents and profiles pillars, rendered while the pillar is active.
   "docs/intents/README.md",
+  "docs/profiles/README.md",
   // Its 2.2 location, kept managed so `update` can remove it (see MOVED_PATHS).
   "docs/journeys/README.md",
 ]);

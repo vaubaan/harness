@@ -5,7 +5,7 @@ tracks:
   - .github/workflows/ci.yml
   - .github/workflows/publish.yml
   - .husky/pre-commit
-last_reviewed: 2026-11-09
+last_reviewed: 2026-11-21
 ---
 
 # Coding workflow — @vaubaan/harness
@@ -65,6 +65,14 @@ pushing a `v<semver>` tag that publishes to npmjs.
 - Branches `<kind>/<slug>` (`feat/…`, `fix/…`, `docs/…`), or
   `agent/<slug>` for agent-driven work; short-lived, rebased on `main`
   before merge.
+- The slug says what the branch does (`agent/pillars-on-demand`). A
+  branch named after a conversation or a ticket number alone
+  (`conv/261121-a75976`) is renamed before its first commit: nobody can
+  tell two of them apart in a list.
+- Several branches may be in flight at once. Before a wide change, list
+  them (`git worktree list`, `git branch -a`) and keep out of the files
+  another one is rewriting; merge `main` into a trial copy of the other
+  branch before opening the PR.
 - No `staging` branch; one is added only if a separate release train
   appears.
 
@@ -74,6 +82,9 @@ pushing a `v<semver>` tag that publishes to npmjs.
   `package.json`, the lockfile and `src/version.ts` (the `version` script
   syncs the constant and reformats `package.json`; a test fails when they
   differ). Then move `[Unreleased]` to the new version in `CHANGELOG.md`,
+  add the version's entry to `src/skills/harness-upgrade.skill.md` (what
+  a project must do to move to it, or "nothing to do"; a test fails when
+  the current minor has none),
   check the README against the code (`readme-writer`), and refresh the
   generated files with `npm run build && node dist/cli/index.js update .`:
   the manifest records the harness version.

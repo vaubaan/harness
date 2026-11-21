@@ -7,6 +7,7 @@ description: |
   cannot see (linters count commits, you read the content).
 engines: [claude-code, codex-cli, opencode]
 requires: [multi-step]
+pillars: [handbook, tests, workflow, intents]
 tags: [drift, doc, audit]
 ---
 

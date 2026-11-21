@@ -22,6 +22,8 @@ Rejected alternatives), validated by `lint:decision-schema`
 
 ## Decisions in force
 
+- [A pillar is active when its folder exists, and only the README is required](./pillars-on-demand.md) — core = README + spec; every other pillar is activated by `add <pillar>`, with its linters, skill and command; `harness-zero` proposes, `harness-upgrade` migrates (unreleased).
+- [An optional profiles pillar says who the project serves, their pains and gains](./profiles-pillar.md) — `docs/profiles/`, one file per user profile; intents name profiles as actors and the pains they relieve; the fit is a generated index (unreleased).
 - [The view is derived on demand, local and self-contained](./context-view.md) — `vaubaan-harness view` renders `.vaubaan/graph.json` and one offline page from the shared parsers and the lint report; Markdown stays the only source (unreleased).
 - [A review session edits the docs in place and a skill runs the loop](./review-loop.md) — snapshot of `docs/` and `README.md`, a local server behind a token, `canvas-review` applies comments; never commits, never starts an engine (unreleased).
 - [Lessons are extracted mechanically, judged by a skill, and land in project pillars](./lessons-from-reviews.md) — `lessons collect` then `lesson-miner`; conversations opt-in; the harness ships the procedure, never the rules (unreleased).

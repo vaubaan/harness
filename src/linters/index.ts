@@ -9,9 +9,11 @@ import { generatedFresh } from "./generated-fresh.js";
 import { gitignoreHarness } from "./gitignore-harness.js";
 import { intentAnchors } from "./intent-anchors.js";
 import { intentGraph } from "./intent-graph.js";
+import { intentProfiles } from "./intent-profiles.js";
 import { intentSchema } from "./intent-schema.js";
 import { intentVocabulary } from "./intent-vocabulary.js";
 import { orphanDecisions } from "./orphan-decisions.js";
+import { profileSchema } from "./profile-schema.js";
 import { qualitySchema } from "./quality-schema.js";
 import { readmePresence } from "./readme-presence.js";
 import { readmeSections } from "./readme-sections.js";
@@ -39,6 +41,8 @@ export const ALL_LINTERS: ReadonlyArray<Linter> = [
   intentAnchors,
   intentVocabulary,
   intentGraph,
+  intentProfiles,
+  profileSchema,
   generatedFresh,
 ];
 

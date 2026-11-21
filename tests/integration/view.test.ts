@@ -127,7 +127,7 @@ describe("context graph", () => {
 
   it("reads the docs of this repository", () => {
     const g = buildGraph(REPO_ROOT, { lint: false, packageDir: PACKAGE_DIR });
-    expect(g.nodes.filter((n) => n.type === "linter")).toHaveLength(19);
+    expect(g.nodes.filter((n) => n.type === "linter")).toHaveLength(21);
     expect(
       g.nodes.some((n) => n.id === "intent:review-the-context/see-the-whole-context-on-one-canvas"),
     ).toBe(true);

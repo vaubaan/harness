@@ -7,6 +7,7 @@ description: |
   one decision, four sections, about 40 lines.
 engines: [claude-code, codex-cli, opencode]
 requires: [multi-step]
+pillars: [decisions]
 tags: [decisions, doc, writer, adr]
 ---
 

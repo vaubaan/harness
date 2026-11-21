@@ -120,14 +120,14 @@ function carryMovedPaths(root: string, previous: Manifest, warnings: string[]): 
   return { ...previous, files, ...(fileHashes ? { fileHashes } : {}) };
 }
 
-/** A Stop hook entry 1.x merged into an engine settings file now points at a no-op. */
+/** A Stop hook entry 1.x merged into an engine settings file calls a command 3.0 removed. */
 function legacyHookWarnings(root: string): string[] {
   const warnings: string[] = [];
   for (const path of LEGACY_HOOK_FILES) {
     const content = currentContent(root, path);
     if (content?.includes(LEGACY_HOOK_MARKER)) {
       warnings.push(
-        `remove the harness Stop hook entry from ${path}: the Stop hook was removed in 2.0, run \`npx @vaubaan/harness lint\` in CI and pre-commit instead`,
+        `remove the harness Stop hook entry from ${path}: the stop-hook command was removed in 3.0 and the entry now fails; run \`npx @vaubaan/harness lint\` in CI and pre-commit instead`,
       );
     }
   }

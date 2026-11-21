@@ -39,7 +39,7 @@ The project map is in the [README](./README.md#documentation).
 
 ## Pull requests
 
-1. Branch from `main` with a `<kind>/<slug>` branch (`feat/…`, `fix/…`, `docs/…`).
+1. Branch from `main` with a `<kind>/<slug>` branch (`feat/…`, `fix/…`, `docs/…`) whose slug says what it does, never a bare number.
 2. Run `npm run ci` (typecheck, lint, tests, build, `lint:harness`): CI rejects the PR otherwise.
 3. Add an entry under `[Unreleased]` in `CHANGELOG.md` if the change is user-visible.
 4. Open the PR against `main`; a maintainer reviews it and squash-merges it.

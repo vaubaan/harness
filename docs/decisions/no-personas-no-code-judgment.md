@@ -25,8 +25,12 @@ checklist the team wants is a project skill in `docs/skills/`
 
 ## Consequences
 
-- A new shipped skill says *how* to maintain a pillar, never *when*: the
-  when belongs to the team's workflow.
+- A new shipped skill says *how* to maintain a pillar, never *when* the
+  team does it: the when belongs to the team's workflow. `harness-zero`
+  says when a pillar is worth adding, as a proposal the human decides
+  ([pillars-on-demand](./pillars-on-demand.md)).
+- *Persona* here means an agent role. The users a project serves are
+  *profiles*, an optional pillar ([profiles-pillar](./profiles-pillar.md)).
 - `docs/quality/code-quality.md` has no reader skill; `AGENTS.md` tells
   agents to read it before writing or auditing code.
 - Several engines can still be rendered side by side; only the roles go.

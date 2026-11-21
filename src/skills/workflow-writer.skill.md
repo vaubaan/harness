@@ -7,6 +7,7 @@ description: |
   PR process / branches / release).
 engines: [claude-code, codex-cli, opencode]
 requires: [multi-step]
+pillars: [workflow]
 tags: [workflow, doc, writer, ci]
 ---
 

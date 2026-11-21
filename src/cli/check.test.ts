@@ -54,21 +54,11 @@ describe("checkCommand", () => {
     expect(result.issues).toContain("README.md missing at repo root");
   });
 
-  it("fails when a required directory is missing", () => {
-    scaffoldFullRepo();
-    rmSync(join(repo, "docs/spec"), { recursive: true });
-    const result = checkCommand(repo);
-    expect(result.pass).toBe(false);
-    expect(result.issues).toContain("missing directory: docs/spec/");
-  });
-
-  it("reports all missing required directories", () => {
+  it("requires no pillar folder: every pillar under docs/ is added on demand", () => {
     scaffoldFullRepo();
     for (const d of REQUIRED_DIRS) rmSync(join(repo, d), { recursive: true });
     const result = checkCommand(repo);
-    for (const d of REQUIRED_DIRS) {
-      expect(result.issues).toContain(`missing directory: ${d}/`);
-    }
+    expect(result).toEqual({ pass: true, issues: [] });
   });
 
   it("fails when .gitignore is missing", () => {
@@ -143,9 +133,7 @@ describe("checkCommand", () => {
     expect(result.pass).toBe(false);
     expect(result.issues).toContain("README.md missing at repo root");
     expect(result.issues).toContain(".gitignore missing at repo root");
-    for (const d of REQUIRED_DIRS) {
-      expect(result.issues).toContain(`missing directory: ${d}/`);
-    }
+    expect(result.issues).toHaveLength(2);
   });
 
   it("does not report gitignore entry issues when .gitignore is absent", () => {

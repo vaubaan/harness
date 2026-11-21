@@ -5,9 +5,11 @@ import { fileURLToPath } from "node:url";
 import { Command } from "commander";
 import { collectLessonEvents } from "../lessons/collect.js";
 import { formatReportText, runLinters } from "../linters/index.js";
+import { ADDABLE_PILLARS } from "../pillars.js";
 import { startReviewServer } from "../review/server.js";
 import { newToken } from "../review/session.js";
 import { VERSION } from "../version.js";
+import { addCommand } from "./add.js";
 import { checkCommand } from "./check.js";
 import { initCommand } from "./init.js";
 import { renderCommand } from "./render.js";
@@ -123,6 +125,47 @@ program
   });
 
 program
+  .command("add")
+  .description(
+    `Activate a pillar the project now needs (${ADDABLE_PILLARS.map((p) => p.id).join(", ")}): starter files, its skill, its command`,
+  )
+  .argument("<pillar>", "pillar to activate")
+  .argument("[target-dir]", "project directory", ".")
+  .option("--overrides-dir <dir>", "directory containing .harness-overrides/")
+  .option("--backup-dir <dir>", "new backup directory outside the project")
+  .option("--json", "print the result as JSON")
+  .action(
+    (pillar: string, targetDir: string, opts: Record<string, string | boolean | undefined>) => {
+      const result = addCommand({
+        targetDir,
+        pillar,
+        packageDir: resolvePackageDir(),
+        overridesDir: opts.overridesDir as string | undefined,
+        backupDir: opts.backupDir as string | undefined,
+      });
+      if (opts.json) {
+        process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+        return;
+      }
+      process.stdout.write(
+        result.activated
+          ? `added the ${result.pillar} pillar\n`
+          : `the ${result.pillar} pillar is already active\n`,
+      );
+      for (const file of result.filesCreated) process.stdout.write(`created ${file}\n`);
+      if (result.update && !result.update.upToDate) {
+        process.stdout.write(
+          `rendered: ${result.update.filesToWrite.length} writes, ${result.update.filesToRemove.length} removals\n`,
+        );
+      }
+      for (const warning of result.update?.warnings ?? []) {
+        process.stderr.write(`warning: ${warning}\n`);
+      }
+      if (result.next) process.stdout.write(`next: ${result.next}\n`);
+    },
+  );
+
+program
   .command("uninstall")
   .description("Remove all files previously written by `init` into a target directory")
   .argument("<target-dir>", "directory to uninstall harness from")
@@ -136,7 +179,7 @@ program
 
 program
   .command("check")
-  .description("Verify repo layout: doc pillars present and .gitignore correct")
+  .description("Verify repo layout: README present and .gitignore correct")
   .argument("<repo>", "path to repo to check")
   .action((repo: string) => {
     const result = checkCommand(repo);
@@ -153,7 +196,7 @@ program
   .description("Run all mechanical linters and exit non-zero on errors")
   .option(
     "--pillar <pillar>",
-    "filter by pillar (spec, decisions, handbook, tests, workflow, quality, intents)",
+    "filter by pillar (readme, spec, decisions, handbook, tests, workflow, quality, intents, profiles)",
   )
   .option("--only <ids>", "comma-separated linter ids to run (e.g. lint:cross-links)")
   .option("--format <fmt>", "text | json", "text")
@@ -379,20 +422,6 @@ program
     });
     process.stdout.write(`rendered ${result.filesWritten.length} files to ${opts.out}\n`);
     for (const w of result.warnings) process.stderr.write(`warning: ${w}\n`);
-  });
-
-// 1.x wrote this command into engine Stop hooks. It stays a silent no-op so an
-// un-migrated hook entry does not fail every turn; it goes away in 3.0.
-program
-  .command("stop-hook", { hidden: true })
-  .description("deprecated no-op kept for Stop hook entries written by 1.x")
-  .option("--engine <engine>")
-  .option("--cwd <dir>")
-  .action(() => {
-    process.stderr.write(
-      "vaubaan-harness stop-hook was removed in 2.0: remove this entry from your engine settings and run `npx @vaubaan/harness lint` in CI and pre-commit instead\n",
-    );
-    process.exit(0);
   });
 
 program.parseAsync(process.argv).catch((err) => {

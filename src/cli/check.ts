@@ -10,14 +10,6 @@ export interface CheckResult {
   issues: string[];
 }
 
-const REQUIRED_DIRS = [
-  "docs/spec",
-  "docs/decisions",
-  "docs/handbook",
-  "docs/tests",
-  "docs/workflow",
-];
-
 export function checkCommand(repoRoot: string): CheckResult {
   const issues: string[] = [];
 
@@ -25,12 +17,7 @@ export function checkCommand(repoRoot: string): CheckResult {
     issues.push("README.md missing at repo root");
   }
 
-  for (const d of REQUIRED_DIRS) {
-    if (!existsSync(join(repoRoot, d))) {
-      issues.push(`missing directory: ${d}/`);
-    }
-  }
-
+  // Only the README is required: every pillar under docs/ is added on demand.
   const gitignorePath = join(repoRoot, ".gitignore");
   if (!existsSync(gitignorePath)) {
     issues.push(".gitignore missing at repo root");

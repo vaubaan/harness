@@ -1,9 +1,12 @@
 import type { Cmd } from "./parser/cmd.js";
 import { INTENTS_INDEX_PATH, type ParsedIntentFile } from "./parser/intent.js";
+import { PROFILES_INDEX_PATH, type ParsedProfileFile } from "./parser/profile.js";
 import type { Skill } from "./parser/skill.js";
+import { type PillarId, allPillars } from "./pillars.js";
 import { buildUmbrellaBody } from "./renderers/common.js";
 import { getRenderer } from "./renderers/index.js";
 import { buildIntentsIndex } from "./renderers/intents-index.js";
+import { buildProfilesIndex } from "./renderers/profiles-index.js";
 import type { Engine, RenderedFile } from "./types.js";
 
 export interface Harness {
@@ -21,10 +24,16 @@ export interface RenderInput {
   engines: ReadonlyArray<Engine>;
   overrides?: HarnessOverrides;
   projectSkills?: ReadonlyArray<Skill>;
-  /** True when the target project ships `docs/quality/code-quality.md` (optional pillar). */
-  hasQualityDoc?: boolean;
-  /** The project's parsed `docs/intents/*.md` (optional pillar); renders their index. */
+  /**
+   * The pillars active in the target project (spec §9.1.2). A skill that
+   * declares `pillars:` is rendered while one of them is active. Omitted:
+   * every pillar, which is what a preview with no project shows.
+   */
+  activePillars?: ReadonlySet<PillarId>;
+  /** The project's parsed `docs/intents/*.md`; given, their index is rendered. */
   intentFiles?: ReadonlyArray<ParsedIntentFile>;
+  /** The project's parsed `docs/profiles/*.md`; given, their index is rendered. */
+  profileFiles?: ReadonlyArray<ParsedProfileFile>;
 }
 
 export interface RenderOutput {
@@ -79,8 +88,13 @@ function opencodeLast(engines: ReadonlyArray<Engine>): Engine[] {
   return [...engines].sort((a, b) => Number(a === "opencode") - Number(b === "opencode"));
 }
 
+/** A skill with no `pillars:` is always rendered; otherwise one of them must be active. */
+function servesAnActivePillar(skill: Skill, active: ReadonlySet<PillarId>): boolean {
+  return !skill.meta.pillars || skill.meta.pillars.some((pillar) => active.has(pillar));
+}
+
 /**
- * Pure transformation `(catalog, engines, overrides) → files`. The harness
+ * Pure transformation `(catalog, engines, overrides, active pillars) → files`. The harness
  * ships no agent persona and no engine hook: only the doc skills, their
  * commands, and the engine-neutral umbrella
  * (docs/decisions/no-personas-no-code-judgment.md,
@@ -94,7 +108,12 @@ export function render(input: RenderInput): RenderOutput {
   const base: Harness = input.projectSkills?.length
     ? { ...input.harness, skills: mergeById(input.harness.skills, input.projectSkills) }
     : input.harness;
-  const harness = applyOverrides(base, input.overrides);
+  const active = input.activePillars ?? allPillars();
+  const merged = applyOverrides(base, input.overrides);
+  const harness: Harness = {
+    ...merged,
+    skills: merged.skills.filter((skill) => servesAnActivePillar(skill, active)),
+  };
 
   const files: RenderedFile[] = [];
   const warnings: string[] = [];
@@ -135,8 +154,7 @@ export function render(input: RenderInput): RenderOutput {
     availableSkills: Array.from(exposedSkills.values()),
     availableCommands: Array.from(exposedCmds.values()),
     hasProjectSkills: (input.projectSkills?.length ?? 0) > 0,
-    hasQualityDoc: input.hasQualityDoc === true,
-    hasIntents: (input.intentFiles?.length ?? 0) > 0,
+    activePillars: active,
   });
   files.push({ path: "AGENTS.md", content: umbrellaContent });
 
@@ -145,9 +163,16 @@ export function render(input: RenderInput): RenderOutput {
     files.push({ path: "CLAUDE.md", content: CLAUDE_MD_STUB });
   }
 
-  // The intents index is a generated file too, rendered only while an intent file exists.
-  if (input.intentFiles && input.intentFiles.length > 0) {
+  // The indexes are generated files too, rendered while their pillar is active:
+  // the caller passes the parsed files of an active pillar, even when there are none.
+  if (input.intentFiles) {
     files.push({ path: INTENTS_INDEX_PATH, content: buildIntentsIndex(input.intentFiles) });
+  }
+  if (input.profileFiles) {
+    files.push({
+      path: PROFILES_INDEX_PATH,
+      content: buildProfilesIndex(input.profileFiles, input.intentFiles ?? []),
+    });
   }
 
   return { files, warnings };

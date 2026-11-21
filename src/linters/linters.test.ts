@@ -95,22 +95,22 @@ Install + run.
 });
 
 describe("lint:doc-layout", () => {
-  it("passes when all 5 dirs exist", () => {
-    for (const d of [
-      "docs/spec",
-      "docs/decisions",
-      "docs/handbook",
-      "docs/tests",
-      "docs/workflow",
-    ]) {
-      repo.mkdir(d);
-    }
+  it("requires no pillar folder: a repo without docs/ passes", () => {
     expect(docLayout.run(repo.root)).toEqual([]);
   });
-  it("flags each missing dir", () => {
+  it("passes when every pillar folder that exists holds a file", () => {
+    repo.write("docs/spec/system.md", "x");
+    repo.write("docs/decisions/README.md", "x");
+    repo.write("docs/handbook/nested/deep.md", "x");
+    expect(docLayout.run(repo.root)).toEqual([]);
+  });
+  it("flags a pillar folder that holds no file, which git would not record", () => {
     repo.mkdir("docs/spec");
+    repo.mkdir("docs/intents/empty-subfolder");
+    repo.mkdir("docs/research");
     const issues = docLayout.run(repo.root);
-    expect(issues).toHaveLength(4);
+    expect(issues.map((i) => i.file)).toEqual(["docs/spec", "docs/intents"]);
+    expect(issues[1]?.message).toMatch(/add intents/);
   });
 });
 
@@ -121,10 +121,18 @@ describe("lint:cardinal-files", () => {
     repo.write("docs/workflow/coding-workflow.md", "x");
     expect(cardinalFiles.run(repo.root)).toEqual([]);
   });
-  it("flags missing cardinal files", () => {
+  it("requires nothing while the tests and workflow pillars are inactive", () => {
+    expect(cardinalFiles.run(repo.root)).toEqual([]);
+  });
+  it("flags the missing cardinal file of an active pillar only", () => {
     repo.write("docs/tests/integration-tests.md", "x");
     const issues = cardinalFiles.run(repo.root);
-    expect(issues).toHaveLength(2);
+    expect(issues.map((i) => i.file)).toEqual(["docs/tests/e2e-tests.md"]);
+    repo.mkdir("docs/workflow");
+    expect(cardinalFiles.run(repo.root).map((i) => i.file)).toEqual([
+      "docs/tests/e2e-tests.md",
+      "docs/workflow/coding-workflow.md",
+    ]);
   });
 });
 
@@ -332,10 +340,11 @@ describe("lint:spec-has-content", () => {
     const issues = specHasContent.run(repo.root);
     expect(issues).toHaveLength(1);
     expect(issues[0]?.severity).toBe("warning");
-    expect(issues[0]?.message).toMatch(/no markdown files/);
+    expect(issues[0]?.message).toMatch(/no spec yet/);
   });
-  it("passes when docs/spec/ does not exist", () => {
-    expect(specHasContent.run(repo.root)).toEqual([]);
+  it("warns, without failing, when docs/spec/ does not exist yet", () => {
+    const issues = specHasContent.run(repo.root);
+    expect(issues.map((i) => i.severity)).toEqual(["warning"]);
   });
 });
 
@@ -667,15 +676,7 @@ describe("formatReportText", () => {
 describe("runLinters aggregator", () => {
   it("returns pass=true when no errors", () => {
     repo.write("README.md", "# Hi\n\n## What is this\n\nx\n\n## Quick start\n\nx\n");
-    for (const d of [
-      "docs/spec",
-      "docs/decisions",
-      "docs/handbook",
-      "docs/tests",
-      "docs/workflow",
-    ]) {
-      repo.mkdir(d);
-    }
+    repo.write("docs/spec/system.md", "# System\n");
     repo.write("package.json", "{}");
     repo.write(
       "docs/tests/integration-tests.md",
@@ -691,6 +692,13 @@ describe("runLinters aggregator", () => {
     expect(report.summary.pass).toBe(true);
     expect(report.summary.errors).toBe(0);
   });
+  it("passes on a project that just started: a README and nothing else", () => {
+    repo.write("README.md", "# Hi\n\n## What is this\n\nx\n\n## Quick start\n\nx\n");
+    repo.write(".gitignore", ".harness-overrides/\n.vaubaan/\n");
+    const report = runLinters(repo.root);
+    expect(report.summary.pass).toBe(true);
+    expect(report.issues.map((i) => i.linter)).toEqual(["lint:spec-has-content"]);
+  });
   it("returns pass=false with errors aggregated", () => {
     const report = runLinters(repo.root);
     expect(report.summary.pass).toBe(false);
@@ -700,14 +708,16 @@ describe("runLinters aggregator", () => {
     const report = runLinters(repo.root, { only: ["lint:readme-presence"] });
     expect(report.issues.every((i) => i.linter === "lint:readme-presence")).toBe(true);
   });
-  it("exposes ALL_LINTERS with 19 entries, the intent linters before generated-fresh, last", () => {
-    expect(ALL_LINTERS).toHaveLength(19);
+  it("exposes ALL_LINTERS with 21 entries, the intent linters before generated-fresh, last", () => {
+    expect(ALL_LINTERS).toHaveLength(21);
     expect(ALL_LINTERS.slice(13).map((l) => l.id)).toEqual([
       "lint:quality-schema",
       "lint:intent-schema",
       "lint:intent-anchors",
       "lint:intent-vocabulary",
       "lint:intent-graph",
+      "lint:intent-profiles",
+      "lint:profile-schema",
       "lint:generated-fresh",
     ]);
   });
@@ -1119,7 +1129,7 @@ describe("lint:tracks-drift on intent files", () => {
     }
     expect(tracksDrift.run(repo.root)).toEqual([]);
   });
-  it("is selected by --pillar=intents with the four intent linters", () => {
+  it("is selected by --pillar=intents with the five intent linters", () => {
     const ids = ALL_LINTERS.filter((l) => l.pillars.includes("intents")).map((l) => l.id);
     expect(ids).toEqual([
       "lint:tracks-drift",
@@ -1127,6 +1137,7 @@ describe("lint:tracks-drift on intent files", () => {
       "lint:intent-anchors",
       "lint:intent-vocabulary",
       "lint:intent-graph",
+      "lint:intent-profiles",
     ]);
   });
 });

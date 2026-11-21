@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PILLAR_IDS } from "../pillars.js";
 import { CAPABILITIES, ENGINES } from "../types.js";
 
 const IdSchema = z
@@ -12,6 +13,8 @@ const SkillFrontmatterSchema = z
     description: z.string().min(1),
     engines: z.array(z.enum(ENGINES)).min(1).optional(),
     requires: z.array(z.enum(CAPABILITIES)).optional(),
+    /** Rendered while one of these pillars is active; omitted = always. */
+    pillars: z.array(z.enum(PILLAR_IDS)).min(1).optional(),
     tags: z.array(z.string()).optional(),
   })
   .strict();
@@ -71,10 +74,25 @@ const IntentFrontmatterSchema = z
 
 export type IntentFrontmatter = z.infer<typeof IntentFrontmatterSchema>;
 
+export const PROFILE_STATUSES = ["hypothesis", "validated"] as const;
+export type ProfileStatus = (typeof PROFILE_STATUSES)[number];
+
+const ProfileFrontmatterSchema = z
+  .object({
+    title: z.string().min(1),
+    status: z.enum(PROFILE_STATUSES),
+    evidence: z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]).optional(),
+    last_reviewed: z.union([z.date(), z.string().min(1)]),
+  })
+  .strict();
+
+export type ProfileFrontmatter = z.infer<typeof ProfileFrontmatterSchema>;
+
 export const Schemas = {
   Skill: SkillFrontmatterSchema,
   Cmd: CmdFrontmatterSchema,
   Intent: IntentFrontmatterSchema,
+  Profile: ProfileFrontmatterSchema,
 } as const;
 
 export class ParseError extends Error {

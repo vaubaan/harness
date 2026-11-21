@@ -31,6 +31,11 @@ describe("migration from the actual 0.9.0 manifest", () => {
       writeFileSync(full, path.endsWith(".json") ? "{}\n" : "# legacy harness content\n");
     }
     writeFileSync(join(sandbox, MANIFEST_FILENAME), LEGACY_MANIFEST);
+    // A 0.9 project had the six then-mandatory pillars: their folders keep their skills in 3.0.
+    for (const pillar of ["decisions", "handbook", "tests", "workflow"]) {
+      mkdirSync(join(sandbox, "docs", pillar), { recursive: true });
+      writeFileSync(join(sandbox, "docs", pillar, "README.md"), `# ${pillar}\n`);
+    }
     const legacyMcp = JSON.stringify({ mcp: { context7: { type: "local", command: ["npx"] } } });
     writeFileSync(join(sandbox, ".opencode/mcp.json"), legacyMcp);
     const userConfig = JSON.stringify({ model: "openai/gpt-4.1", permission: { edit: "deny" } });

@@ -15,6 +15,8 @@ export const NODE_FIELDS = [
   "acceptance",
   "requires",
   "creates",
+  "relieves",
+  "delivers",
 ] as const;
 export type NodeField = (typeof NODE_FIELDS)[number];
 /** Fields only a terminal intent (a node with no sub-intent) may carry. */
@@ -23,6 +25,8 @@ export const TERMINAL_FIELDS: ReadonlyArray<NodeField> = [
   "acceptance",
   "requires",
   "creates",
+  "relieves",
+  "delivers",
 ];
 
 export interface IntentError {
@@ -48,6 +52,9 @@ export interface IntentNode {
   acceptance: string[];
   requires: string[];
   creates: string[];
+  /** Pains relieved and gains delivered: slugs of the actors' profiles (§9.1.4). */
+  relieves: string[];
+  delivers: string[];
   unknownFields: Array<{ key: string; line: number }>;
   /** Nearest `status:` up the tree, else the file status. */
   effectiveStatus?: IntentStatus;
@@ -144,6 +151,8 @@ function newNode(title: string, level: number, line: number): IntentNode {
     acceptance: [],
     requires: [],
     creates: [],
+    relieves: [],
+    delivers: [],
     unknownFields: [],
   };
 }

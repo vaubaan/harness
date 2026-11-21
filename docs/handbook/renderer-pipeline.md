@@ -8,9 +8,11 @@ tracks:
   - src/renderers/opencode.ts
   - src/renderers/index.ts
   - src/renderers/intents-index.ts
+  - src/renderers/profiles-index.ts
+  - src/pillars.ts
   - src/parser/schemas.ts
   - src/parser/common.ts
-last_reviewed: 2026-11-10
+last_reviewed: 2026-11-21
 ---
 
 # Renderer pipeline — handbook
@@ -25,8 +27,9 @@ How `*.skill.md` / `*.cmd.md` sources become each engine's native files plus `AG
 
 ## Invariants
 
-- Parse → render is pure: `render()` never touches the disk; `planInit` reads the project's skills, quality doc and intent files and passes them in. Writes, tracking and conflicts belong to the CLI planner ([file lifecycle](./uninstall.md)).
-- Rendered output is skills, commands, `AGENTS.md`, with claude-code only `CLAUDE.md` as the single `@AGENTS.md` line, and, while the project has an intent file, `docs/intents/README.md` ([intents pillar](./intents-pillar.md)). No agent, hook, MCP or settings file.
+- Parse → render is pure: `render()` never touches the disk; `planInit` reads the project's skills, its active pillars, its intent and profile files and passes them in. Writes, tracking and conflicts belong to the CLI planner ([file lifecycle](./uninstall.md)).
+- Rendered output is skills, commands, `AGENTS.md`, with claude-code only `CLAUDE.md` as the single `@AGENTS.md` line, and, while their pillar is active, the indexes `docs/intents/README.md` and `docs/profiles/README.md` ([intents pillar](./intents-pillar.md), [pillars on demand](./pillars-on-demand.md)). No agent, hook, MCP or settings file.
+- A skill with `pillars:` is dropped before the per-engine loop unless one of them is active, and its command follows it (a command is rendered only when its skill was). `activePillars` omitted means every pillar: that is the `render` preview, which reads no project.
 - Both pivot schemas are `.strict()`: an unknown frontmatter key is a parse error, so a typo fails the build instead of silently dropping a skill.
 - All three engines get YAML frontmatter from one serializer; skills emit `name` (= directory name, per the Agent Skills format) and `description`, OpenCode commands only `description`.
 
@@ -34,9 +37,10 @@ How `*.skill.md` / `*.cmd.md` sources become each engine's native files plus `AG
 
 - OpenCode also reads `.claude/skills/` and `.agents/skills/`: `render()` processes it last and omits its own copy of a skill another rendered engine already exposes. Its **command** is still written to `.opencode/commands/`.
 - Codex renders no command at all (custom prompts are deprecated): the skill is invoked by name.
+- `buildUmbrellaBody` holds a line per active pillar and one sentence naming the inactive ones; that sentence mentions `harness-zero` only while the skill is exposed (an override may disable it).
 - Any change to `buildUmbrellaBody` changes the committed `AGENTS.md` of every harnessed project, this repo included: run `update .` here, and expect `lint:generated-fresh` to fail downstream until they update.
 
 ## Debug
 
-- **A command is missing** — on Codex that is expected; elsewhere its `invokes_skill` was not rendered on that engine ([capabilities matrix](./capabilities-matrix.md)).
+- **A command is missing** — on Codex that is expected; elsewhere its `invokes_skill` was not rendered on that engine ([capabilities matrix](./capabilities-matrix.md)), or the skill's pillar is not active in the project.
 - **An OpenCode skill file is missing** — expected when Claude Code or Codex is also rendered.

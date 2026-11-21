@@ -25,3 +25,16 @@ export {
   type ParsedIntentFile,
 } from "./intent.js";
 export { INTENT_STATUSES, type IntentFrontmatter, type IntentStatus } from "./schemas.js";
+export {
+  PROFILES_DIR,
+  PROFILES_INDEX_PATH,
+  listProfileFiles,
+  parseProfileFile,
+  profileEvidence,
+  readProfileFiles,
+  type ParsedProfileFile,
+  type ProfileError,
+  type ProfileFile,
+  type ProfileItem,
+} from "./profile.js";
+export { PROFILE_STATUSES, type ProfileFrontmatter, type ProfileStatus } from "./schemas.js";

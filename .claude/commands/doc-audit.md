@@ -13,6 +13,7 @@ args:
       - workflow
       - readme
       - intents
+      - profiles
       - all
     default: all
 ---

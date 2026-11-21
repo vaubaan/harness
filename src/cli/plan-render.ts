@@ -3,11 +3,10 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadHarness, loadOverrides, loadProjectSkills } from "../loader.js";
 import { loadIntentFiles } from "../parser/intent.js";
+import { readProfileFiles } from "../parser/profile.js";
+import { activePillars } from "../pillars.js";
 import { type RenderOutput, render } from "../render.js";
 import { ENGINES, type Engine } from "../types.js";
-
-/** Cardinal file of the optional `docs/quality/` pillar. */
-const QUALITY_DOC_PATH = "docs/quality/code-quality.md";
 
 export interface RenderPlanArgs {
   targetDir: string;
@@ -57,8 +56,16 @@ export function planInit(args: RenderPlanArgs): { engines: Engine[]; output: Ren
   const harness = loadHarness(packageDir);
   const overrides = args.overridesDir ? loadOverrides(args.overridesDir) : undefined;
   const projectSkills = loadProjectSkills(args.targetDir);
-  const hasQualityDoc = existsSync(join(args.targetDir, QUALITY_DOC_PATH));
-  const intentFiles = loadIntentFiles(args.targetDir);
-  const output = render({ harness, engines, overrides, projectSkills, hasQualityDoc, intentFiles });
+  // The tree is the switch: a pillar is active when its folder exists (spec §9.1.2).
+  const active = activePillars(args.targetDir);
+  const output = render({
+    harness,
+    engines,
+    overrides,
+    projectSkills,
+    activePillars: active,
+    ...(active.has("intents") ? { intentFiles: loadIntentFiles(args.targetDir) } : {}),
+    ...(active.has("profiles") ? { profileFiles: readProfileFiles(args.targetDir) } : {}),
+  });
   return { engines, output };
 }

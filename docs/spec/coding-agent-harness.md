@@ -1,12 +1,12 @@
 # Vaubaan harness — spec
 
-> **Status:** stable, 2.1 contract. The harness (`@vaubaan/harness`)
+> **Status:** stable, 3.0 contract. The harness (`@vaubaan/harness`)
 > *harnesses* a project directory so that a coding agent (claude-code /
 > codex-cli / opencode) is immediately productive in it, and provides
-> the skills that *keep alive* the project's **doc**: 6 mandatory
-> pillars (README.md at the root + spec + decisions + handbook + tests +
-> workflow under `docs/`) and 3 optional ones (skills and quality, see
-> §9.1.2; intents, see §9.1.3).
+> the skills that *keep alive* the project's **doc**: a core of two
+> pillars (README.md at the root + spec under `docs/`) and the pillars a
+> project adds when it needs them (decisions, handbook, tests, workflow,
+> quality, skills, intents, profiles; see §9.1.2).
 
 ## 0. Vocabulary
 
@@ -44,7 +44,14 @@ The harness reasons with these words:
     `docs/workflow/`, one required file: `coding-workflow.md` (CI,
     env variants, PR process or direct-push, branches, release),
   - **intents** (what the user does and wants, at every scale, one
-    tree anchored to the code) — `docs/intents/`, optional (see §9.1.3).
+    tree anchored to the code) — `docs/intents/` (see §9.1.3),
+  - **profiles** (who the project serves, their pains and gains) —
+    `docs/profiles/` (see §9.1.4).
+- **Pillar** — one kind of information the code cannot carry, with its
+  place, its form contract, its linters and its writer skill. README and
+  spec are the **core**, always active; every other pillar is active
+  when its folder under `docs/` exists and inactive otherwise (see
+  §9.1.2).
 - **Doc-skill** — cross-cutting doc-maintenance skill (see §7).
   Invocable by the agent or by the human via slash-command.
 - **Override** — a local, gitignored customization of the dropped
@@ -64,6 +71,13 @@ The harness reasons with these words:
 - **Anchor** — a pointer from a terminal intent to the code
   and tests that realize it; the `tracks:` syntax, per terminal intent
   (see §9.1.3).
+- **Profile** — a kind of user the project serves: a file under
+  `docs/profiles/`, a `hypothesis` until evidence validates it. Never an
+  agent role (see §9.1.4).
+- **Pain** — what hurts or blocks a profile today, a named bullet of its
+  file. A terminal intent declares the pains it relieves.
+- **Gain** — an outcome a profile hopes for, a named bullet of its file.
+  A terminal intent declares the gains it delivers.
 - **Context graph** — `.vaubaan/graph.json`: the meta database as one
   index of nodes (docs, sections, vocabulary terms, intents, decisions,
   linters, skills, the paths they point to) and typed edges, each node
@@ -146,7 +160,8 @@ The **harness** is the subsystem that:
    native layout.
 2. **Ships** a canonical set of doc-skills (see §7) covering the
    project's doc lifecycle: audit, writers for each pillar, drift
-   detection.
+   detection, and two skills about the harness itself: how to use it and
+   how to move to a new version.
 3. **Ships no agent persona.** No role, no phase, no workflow: the only
    rule it imposes is doc-first, stated in `AGENTS.md`; the team writes
    how it works in `docs/workflow/` and the agents read it.
@@ -155,7 +170,11 @@ The **harness** is the subsystem that:
    and on demand, so that a harnessed project cannot merge a PR that
    creates mechanically detectable drift (see §10.2). The `doc-audit`
    skill covers the semantic judgment.
-5. **Stays lightweight on the project side.** The generated files and
+5. **Asks for nothing a project does not need yet.** A project that
+   just started is harnessed with a README; each other pillar is added
+   the day it helps, with its linters and its skill (see §9.1.2). An
+   inactive pillar leaves no trace: no check, no skill, no command.
+6. **Stays lightweight on the project side.** The generated files and
    the manifest are committed so that a clone has the whole context
    without the harness installed (see §3.3); the project maintains
    nothing by hand outside `docs/`. The harness version is the package
@@ -228,8 +247,9 @@ The harness **has no persistent runtime service**. Rendering is
 functional; install and update keep the artifacts' provenance and the
 necessary backups locally.
 
-- **render(catalog, engines, overrides) → files**: pure function, no
-  side effect. Emits every skill and command, filtered only by the
+- **render(catalog, engines, overrides, active pillars) → files**: pure
+  function, no side effect. Emits the skills and commands whose
+  `pillars:` include an active pillar (§9.1.2), filtered by the
   `engines:` and `requires:` constraints (§4.2).
 - **audit(repo) → report**: `doc-audit` skill, executed by the agent.
 - **scaffold(repo, pillar) → files**: the writer skills, executed by
@@ -245,10 +265,11 @@ them takes the existing installation and file ownership into account
 
 ```
 node_modules/@vaubaan/harness/
-├── skills/      # the 9 doc-skills (§7)
+├── skills/      # the shipped skills (§7)
 ├── commands/    # one command per writer and audit skill
 ├── templates/   # readme, spec, decision, handbook, integration-tests,
-│                # e2e-tests, coding-workflow, code-quality, intent (§9.2)
+│                # e2e-tests, coding-workflow, code-quality, intent,
+│                # profile, and the starter indexes (§9.2)
 └── (CLI, renderers, parser, linters)
 ```
 
@@ -277,8 +298,9 @@ The harness writes nothing under `.codex/`: Codex reads its skills from
 ```
 project/
 ├── README.md                         # ← COMMITTED (README pillar, root)
-├── docs/                             # ← COMMITTED (the other pillars;
-│                                     #   docs/intents/README.md is generated, §9.1.3)
+├── docs/                             # ← COMMITTED (the other pillars; the
+│                                     #   indexes docs/intents/README.md and
+│                                     #   docs/profiles/README.md are generated)
 ├── AGENTS.md, CLAUDE.md, .<engine>/  # ← COMMITTED (generated)
 ├── .harness-manifest.json            # ← COMMITTED (generated)
 ├── .gitignore                        # contains .harness-overrides/ and .vaubaan/
@@ -352,6 +374,7 @@ description: |
   Audits the completeness and freshness of the doc.
 engines: [claude-code, codex-cli, opencode]  # omit = all
 requires: [multi-step]                       # required engine capabilities
+pillars: [handbook, tests]                   # omit = always rendered
 tags: [audit, doc]
 ---
 
@@ -374,6 +397,10 @@ You are invoked to audit the completeness of the project's doc:
 - Body = free-form Markdown, the prompt rendered to the agent.
 - No conditional logic in the body (no templating): per-engine
   variation goes through the frontmatter (`engines:`, `requires:`).
+- `pillars:` lists the pillars the skill serves: it is rendered while at
+  least one of them is active in the project (§9.1.2). Omitted, the
+  skill is always rendered; a project skill or an override may use the
+  field too.
 
 ## 6. `*.cmd.md` format
 
@@ -402,30 +429,42 @@ lives in the skill. An argument is required unless it declares
 
 ## 7. Skills shipped
 
-One category: **doc-skills**, all dropped into the target directory.
-The harness ships no agent persona and no code-quality audit (see
+Two categories: the **doc-skills**, each rendered while a pillar it
+serves is active, and the two **harness skills**, always rendered. The
+harness ships no agent persona and no code-quality audit (see
 [no-personas-no-code-judgment](../decisions/no-personas-no-code-judgment.md)).
 
 ### 7.1 Doc-skills
 
-| ID                          | Role                                                                                                                 |
-|-----------------------------|----------------------------------------------------------------------------------------------------------------------|
-| `doc-audit`                 | Audits the completeness of the doc (see §10).                                                                  |
-| `spec-writer`               | Human-guided, progressive wizard to write / update a `docs/spec/<name>.md` file, section by section.                 |
-| `decision-record-writer`    | Wizard to write an ADR under `docs/decisions/<slug>.md` (no numbering — see §9.1). Detects implicit decisions in the current diff.  |
-| `handbook-writer`           | Documents the actual implementation under `docs/handbook/<name>.md`. Reads the code, proposes, the human validates.     |
-| `test-plan-writer`          | Updates `docs/tests/integration-tests.md` and/or `docs/tests/e2e-tests.md`. Scope, stack, conventions and known gaps; never the covered scenarios. |
-| `workflow-writer`           | Updates `docs/workflow/coding-workflow.md`. Reads the repo's CI/CD config, the package manifest scripts and the branch/PR config, proposes the required sections (CI / env / PR / branches / release) and the optional ones (languages). |
-| `readme-writer`             | Maintains `README.md` at the root. Syncs the links to the other pillars; makes sure pitch + quick start stay up to date vs the code. |
-| `drift-detector`            | Detects code ↔ doc divergences.                                                                                      |
-| `canvas-review`             | Runs a review session (§10.4): opens the view, keeps it live while the human talks or comments, applies each comment to its pillar with that pillar's writer rules, answers in the thread. Writes only to the project domain (§0.2). |
-| `lesson-miner`              | Proposes lessons (§10.5): groups the patch events `lessons collect` extracted, proposes one rule per recurring patch with its evidence, domain and pillar; writes an accepted rule with the pillar's writer rules. |
-| `intent-writer`             | Writes or updates `docs/intents/<slug>.md` one node at a time (§9.1.3): greenfield (three questions) or mature (reads the code's entry points, proposes anchored terminal intents). `/intent <verb + object>` adds a `proposed` intent with its acceptance criteria before any code. |
+| ID                          | Pillars | Role                                                                                                       |
+|-----------------------------|---------|------------------------------------------------------------------------------------------------------------|
+| `doc-audit`                 | always | Audits the completeness of the doc (see §10).                                                                  |
+| `spec-writer`               | always | Human-guided, progressive wizard to write / update a `docs/spec/<name>.md` file, section by section.                 |
+| `decision-record-writer`    | decisions | Wizard to write an ADR under `docs/decisions/<slug>.md` (no numbering — see §9.1). Detects implicit decisions in the current diff.  |
+| `handbook-writer`           | handbook | Documents the actual implementation under `docs/handbook/<name>.md`. Reads the code, proposes, the human validates.     |
+| `test-plan-writer`          | tests | Updates `docs/tests/integration-tests.md` and/or `docs/tests/e2e-tests.md`. Scope, stack, conventions and known gaps; never the covered scenarios. |
+| `workflow-writer`           | workflow | Updates `docs/workflow/coding-workflow.md`. Reads the repo's CI/CD config, the package manifest scripts and the branch/PR config, proposes the required sections (CI / env / PR / branches / release) and the optional ones (languages). |
+| `readme-writer`             | always | Maintains `README.md` at the root. Syncs the links to the other pillars; makes sure pitch + quick start stay up to date vs the code. |
+| `drift-detector`            | handbook, tests, workflow, intents | Detects code ↔ doc divergences.                                                                                      |
+| `canvas-review`             | always | Runs a review session (§10.4): opens the view, keeps it live while the human talks or comments, applies each comment to its pillar with that pillar's writer rules, answers in the thread. Writes only to the project domain (§0.2). |
+| `lesson-miner`              | always | Proposes lessons (§10.5): groups the patch events `lessons collect` extracted, proposes one rule per recurring patch with its evidence, domain and pillar; writes an accepted rule with the pillar's writer rules. |
+| `intent-writer`             | intents, profiles | Writes or updates `docs/intents/<slug>.md` one node at a time (§9.1.3): greenfield (three questions) or mature (reads the code's entry points, proposes anchored terminal intents). `/intent <verb + object>` adds a `proposed` intent with its acceptance criteria before any code. Writes or updates a profile under `docs/profiles/` and names, on an intent, the profile it serves and the pain it relieves (§9.1.4). |
 
-Their evolution is versioned by the package version. Only the
-`engines:` and `requires:` constraints (§4.2) filter a skill out of an
-engine render. A skill says *how* to write or check a pillar, never
-*when*: the when is the team's workflow.
+Their evolution is versioned by the package version. The `pillars:`
+field (§5, §9.1.2) and the `engines:` and `requires:` constraints (§4.2)
+filter a skill out of a render; a command follows its skill. A skill
+says *how* to write or check a pillar, never *when* the team does it:
+the when is the team's workflow.
+
+### 7.2 Harness skills
+
+Two skills are about the harness, not about a pillar, and are always
+rendered:
+
+| ID                | Role |
+|-------------------|------|
+| `harness-zero`    | How to work in a harnessed project: the reading order, which skill answers which situation, what to refuse, what to do at the end of a task. It lists, for each inactive pillar, the signs that the project now needs it, and has the agent propose `add <pillar>` to the human; it never adds one unasked. |
+| `harness-upgrade` | Moves a project to a newer harness version: pin the package, preview `update`, resolve the conflicts it lists, apply, lint, then apply the migration notes of every version crossed. The notes are part of the skill: each minor release adds its entry, even "nothing to do". Command `/harness-upgrade`. |
 
 ## 8. Composition: umbrella + skills + commands
 
@@ -441,14 +480,15 @@ for all the named engines:
 - **Rendered content** lives directly under the engines' native folders
   (`.claude/`, `.agents/`, `.opencode/`). No indirection.
 - **Umbrella `AGENTS.md`** at the root, engine-neutral, in four
-  sections: the project map (where each pillar lives, including the
-  optional ones when present), the doc-first rule, the checks (run
-  `lint` before committing, never edit a generated file by hand) and a
-  compact list of the doc-skills with their slash-commands when they
-  exist. When `docs/intents/` holds an intent file, the map lists it and
-  the doc-first rule adds one line: a visible change of behavior starts
-  with `/intent <verb + object>`, never with the code (§9.1.3). The engines discover
-  skills natively.
+  sections: the project map (where each active pillar lives), the
+  doc-first rule, the checks (run `lint` before committing, never edit a
+  generated file by hand) and a compact list of the rendered skills with
+  their slash-commands when they exist. The map and the doc-first rule
+  hold a line only for an active pillar: with `docs/intents/`, a visible
+  change of behavior starts with `/intent <verb + object>`, never with
+  the code (§9.1.3). One line names the inactive pillars and how to add
+  one, so the agent can propose it (§9.1.2). The engines discover skills
+  natively.
 - **`CLAUDE.md`** at the root if claude-code is included, reduced to
   the `@AGENTS.md` import.
 
@@ -460,30 +500,37 @@ for all the named engines:
 project/
 ├── README.md                         # README pillar (root, outside docs/)
 └── docs/
-    ├── spec/<subsystem>.md           # 1 file per major subsystem
+    ├── spec/<subsystem>.md           # CORE: 1 file per major subsystem
+    │                                 # every folder below is added on demand (§9.1.2)
     ├── decisions/
     │   ├── README.md                 # ADR index
     │   └── <slug>.md                 # no numbering (see §9.1.1)
     ├── handbook/<slug>.md            # no numbering (see §9.1.1)
     ├── tests/
-    │   ├── integration-tests.md      # required
-    │   └── e2e-tests.md              # required
+    │   ├── integration-tests.md      # required once the pillar is active
+    │   └── e2e-tests.md              # required once the pillar is active
     ├── workflow/
-    │   └── coding-workflow.md        # required
-    ├── skills/<id>.skill.md          # OPTIONAL (see §9.1.2)
-    ├── quality/code-quality.md       # OPTIONAL (see §9.1.2)
-    └── intents/                      # OPTIONAL (see §9.1.3)
+    │   └── coding-workflow.md        # required once the pillar is active
+    ├── skills/<id>.skill.md          # see §9.1.2
+    ├── quality/code-quality.md       # see §9.1.2
+    ├── intents/                      # see §9.1.3
+    │   ├── README.md                 # index, generated
+    │   └── <slug>.md                 # one level-1 intent, no numbering
+    └── profiles/                     # see §9.1.4
         ├── README.md                 # index, generated
-        └── <slug>.md                 # one level-1 intent, no numbering
+        └── <slug>.md                 # one user profile, no numbering
 ```
 
 - The `README` pillar lives at the root (universal convention of
   package registries); it is the only pillar outside `docs/`.
-- The `tests/` pillar is constrained to two required files. Unit tests
-  live next to the code and are not documented separately.
-- The `workflow/` pillar has one required file. Further files
-  (`release-workflow.md`, …) are an open question (§15.2).
-- No other pillar (no separate `tutorials/` or `runbooks/`).
+- The `tests/` pillar, once active, is constrained to two required
+  files. Unit tests live next to the code and are not documented
+  separately.
+- The `workflow/` pillar, once active, has one required file. Further
+  files (`release-workflow.md`, …) are an open question (§15.2).
+- No other pillar (no separate `tutorials/` or `runbooks/`). A folder of
+  `docs/` that is no pillar (`docs/research/`, …) is the project's: the
+  harness reads it only to resolve a link.
 
 ### 9.1.1 No numbering for `decisions/` and `handbook/`
 
@@ -502,11 +549,49 @@ is deleted and its option moves to the Rejected alternatives of the new
 one (see
 [decisions-as-current-state](../decisions/decisions-as-current-state.md)).
 
-### 9.1.2 Optional pillars
+### 9.1.2 Active pillars
 
-Three pillars are added to the six mandatory ones (the third, intents,
-has its own section, §9.1.3). Their absence is never an error; their
-presence commits to a form contract.
+README and spec are the **core**: always active, their skills always
+rendered. A missing `README.md` is the only absence that fails the lint;
+a project with no spec yet gets a warning. Every other pillar is
+**active** when its folder under `docs/` exists and **inactive**
+otherwise. Decision:
+[pillars-on-demand](../decisions/pillars-on-demand.md).
+
+| Pillar      | Folder            | Starter files written by `add`            | Skill it brings          |
+|-------------|-------------------|--------------------------------------------|--------------------------|
+| `decisions` | `docs/decisions/` | `README.md`, the index                     | `decision-record-writer` |
+| `handbook`  | `docs/handbook/`  | `README.md`, the index                     | `handbook-writer`        |
+| `tests`     | `docs/tests/`     | `integration-tests.md`, `e2e-tests.md`     | `test-plan-writer`       |
+| `workflow`  | `docs/workflow/`  | `coding-workflow.md`                       | `workflow-writer`        |
+| `quality`   | `docs/quality/`   | `code-quality.md`                          | —                        |
+| `intents`   | `docs/intents/`   | — (the generated index)                    | `intent-writer`          |
+| `profiles`  | `docs/profiles/`  | — (the generated index)                    | `intent-writer`          |
+| `skills`    | `docs/skills/`    | not added: drop a `*.skill.md` file there  | —                        |
+
+- **Inactive, a pillar leaves no trace**: none of its linters reports,
+  its skill and command are not rendered, `AGENTS.md` holds no rule for
+  it, and `doc-audit` does not report it as a gap. Its absence is never
+  an error.
+- **Active, it commits to its form contract**: its linters apply and its
+  required files must exist.
+- **`vaubaan-harness add <pillar> [target-dir]`** activates a pillar: it
+  creates the folder, writes the starter files from the templates
+  without ever overwriting an existing file, then re-renders the
+  installation as `update` does, which brings the pillar's skill, its
+  command and its lines of `AGENTS.md`. A starter file holds
+  placeholders: the lint fails on them until the pillar's writer skill
+  has filled the file. Adding an active pillar changes nothing. Creating
+  the folder by hand and running `update` is equivalent.
+- **Removing** a pillar is deleting its folder, then `update`: the skill,
+  the command and the generated index go with it.
+- **A folder git cannot see is not a pillar.** A pillar folder that holds
+  no file exists on one machine only; `lint:doc-layout` reports it.
+- **A check between two pillars runs only while both are active.** An
+  optional pillar never makes another one mandatory.
+- **Who proposes.** `AGENTS.md` names the inactive pillars in one line;
+  the `harness-zero` skill (§7.2) holds, for each, the signs that the
+  project needs it. The agent proposes, the human decides, `add` does.
 
 **`skills/`** — domain skills versioned with the project (a plugin
 recipe, a migration runbook, a review checklist, a team persona):
@@ -519,7 +604,8 @@ recipe, a migration runbook, a review checklist, a team persona):
   disable any skill, project skills included.
 - No slash command is generated for a project skill; it is invoked by
   name. `AGENTS.md` lists the pillar in its project map when it holds
-  skills.
+  skills. The pillar is active as soon as it holds a skill file; `add`
+  does not apply to it.
 
 **`quality/`** — the code-quality rules *specific to the project*, in a
 single required file, `code-quality.md`. The file is *normative*: it
@@ -539,8 +625,8 @@ a structural choice remains an ADR, which `code-quality.md` points to;
 the implementation remains in the handbook; generic principles are not
 restated; CI commands remain in `coding-workflow.md`.
 
-When the file exists, `AGENTS.md` lists it in the project map and every
-agent reads it before writing or auditing code. The file declares no
+When the pillar is active, `AGENTS.md` lists it in the project map and
+every agent reads it before writing or auditing code. The file declares no
 `tracks:`: like an ADR, it sets a norm and does not follow the code.
 
 ### 9.1.3 Intents
@@ -551,8 +637,8 @@ of intents, each heading an intent (verb + object, for an actor). Not a
 sequence of steps: a node says what is wanted, not what comes next. The
 pillar is where a new behavior is specified before it is coded, and the
 backlog of what is decided and not delivered. Decision:
-[intents-pillar](../decisions/intents-pillar.md). Absent, nothing
-changes; present, it commits to the form below.
+[intents-pillar](../decisions/intents-pillar.md). Inactive, nothing
+changes; active, it commits to the form below.
 
 The tree reads like an OKR tree kept in the repo: an intent is an
 objective (qualitative, verb + object, for an actor), the `acceptance:`
@@ -575,7 +661,8 @@ titled verb + object, never a category; slug without numbering (§9.1.1).
 - `title` (required) — verb + object.
 - `status` (required) — `proposed | implemented | deprecated`; the
   default status of the file's nodes.
-- `actors` (required) — the user roles, free but stable in the project.
+- `actors` (required) — the user roles, free but stable in the project;
+  while the profiles pillar is active, each is a profile (§9.1.4).
 - `spec` (required) — one relative path, or a list, to the specs whose
   vocabulary the file uses; each path must resolve.
 - `last_reviewed` (required) — date; same semantics as a handbook.
@@ -603,6 +690,7 @@ blank. Fenced code is ignored.
 | `spec:`                  | any node        | Relative path, optional `#fragment`, to the spec section that holds the rule. The path must resolve.                                                                  |
 | `anchors:`               | terminal intent | Paths or globs from the repo root, code and tests, the `tracks:` syntax. Required when the intent is `implemented`; each must match at least one existing file.       |
 | `acceptance:`            | terminal intent | Followed by `- ` list items: observable criteria. Required when the intent is `proposed`. Removed at delivery: the titles of the anchored tests restate them.         |
+| `relieves:` / `delivers:` | terminal intent, optional | Pains the activity relieves, gains it delivers: slugs of the profiles named by the file's `actors` (§9.1.4). An error while the profiles pillar is inactive. |
 | `requires:` / `creates:` | terminal intent, optional | Entities (below) the activity needs from another activity, or produces. The edges of the intent graph. What comes from outside the project (an operator's input, an external system) is not declared: the intent is an entry point. |
 
 Any other key directly under a heading is an error. A derivable fact
@@ -635,15 +723,16 @@ pull request that delivers the change; between deliveries, a change of
 behavior is a sibling `proposed` intent, merged into it at delivery. A
 level-1 intent is `implemented` as soon as one of its terminal intents is.
 
-**Index.** `docs/intents/README.md` is rendered by `init` and `update`
-when at least one intent file exists: the whole tree as an indented
+**Index.** `docs/intents/README.md` is rendered by `init`, `update` and
+`add` while the pillar is active: the whole tree as an indented
 list, one line per node with its effective status, the actors on the
-level-1 intent line, a link to each file. It is a generated file: recorded in the
-manifest, committed, covered by `lint:generated-fresh`, removed when no
-intent file remains, never edited by hand. An intent file that does not parse
+level-1 intent line, a link to each file; with no intent file yet, one
+line says how to write the first. It is a generated file: recorded in the
+manifest, committed, covered by `lint:generated-fresh`, removed with the
+folder, never edited by hand. An intent file that does not parse
 fails the render, like an invalid project skill.
 
-**Umbrella.** When the pillar holds an intent file, `AGENTS.md` lists it
+**Umbrella.** When the pillar is active, `AGENTS.md` lists it
 in the project map and the doc-first rule adds: a visible change of
 behavior starts with `/intent <verb + object>`, never with the code.
 
@@ -654,7 +743,7 @@ three questions on a greenfield scope, extraction from the code's entry
 points on a mature one.
 
 **Linters** (§10.2): `lint:intent-schema`, `lint:intent-anchors`,
-`lint:intent-vocabulary`, `lint:intent-graph`; `lint:tracks-drift`
+`lint:intent-vocabulary`, `lint:intent-graph`, `lint:intent-profiles`; `lint:tracks-drift`
 treats the union of an intent file's anchors as its tracked paths.
 `lint:spec-tech-agnostic` does not apply to the pillar: anchors are code
 paths by construction.
@@ -667,9 +756,72 @@ are the `drift-detector`'s judgment. Graph analytics (dominance,
 quotient graphs, reports, viewers) are outside the harness; the format
 is parsable by regex so an external tool can produce them.
 
+### 9.1.4 Profiles
+
+**`profiles/`** — who the project serves: one file per kind of user,
+with what hurts them today and what they hope for, and the evidence
+behind it. It gives the actors of the intents a definition, and each
+intent a reason. A profile is a user, never an agent role. Decision:
+[profiles-pillar](../decisions/profiles-pillar.md). Inactive, nothing
+changes; active, it commits to the form below.
+
+**Layout.** One file `docs/profiles/<slug>.md` per profile, slug without
+numbering (§9.1.1). The slug is the profile's name wherever it is
+referred to. `docs/profiles/README.md` is the index, generated.
+
+**File.** Strict frontmatter; an unknown field is an error:
+
+- `title` (required) — who they are, in a few words.
+- `status` (required) — `hypothesis | validated`. A profile is a
+  hypothesis until research backs it.
+- `evidence` (required when `validated`) — one link or a list: a file of
+  the repo, by relative path, which must resolve, or an address outside
+  it. Research notes are the project's, in a folder or a tool of its
+  choice: they are not a pillar and are never copied into the profile.
+- `last_reviewed` (required) — date.
+
+The first paragraph after the title says who the profile is and in what
+situation. Then two sections, at least one of them non-empty:
+
+- **Pains** — one bullet per pain, opening with its name in bold, then
+  what hurts. The most severe first: the order is the rank.
+- **Gains** — the same for the outcomes hoped for.
+
+The slug of a pain or a gain is formed like an entity (§9.1.3): `**Context
+rot**` gives `context-rot`. A slug is unique within a profile.
+
+**No jobs section.** What a profile is trying to do is its intents: the
+level-1 intents that name it in `actors:`. Written twice, they would
+diverge.
+
+**Link from the intents.** While the pillar is active:
+
+- every actor of an intent file is the slug of a profile;
+- a terminal intent may declare `relieves:` (pains) and `delivers:`
+  (gains), each a slug of one of the profiles the file names as actors.
+
+**Index.** `docs/profiles/README.md` is rendered while the pillar is
+active: each profile with its status, the level-1 intents that name it,
+and under each pain and gain the terminal intents that serve it, or the
+mention that none does yet. This is the fit between what the users need
+and what the product does, read from the repo. Generated like the
+intents index (§9.1.3).
+
+**Skill.** No dedicated one: `intent-writer` writes a profile from the
+research the human points to, and asks, for each new intent, which
+profile and which pain or gain it serves.
+
+**Linters** (§10.2): `lint:profile-schema`, `lint:intent-profiles`.
+
+**Not in the pillar.** Whether a pain is worth relieving, whether a
+profile is still true, whether an intent serves nobody: `doc-audit`'s
+judgment, never a gate. A known pain that nothing relieves is a product
+choice, not an error. Ordered journeys across intents remain an open
+question (§15.2).
+
 ### 9.2 Templates (shipped by the harness)
 
-`@vaubaan/harness/templates/{readme,spec,decision,handbook,integration-tests,e2e-tests,coding-workflow,code-quality,intent}.md.tmpl`.
+`@vaubaan/harness/templates/{readme,spec,decision,handbook,integration-tests,e2e-tests,coding-workflow,code-quality,intent,profile,decisions-index,handbook-index}.md.tmpl`.
 The wizards (`readme-writer`, `spec-writer`, `decision-record-writer`,
 `handbook-writer`, `test-plan-writer`, `workflow-writer`,
 `intent-writer`) instantiate these templates. Minimal format:
@@ -695,19 +847,29 @@ The wizards (`readme-writer`, `spec-writer`, `decision-record-writer`,
   (trunk-based, gitflow, etc.) + Commit / merge conventions +
   **Release** (who triggers it, how we tag, rollback,
   freeze windows).
-- **code-quality.md** (optional pillar): Mechanical checks +
+- **code-quality.md**: Mechanical checks +
   Project rules + Accepted deviations. No dedicated wizard in v1: the
   file is edited by hand from the template.
-- **intent.md** (optional pillar): frontmatter + intent statement + nested
+- **intent.md**: frontmatter + intent statement + nested
   nodes with their fields (§9.1.3); 40-120 lines.
+- **profile.md**: frontmatter + who they are + Pains + Gains (§9.1.4);
+  20-40 lines.
+- **decisions-index.md** / **handbook-index.md**: the `README.md` that
+  `add` writes into the pillar: what the folder holds and its list of
+  files, kept by the pillar's writer.
 
 ### 9.3 Completeness criteria (audited by `doc-audit`)
+
+A criterion about a pillar applies only while that pillar is active
+(§9.1.2); an inactive pillar is neither a gap nor a recommendation of
+the report.
 
 - **README presence**: `README.md` at the root **must** exist and
   contain at least the template sections (pitch + quick start +
   links). Gap → ❌.
-- **README links**: the README must link to `docs/spec/`,
-  `docs/handbook/`, `docs/workflow/coding-workflow.md`. Otherwise → ⚠️.
+- **README links**: the README must link to `docs/spec/` and to each
+  active pillar among `docs/handbook/` and
+  `docs/workflow/coding-workflow.md`. Otherwise → ⚠️.
 - **Spec coverage**: every major subsystem has a spec. A subsystem is
   a package of a multi-package repo or a top-level route of an app,
   unless the project's `doc-audit` override lists them.
@@ -717,31 +879,37 @@ The wizards (`readme-writer`, `spec-writer`, `decision-record-writer`,
 - **Handbook freshness**: each handbook declares the code it depends on
   (`tracks: [...]`). A handbook older than its tracked files by more
   than a threshold (default N commits) → warning.
-- **Tests presence**: the two required files (`integration-tests.md`,
-  `e2e-tests.md`) **must** exist. Gap → ❌.
+- **Tests presence**: if `docs/tests/` exists, the two required files
+  (`integration-tests.md`, `e2e-tests.md`) **must** exist. Gap → ❌.
 - **Tests coverage cross-check**: each spec is exercised by at
   least one integration or E2E test file, or listed under "Known
   gaps" in a test plan. Otherwise → ⚠️ "spec without tests".
 - **Tests freshness**: same `tracks: [...]` criteria as the handbook —
   a test plan that refers to code that has disappeared = ❌.
-- **Workflow presence**: `docs/workflow/coding-workflow.md` **must**
-  exist and cover the 5 core topics (CI, env variants, PR process,
+- **Workflow presence**: if `docs/workflow/` exists,
+  `coding-workflow.md` **must** exist and cover the 5 core topics (CI, env variants, PR process,
   branches, release). Gap → ❌.
 - **Workflow freshness**: `coding-workflow.md` `tracks:` the CI/CD
   config files and the package manifest. Drift → ⚠️.
-- **Quality (optional pillar)**: if `docs/quality/` exists,
+- **Quality**: if `docs/quality/` exists,
   `code-quality.md` **must** exist with its three required sections
   (§9.1.2). Gap → ❌. Content that copies an ADR, a handbook, a tool's
   configuration or generic principles → ⚠️ (pillar boundary).
-- **Intents (optional pillar)**: if `docs/intents/` exists: each
+- **Intents**: if `docs/intents/` exists: each
   spec is linked by at least one intent file, otherwise → ⚠️ "spec
   without intents"; each `implemented` terminal intent anchors at least one
   test; a `proposed` intent older than N commits → ⚠️ pending increment;
   the test titles of a delivered intent restate its former criteria
   (judgment).
-- **Cross-link consistency**: a spec has at least one decision, one
-  handbook or a mention in the tests; a decision is referenced by at
-  least one other doc. Otherwise → orphan.
+- **Profiles**: if `docs/profiles/` exists: a `hypothesis` profile
+  older than N commits → ⚠️ "unvalidated profile"; a first-ranked pain
+  that no intent relieves → ⚠️ "unserved pain"; with intents, a
+  `proposed` terminal intent that relieves no pain and delivers no gain
+  → ⚠️ "intent without a reason"; a pain or gain worded as a feature
+  ("no dashboard") rather than as what the user lives → ⚠️ (judgment).
+- **Cross-link consistency**: among the active pillars, a spec has at
+  least one decision, one handbook or a mention in the tests; a decision
+  is referenced by at least one other doc. Otherwise → orphan.
 - **Pillar boundaries — anti-drift between pillars.** The critical
   point where the doc drifts if it is not audited. Heuristics (regex +
   the agent's judgment):
@@ -785,7 +953,8 @@ Global verdict: `done` if zero `❌`, otherwise `needs-human`.
 ### 10.2 Mechanical linters (CI gates)
 
 Each linter is a pure function `(repoRoot) → issues`, with no LLM and no
-network. `vaubaan-harness lint` runs them all with an aggregated exit
+network. A linter of a pillar reports nothing while the pillar is
+inactive (§9.1.2). `vaubaan-harness lint` runs them all with an aggregated exit
 code: `0` if no issue of severity `error`, `1` otherwise. Options
 filter by pillar or by linter id and choose a text or JSON output.
 
@@ -793,23 +962,25 @@ filter by pillar or by linter id and choose a text or JSON output.
 |---------------------------------|--------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|---------------|
 | `lint:readme-presence`          | README                   | `README.md` exists at the root.                                                                                                                          | error         |
 | `lint:readme-sections`          | README                   | `README.md` contains the template sections (regex on headers).                                                                                           | error         |
-| `lint:doc-layout`               | all                      | `docs/{spec,decisions,handbook,tests,workflow}/` exist.                                                                                                  | error         |
-| `lint:cardinal-files`           | tests, workflow          | `tests/integration-tests.md`, `tests/e2e-tests.md`, `workflow/coding-workflow.md` exist.                                                                  | error         |
+| `lint:doc-layout`               | all                      | No pillar folder is empty: git does not record an empty folder, so the pillar would be active on one machine only.                                       | error         |
+| `lint:cardinal-files`           | tests, workflow          | If `docs/tests/` exists: `integration-tests.md` and `e2e-tests.md` exist. If `docs/workflow/` exists: `coding-workflow.md` exists.                        | error         |
 | `lint:decision-schema`          | decisions                | Each ADR has the 4 sections Context + Decision + Consequences + Rejected alternatives (regex headers).                                                     | error         |
 | `lint:adr-no-tracks`            | decisions                | No ADR declares a non-empty `tracks:` (an ADR states a decision, it does not follow the code).                                                          | error         |
 | `lint:frontmatter-tracks`       | handbook, tests, workflow | Each file declares `tracks: [...]` in frontmatter and all tracked paths exist in the repo.                                                               | error         |
 | `lint:tracks-drift`             | handbook, tests, workflow, intents | The doc file is older than its tracked files by more than N commits (configurable). For an intent file, the tracked paths are the union of its anchors.  | warning       |
 | `lint:spec-tech-agnostic`       | spec                     | Blocklist of tech keywords (frameworks, runtimes, infra providers — effective list in the source code) **forbidden** in `spec/` files.                   | error         |
-| `lint:spec-has-content`         | spec                     | `docs/spec/` contains at least one `.md` file (warns if the directory exists but is empty).                                                              | warning       |
+| `lint:spec-has-content`         | spec                     | `docs/spec/` contains at least one `.md` file: a project with no spec yet is warned, not failed.                                                         | warning       |
 | `lint:cross-links`              | all                      | All relative Markdown links resolve to an existing file.                                                                                                 | error         |
 | `lint:orphan-decisions`         | decisions                | Each ADR is referenced by at least one other doc file.                                                                                                   | warning       |
 | `lint:gitignore-harness`        | repo root                | `.gitignore` excludes `.harness-overrides/` and `.vaubaan/`, and ignores none of the generated paths (`AGENTS.md`, `CLAUDE.md`, engine folders, manifest). | error         |
-| `lint:quality-schema`           | quality (optional)       | If `docs/quality/` exists: `code-quality.md` exists and contains the 3 required sections (regex headers). No effect if the directory is absent.           | error         |
+| `lint:quality-schema`           | quality                  | If `docs/quality/` exists: `code-quality.md` exists and contains the 3 required sections (regex headers). No effect if the directory is absent.           | error         |
 | `lint:generated-fresh`          | repo root                | When a manifest exists: every generated file equals the current render for the recorded engines and overrides; none is missing or stale.                 | error         |
-| `lint:intent-schema`            | intents (optional)       | If `docs/intents/` exists: strict frontmatter; known node fields, the fields of a terminal intent on terminal intents only; an `implemented` terminal intent has `anchors:`, a `proposed` one has `acceptance:`; a terminal intent has at least one field; `spec` paths resolve. No effect if the directory is absent. | error |
-| `lint:intent-anchors`           | intents (optional)       | Every anchor matches at least one existing file (same resolution as `tracks:`), reported at the node's line.                                            | error         |
-| `lint:intent-vocabulary`        | intents (optional)       | Every entity of `requires:` / `creates:` is a term of the Vocabulary section of a linked spec. Downgraded to a warning when no linked spec has a Vocabulary section. | error |
-| `lint:intent-graph`             | intents (optional)       | An entity a terminal intent requires that no terminal intent of any file creates: the intent is unreachable in the doc.                              | warning       |
+| `lint:intent-schema`            | intents                  | If `docs/intents/` exists: strict frontmatter; known node fields, the fields of a terminal intent on terminal intents only; an `implemented` terminal intent has `anchors:`, a `proposed` one has `acceptance:`; a terminal intent has at least one field; `spec` paths resolve. No effect if the directory is absent. | error |
+| `lint:intent-anchors`           | intents                  | Every anchor matches at least one existing file (same resolution as `tracks:`), reported at the node's line.                                            | error         |
+| `lint:intent-vocabulary`        | intents                  | Every entity of `requires:` / `creates:` is a term of the Vocabulary section of a linked spec. Downgraded to a warning when no linked spec has a Vocabulary section. | error |
+| `lint:intent-graph`             | intents                  | An entity a terminal intent requires that no terminal intent of any file creates: the intent is unreachable in the doc.                              | warning       |
+| `lint:intent-profiles`          | intents, profiles        | While both pillars are active: every actor of an intent file is a profile; every `relieves:` is a pain and every `delivers:` a gain of one of the file's actors. With intents alone: `relieves:` / `delivers:` are an error. | error |
+| `lint:profile-schema`           | profiles                 | If `docs/profiles/` exists: strict frontmatter; a `validated` profile has `evidence:`; an evidence path of the repo resolves; at least one pain or gain; each one opens with a bold name, unique in the file. | error |
 
 Section headings are matched in English (`Context`, `Decision`,
 `Consequences`, `Rejected alternatives`; `Mechanical checks`, `Project
@@ -896,7 +1067,7 @@ nowhere. Decision:
   pillar it would go to, and appears in the view.
 - Nothing is written without the human. An accepted lesson lands in a
   project pillar (quality, workflow, handbook, test plan, a project
-  skill); a lesson valid for every project becomes an upstream issue
+  skill), which the human adds first when it is inactive (§9.1.2); a lesson valid for every project becomes an upstream issue
   draft. Rejected lessons are kept locally so they do not come back.
 
 ## 11. Gitignored overrides
@@ -971,6 +1142,11 @@ Re-running `init` refreshes the dropped files and keeps the choices
 recorded by previous runs (preserved files, overrides folder); it is
 also how the engines are changed.
 
+**Growing with the project**: `vaubaan-harness add <pillar>
+[target-dir]` (§9.1.2) activates a pillar the day the project needs it.
+It ends with the next step: the writer skill that fills the starter
+files. Before any installation it only writes the starter files.
+
 **Ownership.** `init` and `update` share one installation planner and
 never overwrite, merge or delete a file the harness does not own. A
 generated path already holding a file the harness did not write, or a
@@ -995,7 +1171,9 @@ project's with `--preserve`. There is no `--force`. Decision:
 
 `update [target-dir]` moves a known installation to the harness
 version that runs it. It neither looks for nor downloads a newer
-version, and does not touch the project's dependency on the package.
+version, and does not touch the project's dependency on the package:
+choosing the version, and whatever a version asks of the project beyond
+a re-render, is the `harness-upgrade` skill's procedure (§7.2).
 It recognizes older installations and keeps the engines, the preserved
 files, the project skills and the applicable overrides.
 
@@ -1013,9 +1191,10 @@ files, the project skills and the applicable overrides.
   it from future generations; the choice is remembered. The manifest
   cannot be preserved.
 
-**Layout check**: `vaubaan-harness check <repo>` exits `0` if `docs/`
-exists and `.gitignore` covers `.harness-overrides/` and `.vaubaan/`
-without ignoring a generated file, `1` with a diagnostic otherwise.
+**Layout check**: `vaubaan-harness check <repo>` exits `0` if
+`README.md` exists and `.gitignore` covers `.harness-overrides/` and
+`.vaubaan/` without ignoring a generated file, `1` with a diagnostic
+otherwise.
 
 **View and review**: `vaubaan-harness view`, then
 `vaubaan-harness review start | next | reply | status | keep | discard`
@@ -1025,8 +1204,10 @@ without ignoring a generated file, `1` with a diagnostic otherwise.
 and pre-commit hook.
 
 **Bootstrapping the doc of an existing project** is not a CLI: the
-agent, following the doc-first rule of `AGENTS.md`, finds the gaps with
-`doc-audit` and fills them with the writer skills.
+agent, following the doc-first rule of `AGENTS.md` and the
+`harness-zero` skill, proposes the pillars the project is ready for,
+finds the gaps of the active ones with `doc-audit` and fills them with
+the writer skills.
 
 ### 13.2 For skill developers (contributors)
 
@@ -1042,13 +1223,17 @@ agent, following the doc-first rule of `AGENTS.md`, finds the gaps with
 - **Unit**: the parser (strict frontmatter), each renderer (pivot
   fixture → expected native layout), the capabilities policy (skip vs
   degraded).
-- **Integration**: `init`, `update`, `uninstall` and `check` on target
-  directories in various states (empty, existing user files, edited
+- **Integration**: `init`, `update`, `add`, `uninstall` and `check` on
+  target directories in various states (empty, existing user files, edited
   generated files, old manifests, unsafe paths); each linter on a
   passing and a failing fixture, the intent linters included;
   `lint:generated-fresh` passing after `init` and failing after a hand
   edit; the intents index rendered, updated and removed with the
-  intent files, and carried over from its 2.2 path.
+  intent files, and carried over from its 2.2 path; a project with a
+  README alone passing the lint and receiving only the always-rendered
+  skills; a pillar's skill, command and umbrella lines appearing with
+  `add` and leaving with the folder; the profiles index and its fit;
+  `harness-upgrade` holding an entry for the current version.
 - **E2E**: the packed package installed and run as a user would, per
   engine; an override replacing a shipped skill in the render.
 - **View and review**: the context graph on a fixture and on this
@@ -1079,10 +1264,10 @@ where it applies.
 - **OQ — Conversation histories of Codex and OpenCode.** Where each
   engine stores them, and whether their format is stable enough to
   collect lessons from (§10.5).
-- **OQ — User personas and ordered journeys.** An intent names its
-  actors but nothing defines them, and the intents tree deliberately
-  holds no sequence of steps (§9.1.3). Should actors become defined
-  terms with their needs, and should an ordered path across intents
-  have a place?
+- **OQ — Ordered journeys.** The intents tree deliberately holds no
+  sequence of steps (§9.1.3), and a profile lists pains and gains, not a
+  path (§9.1.4). Should an ordered path across intents have a place?
+- **OQ — Shrinking the test plans.** Once active, `tests/` asks for both
+  files. Should a project with no end-to-end test be allowed one?
 - **OQ — Per-project `doc-audit` config.** Beyond the drift threshold,
   should more knobs be exposed (expected subsystem names, exclusions)?

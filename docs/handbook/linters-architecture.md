@@ -10,8 +10,11 @@ tracks:
   - src/linters/gitignore-harness.ts
   - src/linters/generated-fresh.ts
   - src/linters/intent-*.ts
+  - src/linters/doc-layout.ts
+  - src/linters/cardinal-files.ts
+  - src/linters/profile-schema.ts
   - src/cli/check.ts
-last_reviewed: 2026-11-10
+last_reviewed: 2026-11-21
 ---
 
 # Linters architecture — handbook
@@ -33,10 +36,13 @@ The mechanical linters run by `vaubaan-harness lint`, in CI and in a git pre-com
 - The JSON report carries `version: 1`; changing its shape means bumping it.
 - `check` and `lint:gitignore-harness` share the same gitignore lists (`missingGitignoreEntries`, `forbiddenGitignoreEntries`): change them in one place.
 - `tracks:` entries and intent anchors resolve the same way, through `trackedPathExists` in `util.ts`: a path from the repo root, or a glob that must match a file.
-- An optional pillar's linters are no-ops when its directory is absent (`quality-schema`, the `intent-*` linters, see [intents pillar](./intents-pillar.md)).
+- A pillar's linters are no-ops while its folder is absent: no linter requires a folder of `docs/`, and only a missing `README.md` fails a project that just started ([pillars on demand](./pillars-on-demand.md)). `cardinal-files` requires a pillar's files only once its folder exists.
+- A linter between two pillars checks that both are active before reporting: `intent-profiles` resolves actors only when `docs/profiles/` exists.
 
 ## Traps
 
+- `doc-layout` no longer checks that folders exist: it fails on a pillar folder holding no file at any depth, because git would not record it and the render would differ between two machines.
+- `spec-has-content` is the one check on an absent folder, and it is a warning.
 - `listMarkdown` skips every `README.md`: pillar READMEs are never linted for content or `tracks:`. Use `listAllMarkdown` when a linter must see them.
 - `tracks-drift` also covers `docs/intents/`, where the tracked paths are the union of an intent file's anchors. It measures from the doc's last **commit**, not from `last_reviewed` (no linter reads that field), and sums commits per tracked file: one commit touching five tracked files counts five. A per-doc `driftThreshold:` raises or lowers the default of 10.
 - The git helpers swallow errors: outside a git repo, or in a shallow CI clone, `tracks-drift` silently reports nothing.

@@ -107,10 +107,16 @@ describe("lint:generated-fresh", () => {
     expect(generatedFresh.run(root)).toEqual([]);
     write("docs/intents/ship.md", intentFile("Build it fast"));
     expect(generatedFresh.run(root).map((issue) => issue.file)).toEqual(["docs/intents/README.md"]);
+    // The folder still exists: the pillar stays active and its index says it is empty.
     unlinkSync(join(root, "docs/intents/ship.md"));
+    expect(generatedFresh.run(root).map((issue) => issue.file)).toEqual(["docs/intents/README.md"]);
+    // Removing the folder deactivates the pillar: its rule, skill and command are stale.
+    rmSync(join(root, "docs/intents"), { recursive: true });
     const issues = generatedFresh.run(root);
-    expect(issues.map((issue) => issue.file)).toEqual(["AGENTS.md", "docs/intents/README.md"]);
-    expect(issues[1]?.message).toMatch(/stale generated file/);
+    expect(issues.map((issue) => issue.file)).toContain("AGENTS.md");
+    const stale = issues.filter((issue) => /stale generated file/.test(issue.message));
+    expect(stale.length).toBeGreaterThan(0);
+    expect(stale.every((issue) => /intent|drift/.test(issue.file))).toBe(true);
   });
 
   it("reports an intent file that does not parse as a render failure", () => {
