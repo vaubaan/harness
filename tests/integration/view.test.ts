@@ -1,5 +1,13 @@
 import { execSync } from "node:child_process";
-import { cpSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import {
+  cpSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -29,6 +37,53 @@ afterEach(() => {
 });
 
 const build = () => buildGraph(repo, { packageDir: PACKAGE_DIR });
+
+const MAP_TYPES = [
+  "readme",
+  "spec",
+  "decision",
+  "handbook",
+  "test-plan",
+  "workflow",
+  "quality",
+  "doc",
+  "intent-file",
+];
+/** Documents per folder of docs/ in this repository on 2026-11-21. */
+const TODAY = {
+  decisions: 16,
+  handbook: 13,
+  spec: 1,
+  tests: 2,
+  workflow: 1,
+  intents: 5,
+  research: 4,
+};
+
+function sizedRepo(sizes: Record<string, number>): string {
+  const root = mkdtempSync(join(tmpdir(), "cah-sized-"));
+  extraRoots.push(root);
+  writeFileSync(join(root, "README.md"), "# Sized\n");
+  for (const [dir, n] of Object.entries(sizes)) {
+    mkdirSync(join(root, "docs", dir), { recursive: true });
+    for (let i = 0; i < n; i++)
+      writeFileSync(join(root, "docs", dir, `doc-${i}.md`), `# A document named ${dir} ${i}\n`);
+  }
+  return root;
+}
+const extraRoots: string[] = [];
+afterEach(() => {
+  for (const r of extraRoots.splice(0)) rmSync(r, { recursive: true, force: true });
+});
+
+function cardsOf(html: string): string[] {
+  return [...html.matchAll(/<a class="n t-([a-z-]+)[^"]*" id="c-/g)].map((m) => m[1] ?? "");
+}
+
+function fitZoom(html: string): number {
+  const world = /id="world" style="width:(\d+)px;height:(\d+)px"/.exec(html);
+  return Math.min(1440 / Number(world?.[1]), 860 / Number(world?.[2]));
+}
 
 describe("context graph", () => {
   it("indexes the pillars of the README example", () => {
@@ -138,29 +193,26 @@ describe("context graph", () => {
 });
 
 describe("view", () => {
-  it("shows one card per document, grouped by pillar, on a map that fits one screen", () => {
+  it("shows one card per document of this repository", () => {
     const g = buildGraph(REPO_ROOT, { lint: false, packageDir: PACKAGE_DIR });
-    const html = renderView(g);
-    const docs = g.nodes.filter((n) =>
-      [
-        "readme",
-        "spec",
-        "decision",
-        "handbook",
-        "test-plan",
-        "workflow",
-        "quality",
-        "doc",
-        "intent-file",
-      ].includes(n.type),
-    );
-    const cards = [...html.matchAll(/<a class="n t-([a-z-]+)[^"]*" id="c-/g)].map((m) => m[1]);
-    expect(cards).toHaveLength(docs.length);
-    const world = /id="world" style="width:(\d+)px;height:(\d+)px"/.exec(html);
+    const docs = g.nodes.filter((n) => MAP_TYPES.includes(n.type));
+    expect(cardsOf(renderView(g))).toHaveLength(docs.length);
+  });
+
+  it("shows one card per document, grouped by pillar, on a map that fits one screen", () => {
+    // A project the size of this repository on 2026-11-21: the measure must
+    // not move when the docs grow, so it runs on a fixture of known size.
+    const html = renderView(buildGraph(sizedRepo(TODAY), { lint: false, packageDir: PACKAGE_DIR }));
+    expect(cardsOf(html)).toHaveLength(1 + Object.values(TODAY).reduce((s, n) => s + n, 0));
     // At 1440 × 860, the fit zoom stays at 0.7 or more: card titles stay at 9 px or more.
-    expect(Math.min(1440 / Number(world?.[1]), 860 / Number(world?.[2]))).toBeGreaterThanOrEqual(
-      0.7,
+    expect(fitZoom(html)).toBeGreaterThanOrEqual(0.7);
+  });
+
+  it("keeps the map on one screen, smaller, when a pillar grows", () => {
+    const html = renderView(
+      buildGraph(sizedRepo({ ...TODAY, decisions: 40 }), { lint: false, packageDir: PACKAGE_DIR }),
     );
+    expect(fitZoom(html)).toBeGreaterThanOrEqual(0.5);
   });
 
   it("shows terms, code paths, rejected alternatives and lint issues as counts on their document's card", () => {

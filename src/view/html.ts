@@ -597,8 +597,9 @@ function renderCanvas(ix: Index, diff: Map<string, DiffState>, removed: GraphNod
     return { frames, W, H, scale: Math.min(1440 / W, 860 / H) };
   };
   let best = layout(1640, 1.6);
-  for (const ratio of [0.8, 1.2, 1.6, 2.2, 3]) {
-    for (let shelfW = 1000; shelfW <= 3200; shelfW += 100) {
+  for (let r = 2; r <= 20; r++) {
+    const ratio = r / 4;
+    for (let shelfW = 1000; shelfW <= 3600; shelfW += 50) {
       const l = layout(shelfW, ratio);
       if (l.scale > best.scale + 1e-9) best = l;
     }

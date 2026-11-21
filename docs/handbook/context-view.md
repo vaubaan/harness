@@ -40,7 +40,7 @@ last_reviewed: 2026-11-21
 - `review next` long-polls up to 540 s through `node:http`: `fetch` gives up after 300 s without headers.
 - `history.replaceState` throws on a `file://` page: the static view opened from disk must not depend on it.
 - The "Before" mode of the differences hides added cards and shows removed ones, but a changed card shows its current content; the detail panel has no old version.
-- The map layout is a search: `renderCanvas` tries shelf widths and frame proportions and keeps the one read at the highest zoom on a 16:10 screen. Adding a pillar frame can move every other frame; the view test pins the fit zoom of this repository at 0.7 or more.
+- The map layout is a search: `renderCanvas` tries shelf widths and frame proportions and keeps the one read at the highest zoom on a 16:10 screen. Adding a pillar frame can move every other frame. More documents always mean a smaller fit zoom: the view test pins 0.7 on a fixture the size of this repository in November 2026 and 0.5 with 40 decisions, never on the live repository, whose docs grow.
 - On a phone the detail panel takes the whole width: a focus is then readable only after closing it.
 - The server binds `127.0.0.1`. When the human's browser runs on another machine (a remote agent), `--host` widens it; the token still applies, the `Host` check is then skipped for `0.0.0.0`.
 - Source links of the static page are `../../<path>`: they resolve only while the page stays in `.vaubaan/view/` of the repo. In a session the server serves `docs/**` and `README.md` read-only for the same links.
