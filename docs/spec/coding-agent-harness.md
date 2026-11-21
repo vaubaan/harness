@@ -22,7 +22,7 @@ The harness reasons with these words:
 - **Skill** — reusable unit of capability. Pivot format
   `*.skill.md` (see §5); rendered per engine.
 - **Command** — slash-command invocable by the human or the agent
-  (`/doc-audit`, `/spec`, …). Pivot format `*.cmd.md` (see §6).
+  (`/harn-doc-audit`, `/harn-spec`, …). Pivot format `*.cmd.md` (see §6).
 - **Meta database** — `docs/` and the views the harness renders from it:
   what the code cannot say, in a small fixed set of Markdown files that
   point to the code for everything else. The **code database** is the
@@ -168,7 +168,7 @@ The **harness** is the subsystem that:
 4. **Enforces its rules via linters.** Every check that can be
    mechanized is an exit-code linter run in CI, in the pre-commit hook
    and on demand, so that a harnessed project cannot merge a PR that
-   creates mechanically detectable drift (see §10.2). The `doc-audit`
+   creates mechanically detectable drift (see §10.2). The `harn-doc-audit`
    skill covers the semantic judgment.
 5. **Asks for nothing a project does not need yet.** A project that
    just started is harnessed with a README; each other pillar is added
@@ -251,7 +251,7 @@ necessary backups locally.
   function, no side effect. Emits the skills and commands whose
   `pillars:` include an active pillar (§9.1.2), filtered by the
   `engines:` and `requires:` constraints (§4.2).
-- **audit(repo) → report**: `doc-audit` skill, executed by the agent.
+- **audit(repo) → report**: `harn-doc-audit` skill, executed by the agent.
 - **scaffold(repo, pillar) → files**: the writer skills, executed by
   the agent.
 
@@ -369,7 +369,7 @@ copy is omitted. Decision:
 
 ```markdown
 ---
-id: doc-audit
+id: harn-doc-audit
 description: |
   Audits the completeness and freshness of the doc.
 engines: [claude-code, codex-cli, opencode]  # omit = all
@@ -390,6 +390,11 @@ You are invoked to audit the completeness of the project's doc:
 
 **Writing rules**:
 
+- **Prefixed ids.** Every skill and command the package ships has an
+  id starting with `harn-`, so that none collides with a project's or a
+  user's own in the folders the engines share; a command's trigger is
+  `/` followed by its id. Project skills and overrides are free of the
+  rule. Decision: [harn-prefix](../decisions/harn-prefix.md).
 - **Strict frontmatter.** An unknown or misspelled field fails the
   parse with a precise message; a skill whose frontmatter does not
   validate is never loaded or rendered. The error surfaces when the
@@ -406,9 +411,9 @@ You are invoked to audit the completeness of the project's doc:
 
 ```markdown
 ---
-id: doc-audit
-trigger: /doc-audit
-invokes_skill: doc-audit
+id: harn-doc-audit
+trigger: /harn-doc-audit
+invokes_skill: harn-doc-audit
 args:
   - name: scope
     type: enum
@@ -417,10 +422,10 @@ args:
 description: Audits the project's doc completeness (scope of your choice).
 ---
 
-# /doc-audit
+# /harn-doc-audit
 
-When the human or the agent invokes `/doc-audit [scope]`, load the
-`doc-audit` skill with the scope passed as argument.
+When the human or the agent invokes `/harn-doc-audit [scope]`, load the
+`harn-doc-audit` skill with the scope passed as argument.
 ```
 
 Commands are **thin**: a `slash → skill + args` binding. All the logic
@@ -438,17 +443,17 @@ harness ships no agent persona and no code-quality audit (see
 
 | ID                          | Pillars | Role                                                                                                       |
 |-----------------------------|---------|------------------------------------------------------------------------------------------------------------|
-| `doc-audit`                 | always | Audits the completeness of the doc (see §10).                                                                  |
-| `spec-writer`               | always | Human-guided, progressive wizard to write / update a `docs/spec/<name>.md` file, section by section.                 |
-| `decision-record-writer`    | decisions | Wizard to write an ADR under `docs/decisions/<slug>.md` (no numbering — see §9.1). Detects implicit decisions in the current diff.  |
-| `handbook-writer`           | handbook | Documents the actual implementation under `docs/handbook/<name>.md`. Reads the code, proposes, the human validates.     |
-| `test-plan-writer`          | tests | Updates `docs/tests/integration-tests.md` and/or `docs/tests/e2e-tests.md`. Scope, stack, conventions and known gaps; never the covered scenarios. |
-| `workflow-writer`           | workflow | Updates `docs/workflow/coding-workflow.md`. Reads the repo's CI/CD config, the package manifest scripts and the branch/PR config, proposes the required sections (CI / env / PR / branches / release) and the optional ones (languages). |
-| `readme-writer`             | always | Maintains `README.md` at the root. Syncs the links to the other pillars; makes sure pitch + quick start stay up to date vs the code. |
-| `drift-detector`            | handbook, tests, workflow, intents | Detects code ↔ doc divergences.                                                                                      |
-| `canvas-review`             | always | Runs a review session (§10.4): opens the view, keeps it live while the human talks or comments, applies each comment to its pillar with that pillar's writer rules, answers in the thread. Writes only to the project domain (§0.2). |
-| `lesson-miner`              | always | Proposes lessons (§10.5): groups the patch events `lessons collect` extracted, proposes one rule per recurring patch with its evidence, domain and pillar; writes an accepted rule with the pillar's writer rules. |
-| `intent-writer`             | intents, profiles | Writes or updates `docs/intents/<slug>.md` one node at a time (§9.1.3): greenfield (three questions) or mature (reads the code's entry points, proposes anchored terminal intents). `/intent <verb + object>` adds a `proposed` intent with its acceptance criteria before any code. Writes or updates a profile under `docs/profiles/` and names, on an intent, the profile it serves and the pain it relieves (§9.1.4). |
+| `harn-doc-audit`                 | always | Audits the completeness of the doc (see §10).                                                                  |
+| `harn-spec-writer`               | always | Human-guided, progressive wizard to write / update a `docs/spec/<name>.md` file, section by section.                 |
+| `harn-decision-record-writer`    | decisions | Wizard to write an ADR under `docs/decisions/<slug>.md` (no numbering — see §9.1). Detects implicit decisions in the current diff.  |
+| `harn-handbook-writer`           | handbook | Documents the actual implementation under `docs/handbook/<name>.md`. Reads the code, proposes, the human validates.     |
+| `harn-test-plan-writer`          | tests | Updates `docs/tests/integration-tests.md` and/or `docs/tests/e2e-tests.md`. Scope, stack, conventions and known gaps; never the covered scenarios. |
+| `harn-workflow-writer`           | workflow | Updates `docs/workflow/coding-workflow.md`. Reads the repo's CI/CD config, the package manifest scripts and the branch/PR config, proposes the required sections (CI / env / PR / branches / release) and the optional ones (languages). |
+| `harn-readme-writer`             | always | Maintains `README.md` at the root. Syncs the links to the other pillars; makes sure pitch + quick start stay up to date vs the code. |
+| `harn-drift-detector`            | handbook, tests, workflow, intents | Detects code ↔ doc divergences.                                                                                      |
+| `harn-canvas-review`             | always | Runs a review session (§10.4): opens the view, keeps it live while the human talks or comments, applies each comment to its pillar with that pillar's writer rules, answers in the thread. Writes only to the project domain (§0.2). |
+| `harn-lesson-miner`              | always | Proposes lessons (§10.5): groups the patch events `lessons collect` extracted, proposes one rule per recurring patch with its evidence, domain and pillar; writes an accepted rule with the pillar's writer rules. |
+| `harn-intent-writer`             | intents, profiles | Writes or updates `docs/intents/<slug>.md` one node at a time (§9.1.3): greenfield (three questions) or mature (reads the code's entry points, proposes anchored terminal intents). `/harn-intent <verb + object>` adds a `proposed` intent with its acceptance criteria before any code. Writes or updates a profile under `docs/profiles/` and names, on an intent, the profile it serves and the pain it relieves (§9.1.4). |
 
 Their evolution is versioned by the package version. The `pillars:`
 field (§5, §9.1.2) and the `engines:` and `requires:` constraints (§4.2)
@@ -463,8 +468,8 @@ rendered:
 
 | ID                | Role |
 |-------------------|------|
-| `harness-guide`    | How to work in a harnessed project: the reading order, which skill answers which situation, what to refuse, what to do at the end of a task. It lists, for each inactive pillar, the signs that the project now needs it, and has the agent propose `add <pillar>` to the human; it never adds one unasked. |
-| `harness-upgrade` | Moves a project to a newer harness version: pin the package, preview `update`, resolve the conflicts it lists, apply, lint, then apply the migration notes of every version crossed. The notes are part of the skill: each minor release adds its entry, even "nothing to do". Command `/harness-upgrade`. |
+| `harn-guide`    | How to work in a harnessed project: the reading order, which skill answers which situation, what to refuse, what to do at the end of a task. It lists, for each inactive pillar, the signs that the project now needs it, and has the agent propose `add <pillar>` to the human; it never adds one unasked. |
+| `harn-upgrade` | Moves a project to a newer harness version: pin the package, preview `update`, resolve the conflicts it lists, apply, lint, then apply the migration notes of every version crossed. The notes are part of the skill: each minor release adds its entry, even "nothing to do". Command `/harn-upgrade`. |
 
 ## 8. Composition: umbrella + skills + commands
 
@@ -485,7 +490,7 @@ for all the named engines:
   generated file by hand) and a compact list of the rendered skills with
   their slash-commands when they exist. The map and the doc-first rule
   hold a line only for an active pillar: with `docs/intents/`, a visible
-  change of behavior starts with `/intent <verb + object>`, never with
+  change of behavior starts with `/harn-intent <verb + object>`, never with
   the code (§9.1.3). One line names the inactive pillars and how to add
   one, so the agent can propose it (§9.1.2). The engines discover skills
   natively.
@@ -560,18 +565,18 @@ otherwise. Decision:
 
 | Pillar      | Folder            | Starter files written by `add`            | Skill it brings          |
 |-------------|-------------------|--------------------------------------------|--------------------------|
-| `decisions` | `docs/decisions/` | `README.md`, the index                     | `decision-record-writer` |
-| `handbook`  | `docs/handbook/`  | `README.md`, the index                     | `handbook-writer`        |
-| `tests`     | `docs/tests/`     | `integration-tests.md`, `e2e-tests.md`     | `test-plan-writer`       |
-| `workflow`  | `docs/workflow/`  | `coding-workflow.md`                       | `workflow-writer`        |
+| `decisions` | `docs/decisions/` | `README.md`, the index                     | `harn-decision-record-writer` |
+| `handbook`  | `docs/handbook/`  | `README.md`, the index                     | `harn-handbook-writer`        |
+| `tests`     | `docs/tests/`     | `integration-tests.md`, `e2e-tests.md`     | `harn-test-plan-writer`       |
+| `workflow`  | `docs/workflow/`  | `coding-workflow.md`                       | `harn-workflow-writer`        |
 | `quality`   | `docs/quality/`   | `code-quality.md`                          | —                        |
-| `intents`   | `docs/intents/`   | — (the generated index)                    | `intent-writer`          |
-| `profiles`  | `docs/profiles/`  | — (the generated index)                    | `intent-writer`          |
+| `intents`   | `docs/intents/`   | — (the generated index)                    | `harn-intent-writer`          |
+| `profiles`  | `docs/profiles/`  | — (the generated index)                    | `harn-intent-writer`          |
 | `skills`    | `docs/skills/`    | not added: drop a `*.skill.md` file there  | —                        |
 
 - **Inactive, a pillar leaves no trace**: none of its linters reports,
   its skill and command are not rendered, `AGENTS.md` holds no rule for
-  it, and `doc-audit` does not report it as a gap. Its absence is never
+  it, and `harn-doc-audit` does not report it as a gap. Its absence is never
   an error.
 - **Active, it commits to its form contract**: its linters apply and its
   required files must exist.
@@ -590,7 +595,7 @@ otherwise. Decision:
 - **A check between two pillars runs only while both are active.** An
   optional pillar never makes another one mandatory.
 - **Who proposes.** `AGENTS.md` names the inactive pillars in one line;
-  the `harness-guide` skill (§7.2) holds, for each, the signs that the
+  the `harn-guide` skill (§7.2) holds, for each, the signs that the
   project needs it. The agent proposes, the human decides, `add` does.
 
 **`skills/`** — domain skills versioned with the project (a plugin
@@ -709,7 +714,7 @@ the language of the spec.
 
 **Statuses.**
 
-- `proposed` — decided, not delivered. Created by `/intent <verb + object>`. Carries
+- `proposed` — decided, not delivered. Created by `/harn-intent <verb + object>`. Carries
   `acceptance:`, no `anchors:`. The `proposed` nodes are the backlog.
 - `implemented` — delivered, anchors valid. The pull request that
   delivers adds `anchors:`, writes the tests whose titles restate the
@@ -734,9 +739,9 @@ fails the render, like an invalid project skill.
 
 **Umbrella.** When the pillar is active, `AGENTS.md` lists it
 in the project map and the doc-first rule adds: a visible change of
-behavior starts with `/intent <verb + object>`, never with the code.
+behavior starts with `/harn-intent <verb + object>`, never with the code.
 
-**Command.** One command, `/intent [verb + object]`. With an argument it
+**Command.** One command, `/harn-intent [verb + object]`. With an argument it
 proposes that intent as a `proposed` terminal intent with its acceptance
 criteria, before any code. Without one it maps or extends the tree:
 three questions on a greenfield scope, extraction from the code's entry
@@ -750,9 +755,9 @@ paths by construction.
 
 **Not in the pillar.** Size targets (2 to 9 children per node, 40 to
 120 lines per file, split into two level-1 intents beyond) belong to
-`intent-writer` and `doc-audit`, not to a linter. The harness reads no
+`harn-intent-writer` and `harn-doc-audit`, not to a linter. The harness reads no
 source code: capability usage, role guards and unanchored entry points
-are the `drift-detector`'s judgment. Graph analytics (dominance,
+are the `harn-drift-detector`'s judgment. Graph analytics (dominance,
 quotient graphs, reports, viewers) are outside the harness; the format
 is parsable by regex so an external tool can produce them.
 
@@ -807,14 +812,14 @@ mention that none does yet. This is the fit between what the users need
 and what the product does, read from the repo. Generated like the
 intents index (§9.1.3).
 
-**Skill.** No dedicated one: `intent-writer` writes a profile from the
+**Skill.** No dedicated one: `harn-intent-writer` writes a profile from the
 research the human points to, and asks, for each new intent, which
 profile and which pain or gain it serves.
 
 **Linters** (§10.2): `lint:profile-schema`, `lint:intent-profiles`.
 
 **Not in the pillar.** Whether a pain is worth relieving, whether a
-profile is still true, whether an intent serves nobody: `doc-audit`'s
+profile is still true, whether an intent serves nobody: `harn-doc-audit`'s
 judgment, never a gate. A known pain that nothing relieves is a product
 choice, not an error. Ordered journeys across intents remain an open
 question (§15.2).
@@ -822,9 +827,9 @@ question (§15.2).
 ### 9.2 Templates (shipped by the harness)
 
 `@vaubaan/harness/templates/{readme,spec,decision,handbook,integration-tests,e2e-tests,coding-workflow,code-quality,intent,profile,decisions-index,handbook-index}.md.tmpl`.
-The wizards (`readme-writer`, `spec-writer`, `decision-record-writer`,
-`handbook-writer`, `test-plan-writer`, `workflow-writer`,
-`intent-writer`) instantiate these templates. Minimal format:
+The wizards (`harn-readme-writer`, `harn-spec-writer`, `harn-decision-record-writer`,
+`harn-handbook-writer`, `harn-test-plan-writer`, `harn-workflow-writer`,
+`harn-intent-writer`) instantiate these templates. Minimal format:
 
 - **README.md**: 1-line pitch + What is this (1 §) + Quick start
   (install + run) + Links (docs/spec, docs/handbook, docs/workflow,
@@ -858,7 +863,7 @@ The wizards (`readme-writer`, `spec-writer`, `decision-record-writer`,
   `add` writes into the pillar: what the folder holds and its list of
   files, kept by the pillar's writer.
 
-### 9.3 Completeness criteria (audited by `doc-audit`)
+### 9.3 Completeness criteria (audited by `harn-doc-audit`)
 
 A criterion about a pillar applies only while that pillar is active
 (§9.1.2); an inactive pillar is neither a gap nor a recommendation of
@@ -872,8 +877,8 @@ the report.
   `docs/workflow/coding-workflow.md`. Otherwise → ⚠️.
 - **Spec coverage**: every major subsystem has a spec. A subsystem is
   a package of a multi-package repo or a top-level route of an app,
-  unless the project's `doc-audit` override lists them.
-- **Explicit decisions**: `doc-audit` flags recent commits whose
+  unless the project's `harn-doc-audit` override lists them.
+- **Explicit decisions**: `harn-doc-audit` flags recent commits whose
   message carries decision hints ("decided to", "switched from X to
   Y", "removed X because") without a matching ADR.
 - **Handbook freshness**: each handbook declares the code it depends on
@@ -933,14 +938,14 @@ The §9.3 criteria are checked on **two complementary levels**, shipped
 together. Decision:
 [linters-mechanical-vs-skills](../decisions/linters-mechanical-vs-skills.md).
 
-- **§10.1 `doc-audit` skill** — the judgment audit, executed by an
+- **§10.1 `harn-doc-audit` skill** — the judgment audit, executed by an
   agent (pillar boundaries, semantic freshness, implicit decisions).
   Output = Markdown report.
 - **§10.2 Mechanical linters** — the exit-code version of the checks
   that can be mechanized. Run in CI, they **block the merge** if red.
 - **§10.3 Division of labor** between the two.
 
-### 10.1 `doc-audit` skill
+### 10.1 `harn-doc-audit` skill
 
 Reads `docs/` and the root README, parses each file's frontmatter, runs
 the §9.3 checks. Output: a Markdown report under
@@ -995,7 +1000,7 @@ own flow). No engine hook is installed. Decision:
 
 ### 10.3 Division of labor: skill vs linters
 
-| Check                                                       | Mechanical linter | `doc-audit` skill |
+| Check                                                       | Mechanical linter | `harn-doc-audit` skill |
 |-------------------------------------------------------------|:-----------------:|:-----------------:|
 | Presence of pillars + required files                        |        ✅         |        ✅         |
 | Frontmatter schema (`tracks:`, ADR sections)                |        ✅         |        ✅         |
@@ -1045,7 +1050,7 @@ The meta database gets a view; Markdown stays the only source. Decision:
   `review reply`. `review keep` ends the session with the changes left
   uncommitted; `review discard` restores `docs/` and `README.md` byte
   for byte, untracked files included. One live session per repo.
-- The `canvas-review` skill runs the loop. A comment on a project doc
+- The `harn-canvas-review` skill runs the loop. A comment on a project doc
   changes that doc; a comment on a linter or a shipped skill yields an
   upstream issue draft under `.vaubaan/reports/`; a comment on a
   generated file changes its source, then `update` runs.
@@ -1064,7 +1069,7 @@ nowhere. Decision:
   project enables in its lint configuration, from engine conversation
   histories. It calls no network service and its output is
   deterministic.
-- The `lesson-miner` skill groups the events by meaning and proposes a
+- The `harn-lesson-miner` skill groups the events by meaning and proposes a
   lesson for each group seen at least twice and covered by no rule in
   force; a rule in force that the patches show is not followed is
   reported as such. Each lesson names its evidence, its domain and the
@@ -1085,9 +1090,9 @@ debugging, disabling a shipped skill.
 project/.harness-overrides/
 ├── skills/
 │   ├── my-custom-skill.skill.md      # addition
-│   └── doc-audit.skill.md            # replaces the shipped version
+│   └── harn-doc-audit.skill.md            # replaces the shipped version
 ├── commands/
-└── disable.yaml                      # disable: [drift-detector]
+└── disable.yaml                      # disable: [harn-drift-detector]
 ```
 
 Overrides apply last: `shipped + project skills + overrides_add −
@@ -1177,7 +1182,7 @@ project's with `--preserve`. There is no `--force`. Decision:
 version that runs it. It neither looks for nor downloads a newer
 version, and does not touch the project's dependency on the package:
 choosing the version, and whatever a version asks of the project beyond
-a re-render, is the `harness-upgrade` skill's procedure (§7.2).
+a re-render, is the `harn-upgrade` skill's procedure (§7.2).
 It recognizes older installations and keeps the engines, the preserved
 files, the project skills and the applicable overrides.
 
@@ -1209,8 +1214,8 @@ and pre-commit hook.
 
 **Bootstrapping the doc of an existing project** is not a CLI: the
 agent, following the doc-first rule of `AGENTS.md` and the
-`harness-guide` skill, proposes the pillars the project is ready for,
-finds the gaps of the active ones with `doc-audit` and fills them with
+`harn-guide` skill, proposes the pillars the project is ready for,
+finds the gaps of the active ones with `harn-doc-audit` and fills them with
 the writer skills.
 
 ### 13.2 For skill developers (contributors)
@@ -1237,7 +1242,7 @@ the writer skills.
   README alone passing the lint and receiving only the always-rendered
   skills; a pillar's skill, command and umbrella lines appearing with
   `add` and leaving with the folder; the profiles index and its fit;
-  `harness-upgrade` holding an entry for the current version.
+  `harn-upgrade` holding an entry for the current version.
 - **E2E**: the packed package installed and run as a user would, per
   engine; an override replacing a shipped skill in the render.
 - **View and review**: the context graph on a fixture and on this
@@ -1273,5 +1278,5 @@ where it applies.
   path (§9.1.4). Should an ordered path across intents have a place?
 - **OQ — Shrinking the test plans.** Once active, `tests/` asks for both
   files. Should a project with no end-to-end test be allowed one?
-- **OQ — Per-project `doc-audit` config.** Beyond the drift threshold,
+- **OQ — Per-project `harn-doc-audit` config.** Beyond the drift threshold,
   should more knobs be exposed (expected subsystem names, exclusions)?

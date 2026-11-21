@@ -13,7 +13,7 @@ export const intentProfiles: Linter = {
   id: "lint:intent-profiles",
   pillars: ["intents", "profiles"],
   defaultSeverity: "error",
-  suggestedSkills: ["/intent"],
+  suggestedSkills: ["/harn-intent"],
   run(repoRoot: string): LintIssue[] {
     const issues: LintIssue[] = [];
     const intentFiles = readIntentFiles(repoRoot);

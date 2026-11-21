@@ -26,4 +26,4 @@ The optional `docs/quality/code-quality.md`, the project's own code rules, read 
 
 - The `AGENTS.md` line depends on the **file**, not the directory: an empty `docs/quality/` adds nothing. The line is computed at render time, so creating the file requires `update .` and a commit, after which `lint:generated-fresh` enforces it.
 - The section headings must be exact level-2 lines (`## Project rules`, nothing after it); the French names are still accepted, accents optional.
-- Overlap with ADRs, handbooks or tool configs is not detected mechanically: only `doc-audit` judges it.
+- Overlap with ADRs, handbooks or tool configs is not detected mechanically: only `harn-doc-audit` judges it.

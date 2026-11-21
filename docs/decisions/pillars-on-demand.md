@@ -22,8 +22,8 @@ lint. Every other pillar is **active** when its folder under `docs/`
 exists, and inactive otherwise: no linter, no skill, no command, no line of
 the project map. `vaubaan-harness add <pillar>` activates one: it writes
 the pillar's starter files and re-renders. The always-rendered
-`harness-guide` skill tells the agent when a pillar is worth adding;
-`harness-upgrade` carries the migration from one version to the next.
+`harn-guide` skill tells the agent when a pillar is worth adding;
+`harn-upgrade` carries the migration from one version to the next.
 Contract: [spec §9.1.2](../spec/coding-agent-harness.md#912-active-pillars).
 
 ## Consequences
@@ -35,9 +35,9 @@ Contract: [spec §9.1.2](../spec/coding-agent-harness.md#912-active-pillars).
   ships a new skill.
 - A check between two pillars runs only while both are active; an optional
   pillar never makes another one mandatory.
-- `doc-audit` never reports an inactive pillar as a gap. Proposing one is
-  `harness-guide`'s job, and the human decides.
-- Every minor release adds its entry to `harness-upgrade`; a test fails
+- `harn-doc-audit` never reports an inactive pillar as a gap. Proposing one is
+  `harn-guide`'s job, and the human decides.
+- Every minor release adds its entry to `harn-upgrade`; a test fails
   when the current version has none.
 
 ## Rejected alternatives

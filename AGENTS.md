@@ -12,17 +12,17 @@ This file describes **how to work in this project**. The **business context** (w
 - `docs/workflow/coding-workflow.md` — CI, branches, PR, release. How this team works: follow it.
 - `docs/intents/<intent>.md` — user intents, one tree per level-1 intent, anchored to the code. `docs/intents/README.md` is the generated index.
 
-Not in this project yet: `quality`, `profiles`. A pillar is added the day the project needs it, with `npx @vaubaan/harness add <pillar>`; the `harness-guide` skill says when each one is worth it. Propose it to the human, never create the folder unasked.
+Not in this project yet: `quality`, `profiles`. A pillar is added the day the project needs it, with `npx @vaubaan/harness add <pillar>`; the `harn-guide` skill says when each one is worth it. Propose it to the human, never create the folder unasked.
 
 ## Doc-first
 
 The order is: **understand the docs → fill the gaps → code → update the docs → commit**. If the docs are silent or stale on something you change, fill the gap upfront with the doc-skill writers — not downstream, not after the fact.
 
-- Visible change of behavior → a `proposed` intent first (`/intent <verb + object>`), never the code first.
+- Visible change of behavior → a `proposed` intent first (`/harn-intent <verb + object>`), never the code first.
 - Missing spec for a subsystem you touch → **do not code**, report the gap.
-- Implicit structural decision in your changes → an ADR (`/decision`).
-- Changed feature behavior → update the matching handbook (`/handbook`).
-- Suspected code ↔ doc drift → `/drift` before moving on.
+- Implicit structural decision in your changes → an ADR (`/harn-decision`).
+- Changed feature behavior → update the matching handbook (`/harn-handbook`).
+- Suspected code ↔ doc drift → `/harn-drift` before moving on.
 
 ## Checks
 
@@ -32,16 +32,16 @@ The files the harness generates (`AGENTS.md`, `CLAUDE.md`, the `.claude/`, `.age
 
 ## Skills
 
-- `canvas-review` (`/canvas`) — Runs a review session of the project's context: opens the view of the
-- `decision-record-writer` (`/decision`) — Writes an ADR under `docs/decisions/<slug>.md`, only for a structural
-- `doc-audit` (`/doc-audit`) — Audits the completeness and freshness of the docs: the README, the
-- `drift-detector` (`/drift`) — Detects code ↔ doc drift. For each doc file that declares a
-- `handbook-writer` (`/handbook`) — Writes or updates `docs/handbook/<slug>.md`: only what an agent cannot
-- `harness-guide` — How to work in a project harnessed by @vaubaan/harness: the reading
-- `harness-upgrade` (`/harness-upgrade`) — Moves a project to a newer version of @vaubaan/harness: pins the
-- `intent-writer` (`/intent`) — Writes or updates `docs/intents/<slug>.md`: the user intents of
-- `lesson-miner` (`/lessons`) — Finds the small patches that reviews keep asking for, in the repo
-- `readme-writer` (`/readme`) — Maintains `README.md` at the repo root. Syncs the links to the other
-- `spec-writer` (`/spec`) — Human-guided wizard to write or update a `docs/spec/<name>.md`
-- `test-plan-writer` (`/test-plan`) — Updates `docs/tests/integration-tests.md` and/or
-- `workflow-writer` (`/workflow`) — Updates `docs/workflow/coding-workflow.md`. Reads `.github/workflows/`,
+- `harn-canvas-review` (`/harn-canvas`) — Runs a review session of the project's context: opens the view of the
+- `harn-decision-record-writer` (`/harn-decision`) — Writes an ADR under `docs/decisions/<slug>.md`, only for a structural
+- `harn-doc-audit` (`/harn-doc-audit`) — Audits the completeness and freshness of the docs: the README, the
+- `harn-drift-detector` (`/harn-drift`) — Detects code ↔ doc drift. For each doc file that declares a
+- `harn-guide` — How to work in a project harnessed by @vaubaan/harness: the reading
+- `harn-handbook-writer` (`/harn-handbook`) — Writes or updates `docs/handbook/<slug>.md`: only what an agent cannot
+- `harn-intent-writer` (`/harn-intent`) — Writes or updates `docs/intents/<slug>.md`: the user intents of
+- `harn-lesson-miner` (`/harn-lessons`) — Finds the small patches that reviews keep asking for, in the repo
+- `harn-readme-writer` (`/harn-readme`) — Maintains `README.md` at the repo root. Syncs the links to the other
+- `harn-spec-writer` (`/harn-spec`) — Human-guided wizard to write or update a `docs/spec/<name>.md`
+- `harn-test-plan-writer` (`/harn-test-plan`) — Updates `docs/tests/integration-tests.md` and/or
+- `harn-upgrade` (`/harn-upgrade`) — Moves a project to a newer version of @vaubaan/harness: pins the
+- `harn-workflow-writer` (`/harn-workflow`) — Updates `docs/workflow/coding-workflow.md`. Reads `.github/workflows/`,

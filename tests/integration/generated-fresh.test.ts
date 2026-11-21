@@ -43,7 +43,7 @@ describe("lint:generated-fresh", () => {
 
   it("flags a generated file edited by hand", () => {
     install();
-    const skill = ".claude/skills/doc-audit/SKILL.md";
+    const skill = ".claude/skills/harn-doc-audit/SKILL.md";
     write(skill, `${readFileSync(join(root, skill), "utf8")}\nlocal edit\n`);
     const issues = generatedFresh.run(root);
     expect(issues).toHaveLength(1);
@@ -116,7 +116,7 @@ describe("lint:generated-fresh", () => {
     expect(issues.map((issue) => issue.file)).toContain("AGENTS.md");
     const stale = issues.filter((issue) => /stale generated file/.test(issue.message));
     expect(stale.length).toBeGreaterThan(0);
-    expect(stale.every((issue) => /intent|drift/.test(issue.file))).toBe(true);
+    expect(stale.every((issue) => /harn-intent|drift/.test(issue.file))).toBe(true);
   });
 
   it("reports an intent file that does not parse as a render failure", () => {

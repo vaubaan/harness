@@ -16,7 +16,7 @@ export const intentVocabulary: Linter = {
   id: "lint:intent-vocabulary",
   pillars: ["intents"],
   defaultSeverity: "error",
-  suggestedSkills: ["/spec"],
+  suggestedSkills: ["/harn-spec"],
   run(repoRoot: string): LintIssue[] {
     const issues: LintIssue[] = [];
     for (const intentFile of readIntentFiles(repoRoot)) {

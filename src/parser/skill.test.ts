@@ -3,7 +3,7 @@ import { ParseError } from "./schemas.js";
 import { parseSkill } from "./skill.js";
 
 const VALID_SKILL = `---
-id: doc-audit
+id: harn-doc-audit
 description: Audit la doc.
 engines: [claude-code, codex-cli, opencode]
 requires: [multi-step]
@@ -17,13 +17,13 @@ Body content here.
 
 describe("parseSkill", () => {
   it("parses a valid skill frontmatter + body", () => {
-    const skill = parseSkill("/virtual/doc-audit.skill.md", VALID_SKILL);
-    expect(skill.meta.id).toBe("doc-audit");
+    const skill = parseSkill("/virtual/harn-doc-audit.skill.md", VALID_SKILL);
+    expect(skill.meta.id).toBe("harn-doc-audit");
     expect(skill.meta.engines).toEqual(["claude-code", "codex-cli", "opencode"]);
     expect(skill.meta.requires).toEqual(["multi-step"]);
     expect(skill.meta.tags).toEqual(["audit", "doc"]);
     expect(skill.body).toMatch(/^# Doc Audit/);
-    expect(skill.sourcePath).toBe("/virtual/doc-audit.skill.md");
+    expect(skill.sourcePath).toBe("/virtual/harn-doc-audit.skill.md");
   });
 
   it("accepts skill without optional fields", () => {

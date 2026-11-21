@@ -41,7 +41,7 @@ spec: ../spec/coding-agent-harness.md#104-view-and-review
 
 requires: view, review-session
 creates: comment
-anchors: src/review/server.ts, src/skills/canvas-review.skill.md, src/commands/canvas.cmd.md, tests/integration/review.test.ts
+anchors: src/review/server.ts, src/skills/harn-canvas-review.skill.md, src/commands/harn-canvas.cmd.md, tests/integration/review.test.ts
 spec: ../spec/coding-agent-harness.md#104-view-and-review
 
 ## Turn review patches into rules
@@ -50,5 +50,5 @@ spec: ../spec/coding-agent-harness.md#104-view-and-review
 
 requires: doc
 creates: lesson
-anchors: src/lessons/collect.ts, src/skills/lesson-miner.skill.md, src/commands/lessons.cmd.md, tests/integration/lessons.test.ts
+anchors: src/lessons/collect.ts, src/skills/harn-lesson-miner.skill.md, src/commands/harn-lessons.cmd.md, tests/integration/lessons.test.ts
 spec: ../spec/coding-agent-harness.md#105-lessons-from-reviews

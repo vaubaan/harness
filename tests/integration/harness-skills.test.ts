@@ -11,8 +11,8 @@ const skill = (id: string) => {
   return found;
 };
 
-describe("harness-guide", () => {
-  const zero = skill("harness-guide");
+describe("harn-guide", () => {
+  const zero = skill("harn-guide");
 
   it("is always rendered: it serves no pillar in particular", () => {
     expect(zero.meta.pillars).toBeUndefined();
@@ -30,8 +30,8 @@ describe("harness-guide", () => {
   });
 });
 
-describe("harness-upgrade", () => {
-  const upgrade = skill("harness-upgrade");
+describe("harn-upgrade", () => {
+  const upgrade = skill("harn-upgrade");
   const entries = [...upgrade.body.matchAll(/^### (.+)$/gm)]
     .flatMap((m) => (m[1] ?? "").split(","))
     .map((v) => v.trim())
@@ -40,8 +40,8 @@ describe("harness-upgrade", () => {
 
   it("is always rendered and has its command", () => {
     expect(upgrade.meta.pillars).toBeUndefined();
-    expect(harness.cmds.find((c) => c.meta.invokes_skill === "harness-upgrade")?.meta.trigger).toBe(
-      "/harness-upgrade",
+    expect(harness.cmds.find((c) => c.meta.invokes_skill === "harn-upgrade")?.meta.trigger).toBe(
+      "/harn-upgrade",
     );
   });
 
@@ -50,11 +50,21 @@ describe("harness-upgrade", () => {
   it("holds a migration entry for the current minor version, or a later one", () => {
     const [major, minor] = VERSION.split(".").map(Number) as [number, number];
     const covered = entries.some(([M, m]) => M > major || (M === major && m >= minor));
-    expect(covered, `no migration entry for ${major}.${minor} in harness-upgrade`).toBe(true);
+    expect(covered, `no migration entry for ${major}.${minor} in harn-upgrade`).toBe(true);
   });
 
   it("lists its entries newest first", () => {
     const keys = entries.map(([M, m]) => M * 1000 + m);
     expect(keys).toEqual([...keys].sort((a, b) => b - a));
+  });
+});
+
+describe("the harn- prefix", () => {
+  it("names every shipped skill and command, and every trigger, so none collides with a project's own", () => {
+    for (const s of harness.skills) expect(s.meta.id, s.sourcePath).toMatch(/^harn-/);
+    for (const c of harness.cmds) {
+      expect(c.meta.id, c.sourcePath).toMatch(/^harn-/);
+      expect(c.meta.trigger).toBe(`/${c.meta.id}`);
+    }
   });
 });

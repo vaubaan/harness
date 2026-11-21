@@ -14,7 +14,7 @@ export const profileSchema: Linter = {
   id: "lint:profile-schema",
   pillars: ["profiles"],
   defaultSeverity: "error",
-  suggestedSkills: ["/intent"],
+  suggestedSkills: ["/harn-intent"],
   run(repoRoot: string): LintIssue[] {
     const issues: LintIssue[] = [];
     for (const profile of readProfileFiles(repoRoot)) {

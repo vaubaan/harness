@@ -31,8 +31,8 @@ engine hook: the `husky` pre-commit runs `npm run ci`, which ends with
 Doc-first: understand the docs → fill the gaps → code → update the
 docs → commit.
 
-- A structural decision → an ADR under `docs/decisions/` (`/decision`).
-- A behavior change → the relevant handbook under `docs/handbook/` (`/handbook`).
+- A structural decision → an ADR under `docs/decisions/` (`/harn-decision`).
+- A behavior change → the relevant handbook under `docs/handbook/` (`/harn-handbook`).
 - A missing spec for the subsystem you touch → open an issue first.
 
 The project map is in the [README](./README.md#documentation).

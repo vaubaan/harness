@@ -11,7 +11,7 @@ export const cardinalFiles: Linter = {
   id: "lint:cardinal-files",
   pillars: ["tests", "workflow"],
   defaultSeverity: "error",
-  suggestedSkills: ["/test-plan", "/workflow"],
+  suggestedSkills: ["/harn-test-plan", "/harn-workflow"],
   run(repoRoot: string): LintIssue[] {
     const issues: LintIssue[] = [];
     for (const { dir, files } of REQUIRED_FILES) {

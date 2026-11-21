@@ -54,8 +54,8 @@ last_reviewed: 2026-11-21
   anyway. A project with a README alone is the baseline fixture, not a
   repo with every pillar.
 - `harness-skills.test.ts` holds the release-time contracts of the two
-  harness skills: a `harness-upgrade` entry for the current minor
-  version, and an `add` command in `harness-guide` for every pillar that
+  harness skills: a `harn-upgrade` entry for the current minor
+  version, and an `add` command in `harn-guide` for every pillar that
   can be added. Bumping the version without the entry fails it.
 - A safety rule (path validation, ownership, rollback) is tested by
   checking that no project file changed, not only that an error was
@@ -71,6 +71,6 @@ last_reviewed: 2026-11-21
 - ⚠️ **Lessons from Codex and OpenCode conversations** (spec §10.5) —
   only the Claude Code history format is read and tested; the other
   two are an open question of the spec.
-- ⚠️ **`doc-audit` and the writer skills** (spec §10.1) — skills are
+- ⚠️ **`harn-doc-audit` and the writer skills** (spec §10.1) — skills are
   prompts; their output needs an engine and is judged by review, not by
   the suite.

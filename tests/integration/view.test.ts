@@ -103,8 +103,8 @@ describe("context graph", () => {
       "intent:send-an-invoice/email-the-invoice",
       "path:src/invoicing/issue.ts",
       "linter:cross-links",
-      "skill:spec-writer",
-      "cmd:spec",
+      "skill:harn-spec-writer",
+      "cmd:harn-spec",
     ]) {
       expect(ids, id).toContain(id);
     }
@@ -128,8 +128,8 @@ describe("context graph", () => {
         "doc:docs/decisions/postgres-over-sqlite.md",
       ),
     ).toBe(true);
-    expect(edge("cmd:spec", "invokes", "skill:spec-writer")).toBe(true);
-    expect(edge("linter:spec-tech-agnostic", "suggests", "skill:spec-writer")).toBe(true);
+    expect(edge("cmd:harn-spec", "invokes", "skill:harn-spec-writer")).toBe(true);
+    expect(edge("linter:spec-tech-agnostic", "suggests", "skill:harn-spec-writer")).toBe(true);
   });
 
   it("gives every node a stable id, its domain, its source file and line", () => {
@@ -137,7 +137,7 @@ describe("context graph", () => {
     expect(new Set(g.nodes.map((n) => n.id)).size).toBe(g.nodes.length);
     const byId = new Map(g.nodes.map((n) => [n.id, n]));
     expect(byId.get("linter:cross-links")?.domain).toBe("harness");
-    expect(byId.get("skill:spec-writer")?.domain).toBe("harness");
+    expect(byId.get("skill:harn-spec-writer")?.domain).toBe("harness");
     expect(byId.get("doc:docs/spec/invoicing.md")?.domain).toBe("project");
     const intent = byId.get("intent:send-an-invoice/void-an-invoice");
     expect(intent?.sourcePath).toBe("docs/intents/send-an-invoice.md");

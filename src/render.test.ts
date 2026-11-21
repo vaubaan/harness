@@ -32,11 +32,15 @@ cmd body
 
 describe("render — multi-engine harness without personas or hooks", () => {
   const harness: Harness = {
-    skills: [mkSkill("doc-audit"), mkSkill("decision-record-writer"), mkSkill("handbook-writer")],
+    skills: [
+      mkSkill("harn-doc-audit"),
+      mkSkill("harn-decision-record-writer"),
+      mkSkill("harn-handbook-writer"),
+    ],
     cmds: [
-      mkCmd("doc-audit", "doc-audit"),
-      mkCmd("decision", "decision-record-writer"),
-      mkCmd("handbook", "handbook-writer"),
+      mkCmd("harn-doc-audit", "harn-doc-audit"),
+      mkCmd("harn-decision", "harn-decision-record-writer"),
+      mkCmd("harn-handbook", "harn-handbook-writer"),
     ],
   };
 
@@ -44,12 +48,12 @@ describe("render — multi-engine harness without personas or hooks", () => {
     const out = render({ harness, engines: ["claude-code"] });
     const paths = out.files.map((f) => f.path).sort();
     expect(paths).toEqual([
-      ".claude/commands/decision.md",
-      ".claude/commands/doc-audit.md",
-      ".claude/commands/handbook.md",
-      ".claude/skills/decision-record-writer/SKILL.md",
-      ".claude/skills/doc-audit/SKILL.md",
-      ".claude/skills/handbook-writer/SKILL.md",
+      ".claude/commands/harn-decision.md",
+      ".claude/commands/harn-doc-audit.md",
+      ".claude/commands/harn-handbook.md",
+      ".claude/skills/harn-decision-record-writer/SKILL.md",
+      ".claude/skills/harn-doc-audit/SKILL.md",
+      ".claude/skills/harn-handbook-writer/SKILL.md",
       "AGENTS.md",
       "CLAUDE.md",
     ]);
@@ -70,8 +74,8 @@ describe("render — multi-engine harness without personas or hooks", () => {
   it("multi-engine: claude-code + codex-cli emit under each engine folder + 1 umbrella + claude stub", () => {
     const out = render({ harness, engines: ["claude-code", "codex-cli"] });
     const paths = out.files.map((f) => f.path).sort();
-    expect(paths).toContain(".claude/skills/doc-audit/SKILL.md");
-    expect(paths).toContain(".agents/skills/doc-audit/SKILL.md");
+    expect(paths).toContain(".claude/skills/harn-doc-audit/SKILL.md");
+    expect(paths).toContain(".agents/skills/harn-doc-audit/SKILL.md");
     expect(paths).toContain("AGENTS.md");
     expect(paths).toContain("CLAUDE.md");
     // AGENTS.md is emitted exactly once
@@ -94,8 +98,8 @@ describe("render — multi-engine harness without personas or hooks", () => {
     expect(umbrella).toMatch(/## Doc-first/);
     expect(umbrella).toMatch(/## Checks/);
     expect(umbrella).toMatch(/npx @vaubaan\/harness lint/);
-    expect(umbrella).toMatch(/## Skills\n\n- `doc-audit` \(`\/doc-audit`\)/);
-    expect(umbrella).toMatch(/decision-record-writer/);
+    expect(umbrella).toMatch(/## Skills\n\n- `harn-doc-audit` \(`\/harn-doc-audit`\)/);
+    expect(umbrella).toMatch(/harn-decision-record-writer/);
     expect(umbrella).not.toMatch(/persona/i);
     expect(umbrella).not.toMatch(/Stop hook/);
   });
@@ -103,13 +107,15 @@ describe("render — multi-engine harness without personas or hooks", () => {
   it("lists every trigger of a skill invoked by several commands, in command order", () => {
     const out = render({
       harness: {
-        skills: [mkSkill("spec-writer")],
-        cmds: [mkCmd("spec", "spec-writer"), mkCmd("glossary", "spec-writer")],
+        skills: [mkSkill("harn-spec-writer")],
+        cmds: [mkCmd("harn-spec", "harn-spec-writer"), mkCmd("glossary", "harn-spec-writer")],
       },
       engines: ["claude-code"],
     });
     const umbrella = out.files.find((f) => f.path === "AGENTS.md")?.content ?? "";
-    expect(umbrella).toContain("- `spec-writer` (`/spec`, `/glossary`) — spec-writer skill.");
+    expect(umbrella).toContain(
+      "- `harn-spec-writer` (`/harn-spec`, `/glossary`) — harn-spec-writer skill.",
+    );
   });
 
   it("throws RenderError when engines list is empty", () => {
@@ -118,13 +124,13 @@ describe("render — multi-engine harness without personas or hooks", () => {
 
   it("codex-cli renders skills requiring multi-step with degradation warning", () => {
     const h: Harness = {
-      skills: [mkSkill("doc-audit", { requires: ["multi-step"] }), mkSkill("simple")],
-      cmds: [mkCmd("doc-audit", "doc-audit"), mkCmd("simple", "simple")],
+      skills: [mkSkill("harn-doc-audit", { requires: ["multi-step"] }), mkSkill("simple")],
+      cmds: [mkCmd("harn-doc-audit", "harn-doc-audit"), mkCmd("simple", "simple")],
     };
     const out = render({ harness: h, engines: ["codex-cli"] });
     const skillPaths = out.files.filter((f) => f.path.includes("/skills/")).map((f) => f.path);
     expect(skillPaths.sort()).toEqual([
-      ".agents/skills/doc-audit/SKILL.md",
+      ".agents/skills/harn-doc-audit/SKILL.md",
       ".agents/skills/simple/SKILL.md",
     ]);
     expect(out.warnings.some((w) => w.includes("multi-step") && w.includes("degradation"))).toBe(
@@ -146,9 +152,9 @@ describe("render — multi-engine harness without personas or hooks", () => {
   it("opencode drops its own skill copy when another rendered engine already exposes it", () => {
     const out = render({ harness, engines: ["opencode", "claude-code"] });
     const paths = out.files.map((f) => f.path);
-    expect(paths).toContain(".claude/skills/doc-audit/SKILL.md");
+    expect(paths).toContain(".claude/skills/harn-doc-audit/SKILL.md");
     expect(paths.some((p) => p.startsWith(".opencode/skills/"))).toBe(false);
-    expect(paths).toContain(".opencode/commands/doc-audit.md");
+    expect(paths).toContain(".opencode/commands/harn-doc-audit.md");
   });
 
   it("CLAUDE.md is an @AGENTS.md import", () => {
@@ -160,11 +166,11 @@ describe("render — multi-engine harness without personas or hooks", () => {
     const out = render({ harness, engines: ["opencode"] });
     const skillPaths = out.files.filter((f) => f.path.includes("/skills/")).map((f) => f.path);
     expect(skillPaths.sort()).toEqual([
-      ".opencode/skills/decision-record-writer/SKILL.md",
-      ".opencode/skills/doc-audit/SKILL.md",
-      ".opencode/skills/handbook-writer/SKILL.md",
+      ".opencode/skills/harn-decision-record-writer/SKILL.md",
+      ".opencode/skills/harn-doc-audit/SKILL.md",
+      ".opencode/skills/harn-handbook-writer/SKILL.md",
     ]);
-    expect(out.files.map((f) => f.path)).toContain(".opencode/commands/decision.md");
+    expect(out.files.map((f) => f.path)).toContain(".opencode/commands/harn-decision.md");
   });
 });
 
@@ -316,7 +322,7 @@ User intents of this project, anchored to the code. Generated by \`@vaubaan/harn
   });
 
   const intentRule =
-    "- Visible change of behavior → a `proposed` intent first (`/intent <verb + object>`), never the code first.";
+    "- Visible change of behavior → a `proposed` intent first (`/harn-intent <verb + object>`), never the code first.";
 
   it("opens the doc-first rules with the intent rule when the project has intent files", () => {
     const out = render({ harness, engines: ["codex-cli"], intentFiles: [keep] });
@@ -342,7 +348,7 @@ User intents of this project, anchored to the code. Generated by \`@vaubaan/harn
       activePillars: new Set<PillarId>(["readme", "spec", "intents"]),
     });
     const index = out.files.find((f) => f.path === "docs/intents/README.md")?.content ?? "";
-    expect(index).toMatch(/No intent yet\. `\/intent <verb \+ object>`/);
+    expect(index).toMatch(/No intent yet\. `\/harn-intent <verb \+ object>`/);
     expect(out.files.find((f) => f.path === "AGENTS.md")?.content).toContain(intentRule);
   });
 });

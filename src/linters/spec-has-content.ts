@@ -6,7 +6,7 @@ export const specHasContent: Linter = {
   id: "lint:spec-has-content",
   pillars: ["spec"],
   defaultSeverity: "warning",
-  suggestedSkills: ["/spec"],
+  suggestedSkills: ["/harn-spec"],
   run(repoRoot: string): LintIssue[] {
     const files = listMarkdown(repoRoot, "docs/spec");
     if (files.length > 0) return [];

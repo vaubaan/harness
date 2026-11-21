@@ -15,7 +15,7 @@ export const intentSchema: Linter = {
   id: "lint:intent-schema",
   pillars: ["intents"],
   defaultSeverity: "error",
-  suggestedSkills: ["/intent"],
+  suggestedSkills: ["/harn-intent"],
   run(repoRoot: string): LintIssue[] {
     const issues: LintIssue[] = [];
     for (const intentFile of readIntentFiles(repoRoot)) {

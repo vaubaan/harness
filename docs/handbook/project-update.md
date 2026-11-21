@@ -34,7 +34,7 @@ last_reviewed: 2026-11-21
 - A modified generated file blocks the run unless its content already equals the new render; all conflicts are listed in one error.
 - The `stop-hook` CLI command was removed in 3.0: a 1.x Stop hook entry left in `.claude/settings.json` or `.codex/hooks.json` now fails on every turn. `update` warns when it finds one; the file is the project's, so it never edits it.
 - `update` also follows the pillars: a pillar folder created or deleted since the last render adds or removes that pillar's skill, command and index. A removal the operator did not expect usually means a folder was deleted or renamed ([pillars on demand](./pillars-on-demand.md)).
-- What a version asks of the project's own files is not in `update`: it is in `src/skills/harness-upgrade.skill.md`, one entry per release, checked by `tests/integration/harness-skills.test.ts`.
+- What a version asks of the project's own files is not in `update`: it is in `src/skills/harn-upgrade.skill.md`, one entry per release, checked by `tests/integration/harness-skills.test.ts`.
 - Backups default to `~/.local/state/vaubaan-harness/backups/<uuid>`, private (0700/0600), and are never purged. They may hold sensitive bytes: never point `--backup-dir` inside a repo (it is refused inside the target anyway).
 - The manifest is always written 0600; there is no lock against another process changing the project during the run.
 - No restore subcommand exists: after `rollback errors`, inspect `snapshot.json` and `files/` in the printed backup directory before retrying.

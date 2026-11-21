@@ -11,7 +11,7 @@ export const intentAnchors: Linter = {
   id: "lint:intent-anchors",
   pillars: ["intents"],
   defaultSeverity: "error",
-  suggestedSkills: ["/intent"],
+  suggestedSkills: ["/harn-intent"],
   run(repoRoot: string): LintIssue[] {
     const issues: LintIssue[] = [];
     for (const intentFile of readIntentFiles(repoRoot)) {

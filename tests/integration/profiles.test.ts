@@ -215,7 +215,10 @@ Gains:
       packageDir: PACKAGE_DIR,
     });
     expect(result.filesWritten).toEqual(
-      expect.arrayContaining(["docs/profiles/README.md", ".claude/skills/intent-writer/SKILL.md"]),
+      expect.arrayContaining([
+        "docs/profiles/README.md",
+        ".claude/skills/harn-intent-writer/SKILL.md",
+      ]),
     );
     expect(readFileSync(join(root, "docs/profiles/README.md"), "utf8")).toContain(
       "Intents: none names this profile yet.",

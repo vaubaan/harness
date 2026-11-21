@@ -37,7 +37,7 @@ spec: ../spec/coding-agent-harness.md#912-active-pillars
 ### Be told when a pillar is worth adding
 
 requires: pillar
-anchors: src/skills/harness-guide.skill.md, src/renderers/common.ts, tests/integration/pillars.test.ts
+anchors: src/skills/harn-guide.skill.md, src/renderers/common.ts, tests/integration/pillars.test.ts
 spec: ../spec/coding-agent-harness.md#72-harness-skills
 
 ## Keep the render current
@@ -53,7 +53,7 @@ spec: ../spec/coding-agent-harness.md#updating-an-existing-installation
 
 requires: manifest
 creates: generated-file
-anchors: src/skills/harness-upgrade.skill.md, src/commands/harness-upgrade.cmd.md, tests/integration/harness-skills.test.ts
+anchors: src/skills/harn-upgrade.skill.md, src/commands/harn-upgrade.cmd.md, tests/integration/harness-skills.test.ts
 spec: ../spec/coding-agent-harness.md#72-harness-skills
 
 ### Keep a generated file as the project's

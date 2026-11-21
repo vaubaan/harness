@@ -22,11 +22,12 @@ Rejected alternatives), validated by `lint:decision-schema`
 
 ## Decisions in force
 
-- [A pillar is active when its folder exists, and only the README is required](./pillars-on-demand.md) — core = README + spec; every other pillar is activated by `add <pillar>`, with its linters, skill and command; `harness-guide` proposes, `harness-upgrade` migrates (unreleased).
+- [Every shipped skill and command carries the harn- prefix](./harn-prefix.md) — `/harn-intent`, `harn-spec-writer`; no collision with a project's or a user's own; `update` warns on an old id (unreleased).
+- [A pillar is active when its folder exists, and only the README is required](./pillars-on-demand.md) — core = README + spec; every other pillar is activated by `add <pillar>`, with its linters, skill and command; `harn-guide` proposes, `harn-upgrade` migrates (unreleased).
 - [An optional profiles pillar says who the project serves, their pains and gains](./profiles-pillar.md) — `docs/profiles/`, one file per user profile; intents name profiles as actors and the pains they relieve; the fit is a generated index (unreleased).
 - [The view is derived on demand, local and self-contained](./context-view.md) — `vaubaan-harness view` renders `.vaubaan/graph.json` and one offline page from the shared parsers and the lint report; Markdown stays the only source (unreleased).
-- [A review session edits the docs in place and a skill runs the loop](./review-loop.md) — snapshot of `docs/` and `README.md`, a local server behind a token, `canvas-review` applies comments; never commits, never starts an engine (unreleased).
-- [Lessons are extracted mechanically, judged by a skill, and land in project pillars](./lessons-from-reviews.md) — `lessons collect` then `lesson-miner`; conversations opt-in; the harness ships the procedure, never the rules (unreleased).
+- [A review session edits the docs in place and a skill runs the loop](./review-loop.md) — snapshot of `docs/` and `README.md`, a local server behind a token, `harn-canvas-review` applies comments; never commits, never starts an engine (unreleased).
+- [Lessons are extracted mechanically, judged by a skill, and land in project pillars](./lessons-from-reviews.md) — `lessons collect` then `harn-lesson-miner`; conversations opt-in; the harness ships the procedure, never the rules (unreleased).
 - [An optional intents pillar holds user intents anchored to the code](./intents-pillar.md) — `docs/intents/`, one tree of intents, terminal intents with `anchors:` and `requires:` / `creates:`, `proposed` → `implemented` in the delivering PR, index rendered; no code parsing, no graph analytics (unreleased).
 - [A decision file holds a structural decision in force](./decisions-as-current-state.md) — admission test, about 40 lines, no History; a replaced decision is deleted (2.1.0).
 - [No agent personas, no code-quality judgment](./no-personas-no-code-judgment.md) — doc-skills only; one working rule in `AGENTS.md`, the team's workflow in `docs/workflow/`, its own personas in `docs/skills/` (2.0.0).
@@ -37,4 +38,4 @@ Rejected alternatives), validated by `lint:decision-schema`
 - [Each renderer emits exactly what its engine reads](./engine-native-layouts-1-0.md) — Codex skills under `.agents/skills/`, YAML everywhere, no Codex commands, `CLAUDE.md` as the `@AGENTS.md` import (1.0.0).
 - [One pivot source per skill, one pure renderer per engine](./multi-engine-pivot-format.md) — a single `*.skill.md` / `*.cmd.md` source, no templating.
 - [TypeScript on Node, ESM only](./typescript-node-stack.md) — strict TypeScript, Node ≥20, ESM, distributed through npm.
-- [Mechanical linters gate, the `doc-audit` skill judges](./linters-mechanical-vs-skills.md) — every mechanizable check is a CI linter; the skill keeps judgment.
+- [Mechanical linters gate, the `harn-doc-audit` skill judges](./linters-mechanical-vs-skills.md) — every mechanizable check is a CI linter; the skill keeps judgment.

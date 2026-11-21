@@ -41,13 +41,13 @@ spec: ../spec/coding-agent-harness.md#33-in-the-project-repo-what-persists-vs-gi
 
 requires: doc
 creates: doc
-anchors: src/skills/spec-writer.skill.md, src/skills/decision-record-writer.skill.md, src/skills/handbook-writer.skill.md, src/skills/test-plan-writer.skill.md, src/skills/workflow-writer.skill.md, src/skills/readme-writer.skill.md, src/commands/*.cmd.md
+anchors: src/skills/harn-spec-writer.skill.md, src/skills/harn-decision-record-writer.skill.md, src/skills/harn-handbook-writer.skill.md, src/skills/harn-test-plan-writer.skill.md, src/skills/harn-workflow-writer.skill.md, src/skills/harn-readme-writer.skill.md, src/commands/*.cmd.md
 spec: ../spec/coding-agent-harness.md#71-doc-skills
 
 ## Audit what the linters cannot judge
 
 requires: doc
-anchors: src/skills/doc-audit.skill.md, src/skills/drift-detector.skill.md
+anchors: src/skills/harn-doc-audit.skill.md, src/skills/harn-drift-detector.skill.md
 spec: ../spec/coding-agent-harness.md#101-doc-audit-skill
 
 ## Rewrite a context that has grown contradictions

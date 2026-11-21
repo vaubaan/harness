@@ -611,7 +611,7 @@ describe("formatReportText", () => {
         },
       ]),
     );
-    expect(out).toContain("  → Try: /decision");
+    expect(out).toContain("  → Try: /harn-decision");
   });
 
   it("issue without suggestedSkills omits → Try: hint", () => {

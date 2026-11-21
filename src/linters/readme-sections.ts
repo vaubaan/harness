@@ -13,7 +13,7 @@ export const readmeSections: Linter = {
   id: "lint:readme-sections",
   pillars: ["readme"],
   defaultSeverity: "error",
-  suggestedSkills: ["/readme"],
+  suggestedSkills: ["/harn-readme"],
   run(repoRoot: string): LintIssue[] {
     if (!fileExists(repoRoot, "README.md")) return [];
     const text = readText(repoRoot, "README.md");

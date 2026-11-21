@@ -68,9 +68,9 @@ describe("initCommand integration — multi-engine harness", () => {
       packageDir: PACKAGE_DIR,
     });
     expect(result.filesWritten.filter((p) => p === "AGENTS.md")).toHaveLength(1);
-    expect(result.filesWritten).toContain(".claude/skills/doc-audit/SKILL.md");
-    expect(result.filesWritten).toContain(".agents/skills/doc-audit/SKILL.md");
-    expect(result.filesWritten).toContain(".opencode/commands/doc-audit.md");
+    expect(result.filesWritten).toContain(".claude/skills/harn-doc-audit/SKILL.md");
+    expect(result.filesWritten).toContain(".agents/skills/harn-doc-audit/SKILL.md");
+    expect(result.filesWritten).toContain(".opencode/commands/harn-doc-audit.md");
     // OpenCode reuses the skills exposed by the other engines.
     expect(result.filesWritten.some((p) => p.startsWith(".opencode/skills/"))).toBe(false);
   });
@@ -104,12 +104,12 @@ describe("initCommand integration — multi-engine harness", () => {
       packageDir: PACKAGE_DIR,
     });
 
-    expect(result.staleFilesRemoved).toContain(".agents/skills/doc-audit/SKILL.md");
-    expect(result.staleFilesRemoved).toContain(".opencode/commands/doc-audit.md");
+    expect(result.staleFilesRemoved).toContain(".agents/skills/harn-doc-audit/SKILL.md");
+    expect(result.staleFilesRemoved).toContain(".opencode/commands/harn-doc-audit.md");
     expect(existsSync(join(sandbox, ".agents", "skills"))).toBe(false);
     expect(existsSync(join(sandbox, ".opencode"))).toBe(false);
     expect(existsSync(userFile)).toBe(true);
-    expect(existsSync(join(sandbox, ".claude", "skills", "doc-audit", "SKILL.md"))).toBe(true);
+    expect(existsSync(join(sandbox, ".claude", "skills", "harn-doc-audit", "SKILL.md"))).toBe(true);
   });
 
   it("rejects unknown engine", () => {
@@ -203,9 +203,9 @@ describe("renderCommand integration", () => {
       expect(result.filesWritten.some((p) => p === "AGENTS.md")).toBe(true);
       const umbrella = readFileSync(join(out, "AGENTS.md"), "utf8");
       expect(umbrella).toMatch(/How we work/);
-      expect(result.filesWritten).toContain(".claude/commands/doc-audit.md");
-      expect(result.filesWritten).toContain(".agents/skills/doc-audit/SKILL.md");
-      expect(result.filesWritten).toContain(".opencode/commands/doc-audit.md");
+      expect(result.filesWritten).toContain(".claude/commands/harn-doc-audit.md");
+      expect(result.filesWritten).toContain(".agents/skills/harn-doc-audit/SKILL.md");
+      expect(result.filesWritten).toContain(".opencode/commands/harn-doc-audit.md");
       expect(result.filesWritten.some((p) => p.includes("/agents/"))).toBe(false);
     } finally {
       rmSync(out, { recursive: true, force: true });

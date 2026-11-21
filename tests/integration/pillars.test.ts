@@ -13,13 +13,13 @@ import { ADDABLE_PILLARS, PILLAR_IDS, activePillars } from "../../src/pillars.js
 const PACKAGE_DIR = resolve(__dirname, "..", "..", "src");
 const README = "# Project\n\n## What is this\n\nIntro.\n\n## Quick start\n\nInstall.\n";
 const ALWAYS = [
-  "canvas-review",
-  "doc-audit",
-  "harness-guide",
-  "harness-upgrade",
-  "lesson-miner",
-  "readme-writer",
-  "spec-writer",
+  "harn-canvas-review",
+  "harn-doc-audit",
+  "harn-guide",
+  "harn-lesson-miner",
+  "harn-readme-writer",
+  "harn-spec-writer",
+  "harn-upgrade",
 ];
 
 let root: string;
@@ -68,12 +68,12 @@ describe("a project that just started: a README alone", () => {
     expect(
       result.filesWritten.filter((path) => path.startsWith(".claude/commands/")).sort(),
     ).toEqual([
-      ".claude/commands/canvas.md",
-      ".claude/commands/doc-audit.md",
-      ".claude/commands/harness-upgrade.md",
-      ".claude/commands/lessons.md",
-      ".claude/commands/readme.md",
-      ".claude/commands/spec.md",
+      ".claude/commands/harn-canvas.md",
+      ".claude/commands/harn-doc-audit.md",
+      ".claude/commands/harn-lessons.md",
+      ".claude/commands/harn-readme.md",
+      ".claude/commands/harn-spec.md",
+      ".claude/commands/harn-upgrade.md",
     ]);
   });
 
@@ -83,11 +83,11 @@ describe("a project that just started: a README alone", () => {
     for (const absent of ["docs/handbook", "docs/decisions", "docs/tests", "docs/workflow"]) {
       expect(umbrella).not.toContain(absent);
     }
-    expect(umbrella).not.toMatch(/`\/decision`|`\/handbook`|`\/drift`|`\/intent/);
+    expect(umbrella).not.toMatch(/`\/harn-decision`|`\/harn-handbook`|`\/harn-drift`|`\/intent/);
     expect(umbrella).toContain(
       "Not in this project yet: `decisions`, `handbook`, `tests`, `workflow`, `quality`, `intents`, `profiles`.",
     );
-    expect(umbrella).toMatch(/npx @vaubaan\/harness add <pillar>.*`harness-guide` skill/);
+    expect(umbrella).toMatch(/npx @vaubaan\/harness add <pillar>.*`harn-guide` skill/);
     expect(umbrella).toContain("- Missing spec for a subsystem you touch");
   });
 });
@@ -107,8 +107,8 @@ describe("a pillar is active when its folder exists", () => {
     const result = update();
     expect(result.filesToWrite).toEqual(
       expect.arrayContaining([
-        ".claude/skills/decision-record-writer/SKILL.md",
-        ".claude/commands/decision.md",
+        ".claude/skills/harn-decision-record-writer/SKILL.md",
+        ".claude/commands/harn-decision.md",
         "AGENTS.md",
       ]),
     );
@@ -121,15 +121,15 @@ describe("a pillar is active when its folder exists", () => {
     write("README.md", README);
     write("docs/handbook/README.md", "# Handbook\n");
     init();
-    expect(existsSync(join(root, ".claude/skills/handbook-writer/SKILL.md"))).toBe(true);
-    expect(existsSync(join(root, ".claude/skills/drift-detector/SKILL.md"))).toBe(true);
+    expect(existsSync(join(root, ".claude/skills/harn-handbook-writer/SKILL.md"))).toBe(true);
+    expect(existsSync(join(root, ".claude/skills/harn-drift-detector/SKILL.md"))).toBe(true);
     rmSync(join(root, "docs/handbook"), { recursive: true });
     const result = update();
     expect(result.filesToRemove.sort()).toEqual([
-      ".claude/commands/drift.md",
-      ".claude/commands/handbook.md",
-      ".claude/skills/drift-detector/SKILL.md",
-      ".claude/skills/handbook-writer/SKILL.md",
+      ".claude/commands/harn-drift.md",
+      ".claude/commands/harn-handbook.md",
+      ".claude/skills/harn-drift-detector/SKILL.md",
+      ".claude/skills/harn-handbook-writer/SKILL.md",
     ]);
     expect(agentsMd()).not.toContain("docs/handbook");
   });
@@ -140,7 +140,7 @@ describe("a pillar is active when its folder exists", () => {
     write("docs/workflow/coding-workflow.md", "---\ntracks: [README.md]\n---\n");
     init();
     rmSync(join(root, "docs/handbook"), { recursive: true });
-    expect(update().filesToRemove).not.toContain(".claude/skills/drift-detector/SKILL.md");
+    expect(update().filesToRemove).not.toContain(".claude/skills/harn-drift-detector/SKILL.md");
   });
 
   it("a mature project with every pillar gets every shipped skill and no 'not yet' line", () => {

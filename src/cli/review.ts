@@ -1,6 +1,6 @@
 /**
  * `vaubaan-harness review …` (docs/spec/coding-agent-harness.md §10.4): the
- * tool of a review session. The loop itself is the `canvas-review` skill.
+ * tool of a review session. The loop itself is the `harn-canvas-review` skill.
  */
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";

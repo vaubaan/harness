@@ -13,7 +13,7 @@ The six pillars say what the project wants, what it settled, how it works,
 how it is tested and shipped. None says what the user does and wants at every
 scale, from a level-1 intent to the atomic activity a handler realizes, nor
 where a new behavior is specified before it is coded. The README promised
-typed transactions (now `/intent`) and a `docs/todo/` pillar for increments; the
+typed transactions (now `/harn-intent`) and a `docs/todo/` pillar for increments; the
 spec stays tech-agnostic and cannot carry pointers to code. The harness reads
 only Markdown, git and the existence of files, which is what keeps it
 agnostic to the project's language. Renamed from *journeys* on 2026-11-10, before any project adopted it: the pillar is one tree of intents and the word implied a sequence of steps.
@@ -35,7 +35,7 @@ Contract: [spec §9.1.3](../spec/coding-agent-harness.md#913-intents).
 
 - `requires:` / `creates:` is the one field that restates what the code
   knows. It is a declared contract, checked against the spec vocabulary by a
-  linter and against the code by the `drift-detector` skill, never computed.
+  linter and against the code by the `harn-drift-detector` skill, never computed.
 - The `proposed` nodes are the backlog; no `docs/todo/` pillar is added.
 - Anything that needs to read the project's code (capability usage, role
   guards, orphan entry points as a CI gate) or to analyze the graph

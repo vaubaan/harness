@@ -38,14 +38,14 @@ function write(path: string, content: string): void {
 
 function legacy(version = "2", extra: Record<string, unknown> = {}): void {
   write("AGENTS.md", "old generated umbrella\n");
-  write(".codex/skills/doc-audit.md", "old generated skill\n");
+  write(".codex/skills/harn-doc-audit.md", "old generated skill\n");
   write(
     MANIFEST_FILENAME,
     JSON.stringify({
       version,
       ...(version === "1" ? { engine: "codex-cli", agent: "coding" } : { engines: ["codex-cli"] }),
       renderedAt: "2026-05-01T00:00:00Z",
-      files: ["AGENTS.md", ".codex/skills/doc-audit.md"],
+      files: ["AGENTS.md", ".codex/skills/harn-doc-audit.md"],
       ...extra,
     }),
   );
@@ -64,8 +64,8 @@ describe("project update", () => {
       const result = update();
       expect(result.fromManifestVersion).toBe(version);
       expect(result.backupDir).toBe(backup);
-      expect(existsSync(join(root, ".codex/skills/doc-audit.md"))).toBe(false);
-      expect(existsSync(join(root, ".agents/skills/doc-audit/SKILL.md"))).toBe(true);
+      expect(existsSync(join(root, ".codex/skills/harn-doc-audit.md"))).toBe(false);
+      expect(existsSync(join(root, ".agents/skills/harn-doc-audit/SKILL.md"))).toBe(true);
       expect(readFileSync(join(root, "AGENTS.md"), "utf8")).toMatch(/^# How we work/);
       const manifest = readManifest(root);
       expect(manifest?.version).toBe("6");
@@ -82,7 +82,7 @@ describe("project update", () => {
     legacy();
     const before = readFileSync(join(root, MANIFEST_FILENAME));
     const preview = update({ dryRun: true });
-    expect(preview.filesToWrite).toContain(".agents/skills/doc-audit/SKILL.md");
+    expect(preview.filesToWrite).toContain(".agents/skills/harn-doc-audit/SKILL.md");
     expect(preview.backupDir).toBeUndefined();
     expect(existsSync(backup)).toBe(false);
     expect(readFileSync(join(root, MANIFEST_FILENAME))).toEqual(before);
@@ -136,7 +136,7 @@ describe("project update", () => {
 
   it("rejects collisions outside the manifest before backup or mutation", () => {
     legacy();
-    write(".agents/skills/doc-audit/SKILL.md", "# my custom skill\n");
+    write(".agents/skills/harn-doc-audit/SKILL.md", "# my custom skill\n");
     expect(() => update()).toThrow("outside harness manifest");
     expect(existsSync(backup)).toBe(false);
     expect(readFileSync(join(root, "AGENTS.md"), "utf8")).toBe("old generated umbrella\n");
@@ -144,10 +144,10 @@ describe("project update", () => {
 
   it("protects local edits using fingerprints recorded by init", () => {
     initCommand({ targetDir: root, packageDir, engines: ["codex-cli"] });
-    write(".agents/skills/doc-audit/SKILL.md", "customized instructions\n");
-    expect(() => update()).toThrow("modified harness file: .agents/skills/doc-audit/SKILL.md");
+    write(".agents/skills/harn-doc-audit/SKILL.md", "customized instructions\n");
+    expect(() => update()).toThrow("modified harness file: .agents/skills/harn-doc-audit/SKILL.md");
     expect(existsSync(backup)).toBe(false);
-    expect(readFileSync(join(root, ".agents/skills/doc-audit/SKILL.md"), "utf8")).toBe(
+    expect(readFileSync(join(root, ".agents/skills/harn-doc-audit/SKILL.md"), "utf8")).toBe(
       "customized instructions\n",
     );
   });
@@ -164,9 +164,9 @@ describe("project update", () => {
 
   it("automatically loads local overrides and refuses their silent disappearance", () => {
     legacy();
-    write(".harness-overrides/disable.yaml", "disable:\n  - doc-audit\n");
+    write(".harness-overrides/disable.yaml", "disable:\n  - harn-doc-audit\n");
     update();
-    expect(existsSync(join(root, ".agents/skills/doc-audit/SKILL.md"))).toBe(false);
+    expect(existsSync(join(root, ".agents/skills/harn-doc-audit/SKILL.md"))).toBe(false);
     expect(readManifest(root)?.overridesDir).toBe(".");
     rmSync(join(root, ".harness-overrides"), { recursive: true });
     expect(() => update({ dryRun: true })).toThrow("overrides are missing");
@@ -174,14 +174,36 @@ describe("project update", () => {
 
   it("uses local overrides from a relocated project", () => {
     legacy();
-    write(".harness-overrides/disable.yaml", "disable:\n  - doc-audit\n");
+    write(".harness-overrides/disable.yaml", "disable:\n  - harn-doc-audit\n");
     update();
     const moved = join(sandbox, "moved");
     cpSync(root, moved, { recursive: true });
-    writeFileSync(join(moved, ".harness-overrides/disable.yaml"), "disable:\n  - spec-writer\n");
+    writeFileSync(
+      join(moved, ".harness-overrides/disable.yaml"),
+      "disable:\n  - harn-spec-writer\n",
+    );
     const preview = updateCommand({ targetDir: moved, packageDir, dryRun: true });
-    expect(preview.filesToWrite).toContain(".agents/skills/doc-audit/SKILL.md");
-    expect(preview.filesToRemove).toContain(".agents/skills/spec-writer/SKILL.md");
+    expect(preview.filesToWrite).toContain(".agents/skills/harn-doc-audit/SKILL.md");
+    expect(preview.filesToRemove).toContain(".agents/skills/harn-spec-writer/SKILL.md");
+  });
+
+  it("warns when an override, a project skill or disable.yaml still names an id renamed in 3.0", () => {
+    legacy();
+    write(".harness-overrides/disable.yaml", "disable:\n  - drift-detector\n");
+    write(
+      ".harness-overrides/skills/spec-writer.skill.md",
+      "---\nid: spec-writer\ndescription: Ours.\n---\n\nbody\n",
+    );
+    write(
+      "docs/skills/intent-writer.skill.md",
+      "---\nid: intent-writer\ndescription: Ours.\n---\n\nbody\n",
+    );
+    const warnings = update().warnings.filter((w) => w.includes("renamed"));
+    expect(warnings).toEqual([
+      "docs/skills/ names `intent-writer`, renamed `harn-intent-writer` in 3.0: it no longer replaces or disables the shipped one — rename it",
+      ".harness-overrides/ names `spec-writer`, renamed `harn-spec-writer` in 3.0: it no longer replaces or disables the shipped one — rename it",
+      ".harness-overrides/disable.yaml names `drift-detector`, renamed `harn-drift-detector` in 3.0: it no longer replaces or disables the shipped one — rename it",
+    ]);
   });
 
   it("requires installation metadata and refuses an unknown schema", () => {
@@ -205,14 +227,17 @@ describe("project update", () => {
     legacy();
     const external = join(sandbox, "external");
     mkdirSync(join(external, ".harness-overrides"), { recursive: true });
-    writeFileSync(join(external, ".harness-overrides/disable.yaml"), "disable:\n  - doc-audit\n");
+    writeFileSync(
+      join(external, ".harness-overrides/disable.yaml"),
+      "disable:\n  - harn-doc-audit\n",
+    );
     write(
       "docs/skills/project-guide.skill.md",
       "---\nid: project-guide\ndescription: Project guide.\n---\nProject-specific instructions.\n",
     );
     update({ overridesDir: external });
     expect(readManifest(root)?.overridesDir).toBe(external);
-    expect(existsSync(join(root, ".agents/skills/doc-audit/SKILL.md"))).toBe(false);
+    expect(existsSync(join(root, ".agents/skills/harn-doc-audit/SKILL.md"))).toBe(false);
     expect(readFileSync(join(root, ".agents/skills/project-guide/SKILL.md"), "utf8")).toContain(
       "Project-specific instructions.",
     );
@@ -230,7 +255,7 @@ describe("project update", () => {
     legacy();
     mkdirSync(join(root, ".agents/skills"), { recursive: true });
     mkdirSync(join(root, "custom-skill"));
-    symlinkSync("../../custom-skill", join(root, ".agents/skills/doc-audit"));
+    symlinkSync("../../custom-skill", join(root, ".agents/skills/harn-doc-audit"));
     expect(() => update()).toThrow("symbolic link");
     expect(existsSync(backup)).toBe(false);
   });
@@ -286,7 +311,7 @@ User intents of this project, anchored to the code. Generated by \`@vaubaan/harn
     install();
     expect(existsSync(join(root, INDEX))).toBe(false);
     expect(readFileSync(join(root, "AGENTS.md"), "utf8")).not.toMatch(
-      /docs\/intents\/<intent>\.md|`\/intent <verb \+ object>`/,
+      /docs\/intents\/<intent>\.md|`\/harn-intent <verb \+ object>`/,
     );
   });
 
@@ -300,15 +325,17 @@ User intents of this project, anchored to the code. Generated by \`@vaubaan/harn
     rmSync(join(root, "docs/intents/ship.md"));
     expect(nextUpdate().filesToWrite).toContain(INDEX);
     expect(readFileSync(join(root, INDEX), "utf8")).toMatch(/No intent yet/);
-    expect(readFileSync(join(root, "AGENTS.md"), "utf8")).toMatch(/`\/intent <verb \+ object>`/);
+    expect(readFileSync(join(root, "AGENTS.md"), "utf8")).toMatch(
+      /`\/harn-intent <verb \+ object>`/,
+    );
     // Removing the folder is removing the pillar: its skill and its rule go with it.
     rmSync(join(root, "docs/intents"), { recursive: true });
     const result = nextUpdate();
     expect(result.filesToRemove.length).toBeGreaterThan(0);
-    expect(result.filesToRemove.every((path) => /intent|drift/.test(path))).toBe(true);
+    expect(result.filesToRemove.every((path) => /harn-intent|drift/.test(path))).toBe(true);
     expect(readManifest(root)?.files).not.toContain(INDEX);
     expect(readFileSync(join(root, "AGENTS.md"), "utf8")).not.toMatch(
-      /docs\/intents\/<intent>\.md|`\/intent <verb \+ object>`/,
+      /docs\/intents\/<intent>\.md|`\/harn-intent <verb \+ object>`/,
     );
   });
 

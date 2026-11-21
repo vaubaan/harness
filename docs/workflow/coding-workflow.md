@@ -82,10 +82,10 @@ pushing a `v<semver>` tag that publishes to npmjs.
   `package.json`, the lockfile and `src/version.ts` (the `version` script
   syncs the constant and reformats `package.json`; a test fails when they
   differ). Then move `[Unreleased]` to the new version in `CHANGELOG.md`,
-  add the version's entry to `src/skills/harness-upgrade.skill.md` (what
+  add the version's entry to `src/skills/harn-upgrade.skill.md` (what
   a project must do to move to it, or "nothing to do"; a test fails when
   the current minor has none),
-  check the README against the code (`readme-writer`), and refresh the
+  check the README against the code (`harn-readme-writer`), and refresh the
   generated files with `npm run build && node dist/cli/index.js update .`:
   the manifest records the harness version.
 - **Trigger**: after merge and green CI on `main`, create the tag

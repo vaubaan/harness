@@ -17,6 +17,38 @@ const MANAGED_FILES = new Set([
  * follows the file to its new path once the project moved it; while the
  * file still sits at the old path, `update` removes it there.
  */
+/**
+ * 3.0: every shipped skill and command id carries the `harn-` prefix, so a
+ * project's own `/spec` or `spec-writer` never collides with the harness's.
+ * A project skill, an override or a `disable.yaml` entry still naming an old
+ * id no longer replaces or disables anything: `update` warns.
+ */
+export const RENAMED_IDS: ReadonlyMap<string, string> = new Map([
+  ["canvas-review", "harn-canvas-review"],
+  ["decision-record-writer", "harn-decision-record-writer"],
+  ["doc-audit", "harn-doc-audit"],
+  ["drift-detector", "harn-drift-detector"],
+  ["handbook-writer", "harn-handbook-writer"],
+  ["harness-guide", "harn-guide"],
+  ["harness-upgrade", "harn-upgrade"],
+  ["intent-writer", "harn-intent-writer"],
+  ["lesson-miner", "harn-lesson-miner"],
+  ["readme-writer", "harn-readme-writer"],
+  ["spec-writer", "harn-spec-writer"],
+  ["test-plan-writer", "harn-test-plan-writer"],
+  ["workflow-writer", "harn-workflow-writer"],
+  ["canvas", "harn-canvas"],
+  ["decision", "harn-decision"],
+  ["drift", "harn-drift"],
+  ["handbook", "harn-handbook"],
+  ["intent", "harn-intent"],
+  ["lessons", "harn-lessons"],
+  ["readme", "harn-readme"],
+  ["spec", "harn-spec"],
+  ["test-plan", "harn-test-plan"],
+  ["workflow", "harn-workflow"],
+]);
+
 export const MOVED_PATHS: ReadonlyMap<string, string> = new Map([
   // 2.3: the journeys pillar became the intents pillar.
   ["docs/journeys/README.md", "docs/intents/README.md"],

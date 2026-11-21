@@ -1001,7 +1001,7 @@ function skillsView(ix: Index): string {
 function lessonsView(ix: Index): string {
   const lessons = ix.of("lesson");
   if (!lessons.length) return "";
-  return `<section class="view" id="view-lessons" data-title="Lessons"><h2>Lessons proposed <span class="k">local</span></h2><p class="k">Patches reviews keep asking for, and the rule that would prevent them. Accept, edit or reject them with <code>/lessons</code>.</p><div class="lessons">${lessons
+  return `<section class="view" id="view-lessons" data-title="Lessons"><h2>Lessons proposed <span class="k">local</span></h2><p class="k">Patches reviews keep asking for, and the rule that would prevent them. Accept, edit or reject them with <code>/harn-lessons</code>.</p><div class="lessons">${lessons
     .map(
       (l) =>
         `<div class="lesson">${nodeRef(ix, l.id)}<span class="row">${pill(str(l.attrs.status) ?? "proposed", str(l.attrs.status) === "accepted" ? "ok" : str(l.attrs.status) === "rejected" ? "mut" : "acc")}${str(l.attrs.domain) ? pill(str(l.attrs.domain) ?? "", "mut") : ""}${num(l.attrs.seen) ? pill(`seen ${num(l.attrs.seen)}×`, "mut") : ""}${str(l.attrs.pillar) ? `<span class="k">→ ${esc(str(l.attrs.pillar) ?? "")}</span>` : ""}</span></div>`,

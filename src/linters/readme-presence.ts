@@ -5,7 +5,7 @@ export const readmePresence: Linter = {
   id: "lint:readme-presence",
   pillars: ["readme"],
   defaultSeverity: "error",
-  suggestedSkills: ["/readme"],
+  suggestedSkills: ["/harn-readme"],
   run(repoRoot: string): LintIssue[] {
     if (fileExists(repoRoot, "README.md")) return [];
     return [

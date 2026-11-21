@@ -4,7 +4,7 @@ import { parseSkill } from "../parser/skill.js";
 import { getRenderer } from "./index.js";
 
 const SKILL_SRC = `---
-id: doc-audit
+id: harn-doc-audit
 description: Audit doc.
 engines: [claude-code, codex-cli, opencode]
 tags: [audit, doc]
@@ -34,9 +34,9 @@ Body.
 `;
 
 const CMD_SRC = `---
-id: doc-audit
-trigger: /doc-audit
-invokes_skill: doc-audit
+id: harn-doc-audit
+trigger: /harn-doc-audit
+invokes_skill: harn-doc-audit
 args:
   - name: scope
     type: enum
@@ -45,17 +45,17 @@ args:
 description: Audit doc scope.
 ---
 
-# /doc-audit
+# /harn-doc-audit
 `;
 
 describe("claudeCodeRenderer", () => {
   const r = getRenderer("claude-code");
 
   it("renders skill under .claude/skills/<id>/SKILL.md", () => {
-    const skill = parseSkill("doc-audit.skill.md", SKILL_SRC);
+    const skill = parseSkill("harn-doc-audit.skill.md", SKILL_SRC);
     const result = r.renderSkill(skill);
-    expect(result.files[0]?.path).toBe(".claude/skills/doc-audit/SKILL.md");
-    expect(result.files[0]?.content).toMatch(/^---\nname: doc-audit/);
+    expect(result.files[0]?.path).toBe(".claude/skills/harn-doc-audit/SKILL.md");
+    expect(result.files[0]?.content).toMatch(/^---\nname: harn-doc-audit/);
     expect(result.files[0]?.content).toMatch(/# Doc Audit/);
     expect(result.warnings).toEqual([]);
   });
@@ -68,10 +68,10 @@ describe("claudeCodeRenderer", () => {
   });
 
   it("renders cmd under .claude/commands/<id>.md", () => {
-    const cmd = parseCmd("doc-audit.cmd.md", CMD_SRC);
+    const cmd = parseCmd("harn-doc-audit.cmd.md", CMD_SRC);
     const result = r.renderCmd(cmd);
-    expect(result.files[0]?.path).toBe(".claude/commands/doc-audit.md");
-    expect(result.files[0]?.content).toMatch(/trigger: \/doc-audit/);
+    expect(result.files[0]?.path).toBe(".claude/commands/harn-doc-audit.md");
+    expect(result.files[0]?.content).toMatch(/trigger: \/harn-doc-audit/);
   });
 
   it("renders `required: false` on an optional argument, and nothing on a required one", () => {
@@ -79,14 +79,15 @@ describe("claudeCodeRenderer", () => {
       "    default: all\n",
       "    default: all\n    required: false\n",
     );
-    const optionalContent = r.renderCmd(parseCmd("doc-audit.cmd.md", optional)).files[0]?.content;
+    const optionalContent = r.renderCmd(parseCmd("harn-doc-audit.cmd.md", optional)).files[0]
+      ?.content;
     expect(optionalContent).toContain(
       "args:\n  - name: scope\n    type: enum\n    values:\n      - spec\n      - all\n    default: all\n    required: false\n",
     );
-    expect(r.renderCmd(parseCmd("doc-audit.cmd.md", CMD_SRC)).files[0]?.content).not.toMatch(
+    expect(r.renderCmd(parseCmd("harn-doc-audit.cmd.md", CMD_SRC)).files[0]?.content).not.toMatch(
       /required/,
     );
-    const opencode = getRenderer("opencode").renderCmd(parseCmd("doc-audit.cmd.md", optional));
+    const opencode = getRenderer("opencode").renderCmd(parseCmd("harn-doc-audit.cmd.md", optional));
     expect(opencode.files[0]?.content).toMatch(/^---\ndescription: Audit doc scope\.\n---\n/);
   });
 
@@ -119,14 +120,14 @@ describe("codexCliRenderer", () => {
   const r = getRenderer("codex-cli");
 
   it("renders skill to .agents/skills/<id>/SKILL.md (the only repo dir Codex scans)", () => {
-    const skill = parseSkill("doc-audit.skill.md", SKILL_SRC);
+    const skill = parseSkill("harn-doc-audit.skill.md", SKILL_SRC);
     const result = r.renderSkill(skill);
-    expect(result.files[0]?.path).toBe(".agents/skills/doc-audit/SKILL.md");
-    expect(result.files[0]?.content).toMatch(/^---\nname: doc-audit/);
+    expect(result.files[0]?.path).toBe(".agents/skills/harn-doc-audit/SKILL.md");
+    expect(result.files[0]?.content).toMatch(/^---\nname: harn-doc-audit/);
   });
 
   it("renders no command file (custom prompts are deprecated in Codex)", () => {
-    const cmd = parseCmd("doc-audit.cmd.md", CMD_SRC);
+    const cmd = parseCmd("harn-doc-audit.cmd.md", CMD_SRC);
     expect(r.renderCmd(cmd)).toEqual({ files: [], warnings: [] });
   });
 
@@ -143,16 +144,16 @@ describe("opencodeRenderer", () => {
   const r = getRenderer("opencode");
 
   it("renders skill to .opencode/skills/<id>/SKILL.md with YAML frontmatter", () => {
-    const skill = parseSkill("doc-audit.skill.md", SKILL_SRC);
+    const skill = parseSkill("harn-doc-audit.skill.md", SKILL_SRC);
     const result = r.renderSkill(skill);
-    expect(result.files[0]?.path).toBe(".opencode/skills/doc-audit/SKILL.md");
-    expect(result.files[0]?.content).toMatch(/^---\nname: doc-audit\n/);
+    expect(result.files[0]?.path).toBe(".opencode/skills/harn-doc-audit/SKILL.md");
+    expect(result.files[0]?.content).toMatch(/^---\nname: harn-doc-audit\n/);
   });
 
   it("renders cmd to .opencode/commands/<id>.md with a YAML description only", () => {
-    const cmd = parseCmd("doc-audit.cmd.md", CMD_SRC);
+    const cmd = parseCmd("harn-doc-audit.cmd.md", CMD_SRC);
     const result = r.renderCmd(cmd);
-    expect(result.files[0]?.path).toBe(".opencode/commands/doc-audit.md");
+    expect(result.files[0]?.path).toBe(".opencode/commands/harn-doc-audit.md");
     expect(result.files[0]?.content).toMatch(/^---\ndescription: Audit doc scope\.\n---\n/);
   });
 });

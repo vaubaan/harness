@@ -73,7 +73,7 @@ export const tracksDrift: Linter = {
   id: "lint:tracks-drift",
   pillars: ["handbook", "tests", "workflow", "intents"],
   defaultSeverity: "warning",
-  suggestedSkills: ["/drift", "/handbook"],
+  suggestedSkills: ["/harn-drift", "/harn-handbook"],
   run(repoRoot: string): LintIssue[] {
     const issues: LintIssue[] = [];
     for (const dir of [...TRACKED_DIRS, INTENTS_DIR]) {

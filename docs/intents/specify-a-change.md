@@ -17,7 +17,7 @@ survives the session that took it and any agent can deliver it.
 ### Write the intent with its acceptance criteria
 
 creates: intent
-anchors: src/skills/intent-writer.skill.md, src/commands/intent.cmd.md, src/parser/intent.ts, src/linters/intent-schema.ts
+anchors: src/skills/harn-intent-writer.skill.md, src/commands/harn-intent.cmd.md, src/parser/intent.ts, src/linters/intent-schema.ts
 spec: ../spec/coding-agent-harness.md#913-intents
 
 ### Name only words the spec defines
@@ -33,7 +33,7 @@ requires: intent
 acceptance:
 - An optional `issue:` field on any node accepts one or several references, `#123`, `owner/repo#123` or a URL; any other shape fails `lint:intent-schema`.
 - The rendered index `docs/intents/README.md` shows the reference next to the node's status.
-- Spec §9.1.3, the intent template and `intent-writer` document the field; `/intent` copies the reference when the intent names a ticket.
+- Spec §9.1.3, the intent template and `harn-intent-writer` document the field; `/harn-intent` copies the reference when the intent names a ticket.
 
 ## Deliver the change
 
@@ -41,7 +41,7 @@ acceptance:
 
 requires: intent
 creates: anchor
-anchors: src/skills/intent-writer.skill.md, src/linters/intent-anchors.ts, src/linters/tracks-drift.ts
+anchors: src/skills/harn-intent-writer.skill.md, src/linters/intent-anchors.ts, src/linters/tracks-drift.ts
 spec: ../spec/coding-agent-harness.md#913-intents
 
 ## Read the backlog

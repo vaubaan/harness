@@ -6,7 +6,7 @@ tracks:
   - src/cli/view.ts
   - src/review/*.ts
   - src/cli/review.ts
-  - src/skills/canvas-review.skill.md
+  - src/skills/harn-canvas-review.skill.md
   - tests/integration/view.test.ts
   - tests/integration/review.test.ts
 last_reviewed: 2026-11-21

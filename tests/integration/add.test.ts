@@ -57,17 +57,19 @@ describe("add <pillar>", () => {
       activated: true,
       filesCreated: ["docs/decisions/README.md"],
     });
-    expect(result.next).toMatch(/\/decision/);
+    expect(result.next).toMatch(/\/harn-decision/);
     expect(read("docs/decisions/README.md")).toMatch(/^# Decisions/);
     expect(result.update?.filesToWrite).toEqual(
       expect.arrayContaining([
-        ".claude/skills/decision-record-writer/SKILL.md",
-        ".claude/commands/decision.md",
+        ".claude/skills/harn-decision-record-writer/SKILL.md",
+        ".claude/commands/harn-decision.md",
         "AGENTS.md",
       ]),
     );
-    expect(read("AGENTS.md")).toContain("→ an ADR (`/decision`)");
-    expect(readManifest(root)?.files).toContain(".claude/skills/decision-record-writer/SKILL.md");
+    expect(read("AGENTS.md")).toContain("→ an ADR (`/harn-decision`)");
+    expect(readManifest(root)?.files).toContain(
+      ".claude/skills/harn-decision-record-writer/SKILL.md",
+    );
     expect(errors()).toEqual([]);
   });
 
@@ -80,7 +82,7 @@ describe("add <pillar>", () => {
     ]);
     const today = new Date().toISOString().slice(0, 10);
     expect(read("docs/tests/integration-tests.md")).toContain(`last_reviewed: ${today}`);
-    expect(existsSync(join(root, ".claude/skills/test-plan-writer/SKILL.md"))).toBe(true);
+    expect(existsSync(join(root, ".claude/skills/harn-test-plan-writer/SKILL.md"))).toBe(true);
     expect(errors().map((issue) => issue.linter)).toContain("lint:frontmatter-tracks");
   });
 
@@ -92,7 +94,7 @@ describe("add <pillar>", () => {
     expect(read("AGENTS.md")).toContain("a `proposed` intent first");
     expect(add("profiles").filesCreated).toEqual([]);
     expect(read("docs/profiles/README.md")).toMatch(/No profile yet/);
-    expect(existsSync(join(root, ".claude/skills/intent-writer/SKILL.md"))).toBe(true);
+    expect(existsSync(join(root, ".claude/skills/harn-intent-writer/SKILL.md"))).toBe(true);
     expect(errors()).toEqual([]);
   });
 

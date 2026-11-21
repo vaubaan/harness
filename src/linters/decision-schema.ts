@@ -6,7 +6,7 @@ export const decisionSchema: Linter = {
   id: "lint:decision-schema",
   pillars: ["decisions"],
   defaultSeverity: "error",
-  suggestedSkills: ["/decision"],
+  suggestedSkills: ["/harn-decision"],
   run(repoRoot: string): LintIssue[] {
     const issues: LintIssue[] = [];
     const files = listMarkdown(repoRoot, "docs/decisions");

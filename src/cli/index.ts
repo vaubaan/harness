@@ -389,7 +389,7 @@ for (const mode of ["keep", "discard"] as const) {
 
 program
   .command("lessons")
-  .description("Lessons from reviews: extract the patch events the lesson-miner skill groups")
+  .description("Lessons from reviews: extract the patch events the harn-lesson-miner skill groups")
   .command("collect")
   .description(
     "Read the history, the pull requests saved in .vaubaan/lessons/prs.json, the archived review threads and the enabled conversation histories; write .vaubaan/lessons/events.json",

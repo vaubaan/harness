@@ -21,7 +21,7 @@ A review session copies `docs/` and `README.md` to
 reachable only from the local machine, behind a random token, rebuilds and
 pushes the view on each change and alone writes the session file. The CLI is
 the tool (`review start | next | reply | keep | discard`), the shipped skill
-`canvas-review` is the loop; the harness never starts an engine and never
+`harn-canvas-review` is the loop; the harness never starts an engine and never
 commits. Contract:
 [spec §10.4](../spec/coding-agent-harness.md#104-view-and-review).
 

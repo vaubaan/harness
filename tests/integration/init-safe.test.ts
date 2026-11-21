@@ -48,7 +48,7 @@ function read(path: string): string {
   return readFileSync(join(root, path), "utf8");
 }
 
-const SKILL = ".claude/skills/doc-audit/SKILL.md";
+const SKILL = ".claude/skills/harn-doc-audit/SKILL.md";
 const SETTINGS = ".claude/settings.json";
 const STOP_HOOK = "npx -y @vaubaan/harness stop-hook --engine claude";
 
@@ -145,7 +145,9 @@ describe("re-running init", () => {
   it("refuses to overwrite a generated file edited since the last run", () => {
     init();
     write(SKILL, "# my audit rules\n");
-    expect(() => init()).toThrow(/modified harness file: \.claude\/skills\/doc-audit\/SKILL\.md/);
+    expect(() => init()).toThrow(
+      /modified harness file: \.claude\/skills\/harn-doc-audit\/SKILL\.md/,
+    );
     expect(read(SKILL)).toBe("# my audit rules\n");
   });
 

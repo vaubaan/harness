@@ -50,4 +50,4 @@ last_reviewed: 2026-11-21
 ## Procedures
 
 - After adding or editing an intent file, run `npx @vaubaan/harness update .` and commit the index with it, or `lint:generated-fresh` fails. In this repository: `npm run build && node dist/cli/index.js update .`.
-- An entity rejected by `intent-vocabulary` is added to the spec's Vocabulary first (`/spec`), never renamed into a synonym in the intent file.
+- An entity rejected by `intent-vocabulary` is added to the spec's Vocabulary first (`/harn-spec`), never renamed into a synonym in the intent file.

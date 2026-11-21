@@ -23,7 +23,7 @@ with its pains and gains as named, ranked bullets and the evidence it rests
 on. While the pillar is active, an intent's `actors:` are profiles and a
 terminal intent may declare the pains it `relieves:` and the gains it
 `delivers:`. The fit between profiles and intents is rendered into the
-generated index `docs/profiles/README.md`. No new skill: `intent-writer`
+generated index `docs/profiles/README.md`. No new skill: `harn-intent-writer`
 writes profiles. Contract:
 [spec §9.1.4](../spec/coding-agent-harness.md#914-profiles).
 
@@ -36,7 +36,7 @@ writes profiles. Contract:
 - Without the pillar, intents behave as before: actors stay free strings
   ([pillars-on-demand](./pillars-on-demand.md)).
 - A pain no intent relieves is shown by the index and judged by
-  `doc-audit`; it never fails the lint, since a known gap is a product
+  `harn-doc-audit`; it never fails the lint, since a known gap is a product
   choice.
 - Research material is not a pillar: evidence is a link, to a file of the
   repo or elsewhere.

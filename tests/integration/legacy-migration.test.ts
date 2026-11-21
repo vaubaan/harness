@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { initCommand } from "../../src/cli/init.js";
-import { RELEASED_PATHS } from "../../src/cli/managed-paths.js";
+import { RELEASED_PATHS, RENAMED_IDS } from "../../src/cli/managed-paths.js";
 import { MANIFEST_FILENAME, MANIFEST_VERSION, readManifest } from "../../src/cli/manifest.js";
 import { ENGINES } from "../../src/types.js";
 
@@ -63,7 +63,8 @@ describe("migration from the actual 0.9.0 manifest", () => {
     for (const path of legacy.files.filter((file) => file.startsWith(".codex/skills/"))) {
       const id = path.slice(".codex/skills/".length, -".md".length);
       if (id === "clean-code-guardian") continue;
-      const nativeSkill = `.agents/skills/${id}/SKILL.md`;
+      // 3.0 prefixed every shipped id with `harn-`.
+      const nativeSkill = `.agents/skills/${RENAMED_IDS.get(id) ?? id}/SKILL.md`;
       expect(result.filesWritten).toContain(nativeSkill);
       expect(existsSync(join(sandbox, nativeSkill))).toBe(true);
     }

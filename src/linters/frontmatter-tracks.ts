@@ -7,7 +7,7 @@ export const frontmatterTracks: Linter = {
   id: "lint:frontmatter-tracks",
   pillars: ["handbook", "tests", "workflow"],
   defaultSeverity: "error",
-  suggestedSkills: ["/handbook", "/test-plan", "/workflow"],
+  suggestedSkills: ["/harn-handbook", "/harn-test-plan", "/harn-workflow"],
   run(repoRoot: string): LintIssue[] {
     const issues: LintIssue[] = [];
     for (const dir of TRACKED_DIRS) {

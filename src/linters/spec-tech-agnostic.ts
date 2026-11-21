@@ -25,7 +25,7 @@ export const specTechAgnostic: Linter = {
   id: "lint:spec-tech-agnostic",
   pillars: ["spec"],
   defaultSeverity: "error",
-  suggestedSkills: ["/spec"],
+  suggestedSkills: ["/harn-spec"],
   run(repoRoot: string): LintIssue[] {
     const issues: LintIssue[] = [];
     const files = listMarkdown(repoRoot, "docs/spec");

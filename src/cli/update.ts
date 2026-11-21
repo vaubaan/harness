@@ -1,11 +1,11 @@
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
-import { DisableYamlSchema } from "../loader.js";
+import { DisableYamlSchema, loadOverrides, loadProjectSkills } from "../loader.js";
 import type { Engine, RenderedFile } from "../types.js";
 import { parseYAML } from "../util/yaml.js";
 import { VERSION } from "../version.js";
-import { MOVED_PATHS, RELEASED_PATHS, assertManagedPaths } from "./managed-paths.js";
+import { MOVED_PATHS, RELEASED_PATHS, RENAMED_IDS, assertManagedPaths } from "./managed-paths.js";
 import { MANIFEST_FILENAME, MANIFEST_VERSION, type Manifest, hashContent } from "./manifest.js";
 import { planInit } from "./plan-render.js";
 import { pruneEmptyDirs } from "./uninstall.js";
@@ -134,6 +134,35 @@ function legacyHookWarnings(root: string): string[] {
   return warnings;
 }
 
+/**
+ * Ids renamed in 3.0 that the project still uses: a project skill or an
+ * override with an old id is now an extra skill instead of a replacement,
+ * and a `disable.yaml` entry with one disables nothing.
+ */
+function renamedIdWarnings(root: string, overridesParent: string | undefined): string[] {
+  const used: Array<{ id: string; where: string }> = loadProjectSkills(root).map((skill) => ({
+    id: skill.meta.id,
+    where: "docs/skills/",
+  }));
+  if (overridesParent) {
+    const overrides = loadOverrides(overridesParent);
+    for (const item of [...(overrides?.add?.skills ?? []), ...(overrides?.add?.cmds ?? [])]) {
+      used.push({ id: item.meta.id, where: ".harness-overrides/" });
+    }
+    for (const id of overrides?.disable ?? []) {
+      used.push({ id, where: ".harness-overrides/disable.yaml" });
+    }
+  }
+  return used.flatMap(({ id, where }) => {
+    const renamed = RENAMED_IDS.get(id);
+    return renamed
+      ? [
+          `${where} names \`${id}\`, renamed \`${renamed}\` in 3.0: it no longer replaces or disables the shipped one — rename it`,
+        ]
+      : [];
+  });
+}
+
 /** All reads and validation precede backup creation and project mutations. */
 export function planInstallation(
   args: Omit<UpdateArgs, "dryRun" | "backupDir">,
@@ -197,7 +226,11 @@ export function planInstallation(
     manifest.renderedAt = new Date().toISOString();
     writes.push({ path: MANIFEST_FILENAME, content: `${JSON.stringify(manifest, null, 2)}\n` });
   }
-  warnings.push(...rendered.output.warnings, ...legacyHookWarnings(root));
+  warnings.push(
+    ...rendered.output.warnings,
+    ...legacyHookWarnings(root),
+    ...renamedIdWarnings(root, hasOverrides ? overridesDir : undefined),
+  );
   if (preserved.length) warnings.push(`preserved user-owned artifacts: ${preserved.join(", ")}`);
   return { writes, removals: existingRemovals, owned, manifest, warnings };
 }

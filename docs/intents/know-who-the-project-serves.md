@@ -15,7 +15,7 @@ for whom and why a change is made.
 ## Describe a profile with its pains and gains
 
 creates: profile, pain, gain
-anchors: src/parser/profile.ts, src/linters/profile-schema.ts, src/templates/profile.md.tmpl, src/skills/intent-writer.skill.md, tests/integration/profiles.test.ts
+anchors: src/parser/profile.ts, src/linters/profile-schema.ts, src/templates/profile.md.tmpl, src/skills/harn-intent-writer.skill.md, tests/integration/profiles.test.ts
 spec: ../spec/coding-agent-harness.md#914-profiles
 
 ## Say which pain an intent relieves

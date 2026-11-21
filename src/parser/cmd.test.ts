@@ -3,9 +3,9 @@ import { parseCmd } from "./cmd.js";
 import { ParseError } from "./schemas.js";
 
 const VALID_CMD = `---
-id: doc-audit
-trigger: /doc-audit
-invokes_skill: doc-audit
+id: harn-doc-audit
+trigger: /harn-doc-audit
+invokes_skill: harn-doc-audit
 args:
   - name: scope
     type: enum
@@ -14,15 +14,15 @@ args:
 description: Audits the completeness of the project docs.
 ---
 
-# /doc-audit
+# /harn-doc-audit
 `;
 
 describe("parseCmd", () => {
   it("parses a valid cmd frontmatter", () => {
-    const cmd = parseCmd("/virtual/doc-audit.cmd.md", VALID_CMD);
-    expect(cmd.meta.id).toBe("doc-audit");
-    expect(cmd.meta.trigger).toBe("/doc-audit");
-    expect(cmd.meta.invokes_skill).toBe("doc-audit");
+    const cmd = parseCmd("/virtual/harn-doc-audit.cmd.md", VALID_CMD);
+    expect(cmd.meta.id).toBe("harn-doc-audit");
+    expect(cmd.meta.trigger).toBe("/harn-doc-audit");
+    expect(cmd.meta.invokes_skill).toBe("harn-doc-audit");
     expect(cmd.meta.args).toHaveLength(1);
     const arg = cmd.meta.args?.[0];
     expect(arg).toBeDefined();
@@ -48,8 +48,8 @@ body
   it("accepts an optional argument, required by default", () => {
     const src = (required: string) => `---
 id: intent
-trigger: /intent
-invokes_skill: intent-writer
+trigger: /harn-intent
+invokes_skill: harn-intent-writer
 args:
   - name: intent
     type: string
@@ -67,7 +67,7 @@ body
   it("rejects trigger without leading slash", () => {
     const src = `---
 id: x
-trigger: doc-audit
+trigger: harn-doc-audit
 invokes_skill: x
 description: x
 ---

@@ -7,7 +7,7 @@ export const orphanDecisions: Linter = {
   id: "lint:orphan-decisions",
   pillars: ["decisions"],
   defaultSeverity: "warning",
-  suggestedSkills: ["/handbook"],
+  suggestedSkills: ["/harn-handbook"],
   run(repoRoot: string, ctx?: LintContext): LintIssue[] {
     const extra = ctx?.config.ignore ?? [];
     const issues: LintIssue[] = [];

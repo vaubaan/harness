@@ -7,7 +7,7 @@ export const adrNoTracks: Linter = {
   id: "lint:adr-no-tracks",
   pillars: ["decisions"],
   defaultSeverity: "error",
-  suggestedSkills: ["/decision"],
+  suggestedSkills: ["/harn-decision"],
   run(repoRoot: string): LintIssue[] {
     const issues: LintIssue[] = [];
     const files = listMarkdown(repoRoot, ADR_DIR);

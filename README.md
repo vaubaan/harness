@@ -24,7 +24,7 @@ A few Markdown files hold what the code cannot say and point to the code and con
 - **As much context as the project needs, no more.** A project that starts needs a README. Every other pillar is added the day it helps, with one command, and costs nothing until then: no check, no skill, no line of context.
 - **Pointers that stay true.** Handbooks, test plans and intents declare the files they describe. When that code moves and the doc does not, the linter says so.
 - **Checks with zero tokens.** Twenty-one mechanical linters run in CI and in your pre-commit hook. No engine hook, no injected turn, no loop. The agent sees a failed command and fixes it.
-- **A view to review it.** `vaubaan-harness view` draws the whole context on one offline canvas. `/canvas` keeps it live while you talk to the agent or comment a card, and nothing is committed until you say so. `/lessons` turns the patches reviews keep asking for into rules.
+- **A view to review it.** `vaubaan-harness view` draws the whole context on one offline canvas. `/harn-canvas` keeps it live while you talk to the agent or comment a card, and nothing is committed until you say so. `/harn-lessons` turns the patches reviews keep asking for into rules.
 
 **Contents**
 
@@ -318,10 +318,10 @@ jobs:
 **4. Open your agent and let it fill the gaps.**
 
 ```
-/doc-audit      # what is missing or stale
-/spec           # write the spec of a subsystem, guided
-/decision       # turn an implicit choice into an ADR
-/intent <what>  # a proposed intent with acceptance criteria, before the code
+/harn-doc-audit      # what is missing or stale
+/harn-spec           # write the spec of a subsystem, guided
+/harn-decision       # turn an implicit choice into an ADR
+/harn-intent <what>  # a proposed intent with acceptance criteria, before the code
 ```
 
 > [!NOTE]
@@ -337,12 +337,12 @@ Four situations that happen once per project. The quick start above is the short
 
 **When.** No code yet. The docs precede the code, and that is where they are cheapest.
 
-**What you say.** `init`, then `/readme` and `/spec`. Nothing else is asked of you on day one.
+**What you say.** `init`, then `/harn-readme` and `/harn-spec`. Nothing else is asked of you on day one.
 
 **What happens.**
 
 1. `init` renders seven skills and `AGENTS.md`. The lint passes with a README alone; it warns that there is no spec yet.
-2. `/spec` in greenfield mode: three questions to start, then one section at a time. The Vocabulary first: it will constrain the intents.
+2. `/harn-spec` in greenfield mode: three questions to start, then one section at a time. The Vocabulary first: it will constrain the intents.
 3. The rest comes when the project calls for it, one pillar at a time: `add intents` before the first feature you want specified before it is coded, `add decisions` the day you pick a database, `add workflow` when CI exists, `add tests` with the second kind of test. The agent proposes each one at the moment it would help; see [add a pillar](#add-a-pillar).
 
 **What the harness checks.** That the README exists. Then, for each pillar you added, its own contract and nothing more.
@@ -363,15 +363,15 @@ Four situations that happen once per project. The quick start above is the short
 npx -y @vaubaan/harness init . --engines=claude-code
 ```
 
-then `/doc-audit`.
+then `/harn-doc-audit`.
 
 **What happens.**
 
 1. `init` renders the engine files without touching anything it did not write. A hand-written `AGENTS.md` or `CLAUDE.md` stops it with a list: move the content into `docs/`, or keep the file as yours with `--preserve AGENTS.md`. It never merges a configuration file and never touches `.claude/settings.json`, `.codex/hooks.json` or any MCP configuration. You commit everything, and wire the lint in pre-commit and CI.
-2. `/spec` by extraction from the code: the agent proposes, you correct.
-3. Add the pillars the project is ready for, in useful order: `add workflow`, then `/workflow` from `.github/workflows/`; `add handbook`, then `/handbook` for the modules with traps; `add decisions`, then `/decision` for the implicit choices the `git log` betrays.
-4. `add intents`, then `/intent` with no argument, in mature mode: the agent reads routes, commands and handlers, proposes a hierarchy, one terminal intent at a time with its anchors. One sub-domain first, to stabilize the vocabulary.
-5. `/doc-audit` says what is missing or stale in the pillars you activated. It never reports a pillar you did not add.
+2. `/harn-spec` by extraction from the code: the agent proposes, you correct.
+3. Add the pillars the project is ready for, in useful order: `add workflow`, then `/harn-workflow` from `.github/workflows/`; `add handbook`, then `/harn-handbook` for the modules with traps; `add decisions`, then `/harn-decision` for the implicit choices the `git log` betrays.
+4. `add intents`, then `/harn-intent` with no argument, in mature mode: the agent reads routes, commands and handlers, proposes a hierarchy, one terminal intent at a time with its anchors. One sub-domain first, to stabilize the vocabulary.
+5. `/harn-doc-audit` says what is missing or stale in the pillars you activated. It never reports a pillar you did not add.
 
 **What the harness checks.** From the first commit: the shape of the pillars present, the gitignore, the freshness of the render. Pillars that are absent report nothing.
 
@@ -397,15 +397,15 @@ or "add the decisions pillar" to the agent.
 
 | Pillar      | Add it when                                                                 | Starter files                          | Brings                      |
 | ----------- | --------------------------------------------------------------------------- | -------------------------------------- | --------------------------- |
-| `decisions` | A choice is costly to reverse, or someone asks "why is it done this way?"    | `README.md`, the index                 | `/decision`                 |
-| `handbook`  | An invariant or a trap took several files to learn                           | `README.md`, the index                 | `/handbook`, `/drift`       |
-| `tests`     | A second kind of test, a shared fixture, a known gap                         | `integration-tests.md`, `e2e-tests.md` | `/test-plan`, `/drift`      |
-| `workflow`  | CI, a second contributor, a release                                          | `coding-workflow.md`                   | `/workflow`, `/drift`       |
+| `decisions` | A choice is costly to reverse, or someone asks "why is it done this way?"    | `README.md`, the index                 | `/harn-decision`                 |
+| `handbook`  | An invariant or a trap took several files to learn                           | `README.md`, the index                 | `/harn-handbook`, `/harn-drift`       |
+| `tests`     | A second kind of test, a shared fixture, a known gap                         | `integration-tests.md`, `e2e-tests.md` | `/harn-test-plan`, `/harn-drift`      |
+| `workflow`  | CI, a second contributor, a release                                          | `coding-workflow.md`                   | `/harn-workflow`, `/harn-drift`       |
 | `quality`   | The same review remark comes back                                            | `code-quality.md`                      | a line in `AGENTS.md`       |
-| `intents`   | You want a change specified before it is coded, and a backlog the repo keeps | the generated index                    | `/intent`, `/drift`         |
-| `profiles`  | You know, or want to find out, who the product is for and what hurts them    | the generated index                    | profiles in `intent-writer` |
+| `intents`   | You want a change specified before it is coded, and a backlog the repo keeps | the generated index                    | `/harn-intent`, `/harn-drift`         |
+| `profiles`  | You know, or want to find out, who the product is for and what hurts them    | the generated index                    | profiles in `harn-intent-writer` |
 
-**What the harness checks.** Once added, the pillar's contract: `add tests` leaves two files with placeholders, and the lint fails on them until `/test-plan` has filled them. That is the point of adding it. An empty pillar folder fails the lint too: git would not record it.
+**What the harness checks.** Once added, the pillar's contract: `add tests` leaves two files with placeholders, and the lint fails on them until `/harn-test-plan` has filled them. That is the point of adding it. An empty pillar folder fails the lint too: git would not record it.
 
 **What you see at the end.** One more folder under `docs/`, one more skill, and a project map in `AGENTS.md` that says so. To remove a pillar, delete its folder and run `update .`.
 
@@ -417,13 +417,13 @@ or "add the decisions pillar" to the agent.
 
 **When.** A new version is published.
 
-**What you say.** `/harness-upgrade`, or by hand:
+**What you say.** `/harn-upgrade`, or by hand:
 
 ```bash
 npm i -D @vaubaan/harness@latest && npx vaubaan-harness update .
 ```
 
-**What happens.** The `harness-upgrade` skill pins the version wherever your project pins it, previews the update, resolves what it reports, applies it, then applies the migration notes of every version you cross: what a version asks of your own files, which no command can do for you. `update` itself re-renders the engine files and the manifest, leaves untouched the generated files you modified by hand (it refuses to overwrite them: delete and rerun if you want the new version), and tells you to commit.
+**What happens.** The `harn-upgrade` skill pins the version wherever your project pins it, previews the update, resolves what it reports, applies it, then applies the migration notes of every version you cross: what a version asks of your own files, which no command can do for you. `update` itself re-renders the engine files and the manifest, leaves untouched the generated files you modified by hand (it refuses to overwrite them: delete and rerun if you want the new version), and tells you to commit.
 
 **What the harness checks.** `generated-fresh`: the committed render is the one of the installed version.
 
@@ -463,7 +463,7 @@ npx @vaubaan/harness uninstall .
 
 1. **Your docs are the context.** A small, fixed layout under `docs/`. Every file has a template and a writer skill, so you rarely start from a blank page.
 2. **One pivot format, rendered per engine.** Skills and commands land where Claude Code, Codex and OpenCode look for them. `AGENTS.md` is the shared entry point; `CLAUDE.md` just imports it.
-3. **Linters keep context and code in sync.** They run before each commit and on every pull request. The semantic part, contradictions, stale prose, missing pieces, is a skill the agent runs: `/doc-audit`.
+3. **Linters keep context and code in sync.** They run before each commit and on every pull request. The semantic part, contradictions, stale prose, missing pieces, is a skill the agent runs: `/harn-doc-audit`.
 
 In database terms:
 
@@ -473,7 +473,7 @@ In database terms:
 | Foreign keys          | `tracks:`, `anchors:`, `spec:`, the "realized by" arrows. They point into the code database, and the linter refuses one that does not resolve.         |
 | Integrity constraints | Twenty-one linters: shape, pointers, vocabulary, freshness. Run on every commit and pull request, at zero token cost.                                  |
 | Materialized views    | What `update .` renders: `AGENTS.md`, the skills per engine, the intents and profiles indexes. Committed, never edited by hand, refreshed from their source. And what `view` derives on demand, never committed: the context graph and its canvas. |
-| Transactions          | `/intent <verb + object>`: a typed write that adds a `proposed` intent with its acceptance criteria and leaves the base consistent.                     |
+| Transactions          | `/harn-intent <verb + object>`: a typed write that adds a `proposed` intent with its acceptance criteria and leaves the base consistent.                     |
 | Join table            | The intents pillar: the one table that joins both databases, to the code through `anchors:` and to the spec vocabulary through `requires:` / `creates:`. |
 
 ## Day to day
@@ -499,13 +499,13 @@ One word first. In the intents pillar, every heading is an **intent**: what the 
 **What you say.** You describe what you want, the agent asks its questions, you converge. Then `go`, or directly:
 
 ```
-/intent the customer receives the invoice by email
+/harn-intent the customer receives the invoice by email
 ```
 
 **What happens.**
 
 1. The agent opens `docs/intents/README.md`, the rendered index, and finds the level-1 intent this belongs to. None fits: it creates a file.
-2. It checks that every word of the new intent is in the Vocabulary section of the spec. A word is missing: it stops and offers `/spec` to define it first.
+2. It checks that every word of the new intent is in the Vocabulary section of the spec. A word is missing: it stops and offers `/harn-spec` to define it first.
 3. It writes the `proposed` intent with two to five observable acceptance criteria, then runs `update .` so the index follows.
 4. It shows you the intent. You correct, you validate. Not one line of code.
 
@@ -535,7 +535,7 @@ acceptance:
 **What you say.** Planning ends in an issue, as today, with draft criteria in its body. Later, when the work is picked up:
 
 ```
-/intent #123
+/harn-intent #123
 ```
 
 **What happens.**
@@ -565,7 +565,7 @@ Write the rule in your `docs/workflow/coding-workflow.md`: intents are born in t
 1. The agent reads the intent, the spec section it cites, the handbook of the module. That is its whole brief.
 2. It codes, and writes tests whose titles restate the acceptance criteria, one for one.
 3. In the same pull request the intent turns `implemented`: it adds `anchors:` to the code and the tests, removes `acceptance:`, sets `last_reviewed`.
-4. If the "how" changed, `/handbook`. If a structural choice slipped into the diff, `/decision`. Then `update .`.
+4. If the "how" changed, `/harn-handbook`. If a structural choice slipped into the diff, `/harn-decision`. Then `update .`.
 
 **What the harness checks.** The anchors exist, the index is fresh, the docs that `tracks:` the touched code are not older than it. Pre-commit, then CI.
 
@@ -584,8 +584,8 @@ Write the rule in your `docs/workflow/coding-workflow.md`: intents are born in t
 **What happens.**
 
 1. **Mechanical, zero tokens.** `npx @vaubaan/harness lint`. Shape, pointers, drift, freshness of the render. Green means the structure is sound.
-2. **Code ↔ doc drift.** `/drift`. For each doc that declares code, the agent reads the code and judges whether the doc still tells the truth. Hard and soft drift, listed.
-3. **Completeness.** `/doc-audit`. Pillar by pillar: in place, missing, stale. It also spots implicit decisions in the `git log` that have no ADR. Report in `.vaubaan/reports/doc-audit.md`, gitignored.
+2. **Code ↔ doc drift.** `/harn-drift`. For each doc that declares code, the agent reads the code and judges whether the doc still tells the truth. Hard and soft drift, listed.
+3. **Completeness.** `/harn-doc-audit`. Pillar by pillar: in place, missing, stale. It also spots implicit decisions in the `git log` that have no ADR. Report in `.vaubaan/reports/doc-audit.md`, gitignored.
 4. **Where we stand.** The intents index. `proposed` intents are what remains; `deprecated` ones leave at the next release.
 
 **What the harness checks.** Level 1 entirely. Levels 2 and 3 are judgment: the harness ships the skill and the report format, the agent does the work.
@@ -604,9 +604,9 @@ Write the rule in your `docs/workflow/coding-workflow.md`: intents are born in t
 
 **What happens.**
 
-1. `/doc-audit` in contradiction mode: where the spec and a handbook disagree, where an ADR is contradicted by a config, where two handbooks describe the same code.
+1. `/harn-doc-audit` in contradiction mode: where the spec and a handbook disagree, where an ADR is contradicted by a config, where two handbooks describe the same code.
 2. For each pillar, its writer rewrites with the content test: the rule stays in the spec, the why in the ADR, the how in the handbook, the rest is a pointer. One pull request per pillar, so the review stays readable.
-3. `/drift` at the end, to check the rewrite lost no rule in force.
+3. `/harn-drift` at the end, to check the rewrite lost no rule in force.
 
 **What the harness checks.** That every pointer still resolves and the cross-links hold. It does not judge loss of meaning: that is your review.
 
@@ -628,7 +628,7 @@ A dedicated `/compact` is decided and not shipped: it is a `proposed` intent, "R
 
 1. The agent reads the handbook of the module before touching it: invariants and traps are there.
 2. It codes, adds a regression test.
-3. If an invariant or a trap changed: `/handbook`. If files moved: it updates the `tracks:` and `anchors:` that cited them, or the lint fails.
+3. If an invariant or a trap changed: `/harn-handbook`. If files moved: it updates the `tracks:` and `anchors:` that cited them, or the lint fails.
 
 **What the harness checks.** That every declared path still exists after the move, and that the handbook is not older than the code it tracks.
 
@@ -642,7 +642,7 @@ A dedicated `/compact` is decided and not shipped: it is a `proposed` intent, "R
 
 **When.** A choice is costly to reverse, a real alternative was weighed, and it will outlive the ticket. Database, framework, package layout, CI policy.
 
-**What you say.** `we move from SQLite to Postgres`, or after the fact, `/decision` on a diff that holds an implicit choice.
+**What you say.** `we move from SQLite to Postgres`, or after the fact, `/harn-decision` on a diff that holds an implicit choice.
 
 **What happens.**
 
@@ -669,7 +669,7 @@ A dedicated `/compact` is decided and not shipped: it is a `proposed` intent, "R
 1. The agent reads `AGENTS.md`: the map and the rule.
 2. The intents index: what the user does, where in the code, and the `proposed` intents as the remaining work.
 3. The ADRs: the choices in force.
-4. `/drift` if the last `last_reviewed` is old.
+4. `/harn-drift` if the last `last_reviewed` is old.
 
 **What the harness checks.** Nothing beyond the usual. Its work here was done before: everything is in the repo, no external tool and no token needed to resume.
 
@@ -683,7 +683,7 @@ A dedicated `/compact` is decided and not shipped: it is a `proposed` intent, "R
 
 **When.** A new CI job, a move to trunk-based, an automated release, a team rule such as "intents are born in GitHub Projects".
 
-**What you say.** `/workflow`, after changing `.github/workflows/`, or to write a team rule.
+**What you say.** `/harn-workflow`, after changing `.github/workflows/`, or to write a team rule.
 
 **What happens.** The agent reads the workflows, the scripts, the pre-commit hook, and updates `docs/workflow/coding-workflow.md`: what triggers what, what lives outside the repo (protections, secrets, approvals), the release. It is the one pillar where the team describes its own organization; the harness imposes none.
 
@@ -697,7 +697,7 @@ A dedicated `/compact` is decided and not shipped: it is a `proposed` intent, "R
 
 How a coding agent should react to what the user asks, in a harnessed project. It does not replace `docs/workflow/`, which says how the team organizes itself, nor the skills, which say how to write each pillar. It says which reflex to trigger, and when to trigger none.
 
-Your agent does not need this page: the `harness-guide` skill, rendered into every project, carries the same reflexes, plus the signs that the project is ready for a pillar it does not have yet. A step below that names a pillar the project has not added is skipped, or the agent proposes the pillar.
+Your agent does not need this page: the `harn-guide` skill, rendered into every project, carries the same reflexes, plus the signs that the project is ready for a pillar it does not have yet. A step below that names a pillar the project has not added is skipped, or the agent proposes the pillar.
 
 <a name="before-any-task-the-reading-order"></a>
 <details>
@@ -740,23 +740,23 @@ The first question is always the same: does the behavior visible to the user cha
 
 | The user says                                               | Reflex                                                                                                                                                                                                  | Never                                                                                                                       |
 | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| "I want the user to be able to…", "add a feature"           | Talk until you converge, then `/intent`. Show the intent, wait for validation, and only then code.                                                                                                      | Open the code first. Write the intent after the code "to document".                                                        |
-| "Go", after a planning discussion                           | Summarize the decisions in a short list and land them: `/intent` for behavior, `/decision` for a structural choice. Then code.                                                                          | Treat the conversation as the spec. It dies with the session.                                                              |
-| "Take issue #123"                                           | Read the issue with `gh`. `/intent` citing the issue. Comment the issue with the path of the intent. The pull request says `Closes #123`.                                                                | Copy the issue's criteria into the code without the intent. Keep two diverging versions of the criteria.                   |
+| "I want the user to be able to…", "add a feature"           | Talk until you converge, then `/harn-intent`. Show the intent, wait for validation, and only then code.                                                                                                      | Open the code first. Write the intent after the code "to document".                                                        |
+| "Go", after a planning discussion                           | Summarize the decisions in a short list and land them: `/harn-intent` for behavior, `/harn-decision` for a structural choice. Then code.                                                                          | Treat the conversation as the spec. It dies with the session.                                                              |
+| "Take issue #123"                                           | Read the issue with `gh`. `/harn-intent` citing the issue. Comment the issue with the path of the intent. The pull request says `Closes #123`.                                                                | Copy the issue's criteria into the code without the intent. Keep two diverging versions of the criteria.                   |
 | "Deliver the intent X"                                      | Read the intent, its spec section, the handbook. Code. Tests titled after the criteria. Intent → `implemented` with `anchors:`, `acceptance:` removed, `last_reviewed` set. `update .`.                 | Deliver without touching the intent. Leave `acceptance:` on a delivered intent. Move an intent back to `proposed`.           |
-| "Fix this bug"                                              | Read the handbook of the module. Code, regression test. If an invariant or a trap changed, `/handbook`.                                                                                                 | Open an intent: the expected behavior does not change. Fix without a test.                                                 |
-| "Refactor", "rename", "move"                                | Code. Update every `tracks:` and `anchors:` that cited the old paths. `/handbook` if the map changed.                                                                                                   | Let the lint fail on dead paths. Open an intent.                                                                            |
-| "We move to Postgres", "we change framework"                | Admission test. If it passes: `/decision` before the code, with the files that embody the choice. Then the code, then `/handbook` and `/workflow` if CI changes.                                       | Make the change and leave the why in a commit message. Write an ADR for a choice reversible in one pull request.            |
-| "Why is it done this way?"                                  | Look for the ADR, the handbook, the spec. Answer by citing. If none answers and it is structural: say so, offer `/decision`.                                                                            | Invent a plausible justification. Write the ADR before the user confirms the reason.                                       |
-| "Is it fine?", "reassure me", "where do we stand?"          | Read-only mode: `lint`, then `/drift`, then `/doc-audit`, then the intents index. Report in three parts: healthy, drifted, missing. Each item names the skill that fixes it.                              | Fix things on the way. The user asked for a state, not changes.                                                            |
-| "Compact the docs", "clean up", "too long"                  | `/doc-audit` to list the contradictions first. Then one pillar at a time, with the pillar's writer and the content test. One pull request per pillar. `/drift` at the end.                               | Delete a rule in force because it looks redundant. Rewrite everything in one pull request.                                  |
+| "Fix this bug"                                              | Read the handbook of the module. Code, regression test. If an invariant or a trap changed, `/harn-handbook`.                                                                                                 | Open an intent: the expected behavior does not change. Fix without a test.                                                 |
+| "Refactor", "rename", "move"                                | Code. Update every `tracks:` and `anchors:` that cited the old paths. `/harn-handbook` if the map changed.                                                                                                   | Let the lint fail on dead paths. Open an intent.                                                                            |
+| "We move to Postgres", "we change framework"                | Admission test. If it passes: `/harn-decision` before the code, with the files that embody the choice. Then the code, then `/harn-handbook` and `/harn-workflow` if CI changes.                                       | Make the change and leave the why in a commit message. Write an ADR for a choice reversible in one pull request.            |
+| "Why is it done this way?"                                  | Look for the ADR, the handbook, the spec. Answer by citing. If none answers and it is structural: say so, offer `/harn-decision`.                                                                            | Invent a plausible justification. Write the ADR before the user confirms the reason.                                       |
+| "Is it fine?", "reassure me", "where do we stand?"          | Read-only mode: `lint`, then `/harn-drift`, then `/harn-doc-audit`, then the intents index. Report in three parts: healthy, drifted, missing. Each item names the skill that fixes it.                              | Fix things on the way. The user asked for a state, not changes.                                                            |
+| "Compact the docs", "clean up", "too long"                  | `/harn-doc-audit` to list the contradictions first. Then one pillar at a time, with the pillar's writer and the content test. One pull request per pillar. `/harn-drift` at the end.                               | Delete a rule in force because it looks redundant. Rewrite everything in one pull request.                                  |
 | "Document this"                                             | Pick the pillar by nature: a rule → spec; a why → ADR; where and how, traps → handbook; test scope → test plan; team procedure → workflow; what the user wants → intent. A pointer over a retelling.    | Write into `AGENTS.md` or `CLAUDE.md`. Create `docs/notes.md`. Paraphrase the code.                                         |
 | "Change AGENTS.md / CLAUDE.md"                              | Explain they are rendered. Find the source: `docs/`, a project skill in `docs/skills/`, or `.harness-overrides/` for a local trial. `update .`, commit the render.                                       | Edit the file: `generated-fresh` fails on the next commit.                                                                  |
 | "The lint fails"                                            | Read the message: it names the file and the skill. Fix the cause. If it is drift, reread the code and update the doc, not only the date.                                                                | Touch `last_reviewed` without rereading. Disable the linter. Reformat a generated file.                                     |
 | "Release", "tag"                                            | Follow `docs/workflow/coding-workflow.md` § Release, to the letter. Changelog, version, tag, verification. A snag in the procedure goes back into the file the same day.                                 | Improvise the order of steps. Skip verifying the publication.                                                              |
-| "Update the harness"                                        | `/harness-upgrade`: pin the version, preview, `update .`, apply the migration notes of every version crossed, lint, commit the generated files. Report the preserved files that will not be refreshed.   | Overwrite a file the user had modified. Skip a version's migration notes.                                                  |
-| "Who is this for?", "here is our user research"             | `add profiles` if the human agrees, then `intent-writer` writes the profile from the research. Each intent then names the pain it relieves.                                                             | Invent a persona. Copy interview notes into the repo.                                                                      |
-| "Give me the tour"                                          | `AGENTS.md`, the intents index, the ADRs, then `/drift` if `last_reviewed` is old. Summarize: what it does, what is left (`proposed`), what moved.                                                        | Read all the code to retell it. The docs exist to avoid that.                                                              |
+| "Update the harness"                                        | `/harn-upgrade`: pin the version, preview, `update .`, apply the migration notes of every version crossed, lint, commit the generated files. Report the preserved files that will not be refreshed.   | Overwrite a file the user had modified. Skip a version's migration notes.                                                  |
+| "Who is this for?", "here is our user research"             | `add profiles` if the human agrees, then `harn-intent-writer` writes the profile from the research. Each intent then names the pain it relieves.                                                             | Invent a persona. Copy interview notes into the repo.                                                                      |
+| "Give me the tour"                                          | `AGENTS.md`, the intents index, the ADRs, then `/harn-drift` if `last_reviewed` is old. Summarize: what it does, what is left (`proposed`), what moved.                                                        | Read all the code to retell it. The docs exist to avoid that.                                                              |
 
 </details>
 
@@ -767,7 +767,7 @@ The first question is always the same: does the behavior visible to the user cha
 Five cases where the agent says no, explains, and offers the path. They are the only ones.
 
 - **Coding before the intent.** "This change is visible to the user. I write the `proposed` intent with its criteria first, you validate, then I code." If the user insists, it is their call: say so, do it, and write the intent in the same pull request.
-- **Inventing a word.** "The word *email* is not in the spec Vocabulary. I add it to the spec with `/spec` before using it in the intent." No synonym, no plural.
+- **Inventing a word.** "The word *email* is not in the spec Vocabulary. I add it to the spec with `/harn-spec` before using it in the intent." No synonym, no plural.
 - **Editing a generated file.** "`AGENTS.md` is rendered from `docs/`. I change the source and rerun `update .`." Same for the intents index.
 - **Coding without a spec.** "The subsystem I touch has no spec. I stop and report the gap." It is the rule of `AGENTS.md`: missing spec, do not code, report the gap.
 - **Adding a pillar unasked.** "This decision would go into a `decisions` pillar, which this project does not have. Shall I add it?" The agent proposes once, at the moment the work shows the need; it never creates the folder itself.
@@ -796,19 +796,19 @@ Warning sign: if finishing requires touching a generated file, disabling a linte
 
 | Command            | Skill                    | Rendered with                      | What it does                                                                                   |
 | ------------------ | ------------------------ | ---------------------------------- | ---------------------------------------------------------------------------------------------- |
-| —                  | `harness-guide`           | always                             | How to work in a harnessed project: reading order, which skill for which request, what to refuse, and when to propose a pillar the project does not have yet. |
-| `/harness-upgrade` | `harness-upgrade`        | always                             | Moves the project to a newer harness version, with the migration notes of every version crossed. |
-| `/doc-audit`       | `doc-audit`              | always                             | Audits completeness and freshness of the active pillars.                                       |
-| `/spec`            | `spec-writer`            | always                             | Writes a tech-agnostic spec, progressively: three questions to start, one section at a time after. |
-| `/readme`          | `readme-writer`          | always                             | Keeps the README in sync with the code.                                                        |
-| `/canvas`          | `canvas-review`          | always                             | Opens the live view of the context; you talk or comment cards, the agent changes the docs and answers in the thread. Ends with keep or discard, never a commit. |
-| `/lessons`         | `lesson-miner`           | always                             | Finds the patches reviews keep asking for and proposes the rule that prevents each, with its evidence, in the right pillar. |
-| `/decision`        | `decision-record-writer` | `decisions`                        | Writes an ADR, spotting implicit decisions in your diff.                                       |
-| `/handbook`        | `handbook-writer`        | `handbook`                         | Documents how a feature is actually implemented.                                               |
-| `/test-plan`       | `test-plan-writer`       | `tests`                            | Keeps integration and e2e test plans up to date.                                               |
-| `/workflow`        | `workflow-writer`        | `workflow`                         | Documents CI, environments, PR process, branches, release, languages.                          |
-| `/drift`           | `drift-detector`         | `handbook`, `tests`, `workflow` or `intents` | Finds where docs no longer match the code.                                           |
-| `/intent`          | `intent-writer`          | `intents` or `profiles`            | `/intent <verb + object>` proposes an intent with its acceptance criteria before any code; with no argument, maps or extends the intent tree: three questions on a greenfield scope, extraction from the code on a mature one. Writes the user profiles and names, on each intent, the pain it relieves. |
+| —                  | `harn-guide`           | always                             | How to work in a harnessed project: reading order, which skill for which request, what to refuse, and when to propose a pillar the project does not have yet. |
+| `/harn-upgrade` | `harn-upgrade`        | always                             | Moves the project to a newer harness version, with the migration notes of every version crossed. |
+| `/harn-doc-audit`       | `harn-doc-audit`              | always                             | Audits completeness and freshness of the active pillars.                                       |
+| `/harn-spec`            | `harn-spec-writer`            | always                             | Writes a tech-agnostic spec, progressively: three questions to start, one section at a time after. |
+| `/harn-readme`          | `harn-readme-writer`          | always                             | Keeps the README in sync with the code.                                                        |
+| `/harn-canvas`          | `harn-canvas-review`          | always                             | Opens the live view of the context; you talk or comment cards, the agent changes the docs and answers in the thread. Ends with keep or discard, never a commit. |
+| `/harn-lessons`         | `harn-lesson-miner`           | always                             | Finds the patches reviews keep asking for and proposes the rule that prevents each, with its evidence, in the right pillar. |
+| `/harn-decision`        | `harn-decision-record-writer` | `decisions`                        | Writes an ADR, spotting implicit decisions in your diff.                                       |
+| `/harn-handbook`        | `harn-handbook-writer`        | `handbook`                         | Documents how a feature is actually implemented.                                               |
+| `/harn-test-plan`       | `harn-test-plan-writer`       | `tests`                            | Keeps integration and e2e test plans up to date.                                               |
+| `/harn-workflow`        | `harn-workflow-writer`        | `workflow`                         | Documents CI, environments, PR process, branches, release, languages.                          |
+| `/harn-drift`           | `harn-drift-detector`         | `handbook`, `tests`, `workflow` or `intents` | Finds where docs no longer match the code.                                           |
+| `/harn-intent`          | `harn-intent-writer`          | `intents` or `profiles`            | `/harn-intent <verb + object>` proposes an intent with its acceptance criteria before any code; with no argument, maps or extends the intent tree: three questions on a greenfield scope, extraction from the code on a mature one. Writes the user profiles and names, on each intent, the pain it relieves. |
 
 ### Linters
 
@@ -855,7 +855,7 @@ You name your engines; nothing is rendered for a tool you don't use. Add one lat
 | `lint`                                | Run the linters. `--format json`, `--pillar <name>`, `--only <ids>`.                         |
 | `view [dir]`                          | Write the context graph (`.vaubaan/graph.json`) and its offline canvas (`.vaubaan/view/index.html`). |
 | `review start \| next \| reply \| keep \| discard` | A review session: the canvas served locally and live, comments handed to the agent; `discard` restores `docs/` as it was. |
-| `lessons collect [dir]`               | Extract the patch events `/lessons` turns into rules (`.vaubaan/lessons/events.json`).        |
+| `lessons collect [dir]`               | Extract the patch events `/harn-lessons` turns into rules (`.vaubaan/lessons/events.json`).        |
 | `check <dir>`                         | Quick layout check: the README and `.gitignore`.                                             |
 | `render --engines=<list> --out <dir>` | Preview the render somewhere harmless.                                                       |
 
@@ -889,7 +889,7 @@ Try a custom skill or command without forking, in a gitignored `.harness-overrid
 .harness-overrides/
   skills/      *.skill.md
   commands/    *.cmd.md
-  disable.yaml           # disable: [readme-writer, workflow-writer]
+  disable.yaml           # disable: [harn-readme-writer, harn-workflow-writer]
 ```
 
 Overrides are personal and disposable. Skills meant for the whole team go in `docs/skills/`, which is versioned. See [overrides loading](./docs/handbook/overrides-loading.md).
@@ -899,7 +899,7 @@ Overrides are personal and disposable. Skills meant for the whole team go in `do
 <details>
 <summary><b>Lessons from your agent conversations</b></summary>
 
-`/lessons` reads the history, your pull requests and the comments of past review sessions. Agent conversations are often where corrections happen, but they are private: they are read only if you list the source, and quoted one line at a time.
+`/harn-lessons` reads the history, your pull requests and the comments of past review sessions. Agent conversations are often where corrections happen, but they are private: they are read only if you list the source, and quoted one line at a time.
 
 ```json
 {
@@ -933,7 +933,7 @@ npx @vaubaan/harness update .                    # then commit the result
 
 **Do I have to write all of this before I can code?** No. A README is enough to start, and the lint passes on it. The spec comes next; every other pillar waits until you add it. The harness never asks for a document about something your project does not have yet.
 
-**How does the agent know when to suggest a pillar?** `AGENTS.md` names the pillars the project has not added, in one line, and the `harness-guide` skill holds the sign for each: a choice costly to reverse for `decisions`, a trap explained twice for `handbook`, a first release for `workflow`. The agent proposes once, when it sees the sign; you say yes or no.
+**How does the agent know when to suggest a pillar?** `AGENTS.md` names the pillars the project has not added, in one line, and the `harn-guide` skill holds the sign for each: a choice costly to reverse for `decisions`, a trap explained twice for `handbook`, a first release for `workflow`. The agent proposes once, when it sees the sign; you say yes or no.
 
 **Are profiles the same as personas?** A profile is a kind of *user* your product serves, with pains and gains backed by research. The personas the harness does not ship are *agent roles* (reviewer, planner). Different things; hence the different word.
 
@@ -941,11 +941,11 @@ npx @vaubaan/harness update .                    # then commit the result
 
 **Why no engine hook?** A hook that re-injects a report at the end of every turn costs tokens you don't see, and every engine does it differently. A pre-commit hook and CI cost nothing and work the same everywhere.
 
-**Can I write my docs in another language?** Prose, yes. The linters look for English section headings (`## Context`, `## Decision`…); French headings are also accepted. `/workflow` records which languages you use for docs, code and domain.
+**Can I write my docs in another language?** Prose, yes. The linters look for English section headings (`## Context`, `## Decision`…); French headings are also accepted. `/harn-workflow` records which languages you use for docs, code and domain.
 
 **Does it work in a monorepo?** Run it at the repository root and use `lint.ignore` for sub-projects you don't want checked.
 
-**Coming from 2.x?** Nothing breaks: your six pillars exist, so they stay active. `/harness-upgrade` walks through the rest; a pillar you kept only to satisfy the lint can now be deleted.
+**Coming from 2.x?** Nothing breaks: your six pillars exist, so they stay active. `/harn-upgrade` walks through the rest; a pillar you kept only to satisfy the lint can now be deleted.
 
 **Coming from 1.x?** `--with-mcp`, the Stop hook and the four personas are gone. Go to the last 2.x first: run `update .`, remove the old Stop hook entry from your engine settings if you had one (in 3.0 it fails instead of doing nothing), un-ignore the generated files, and commit. The [changelog](./CHANGELOG.md) has the full list.
 
@@ -953,7 +953,7 @@ npx @vaubaan/harness update .                    # then commit the result
 
 ## Where this is going
 
-Shipped: the context view and review sessions (`view`, `/canvas`) and lessons from reviews (`/lessons`); pillars on demand (`add <pillar>`), the `docs/profiles/` pillar that says who the product serves and which intent relieves which pain, the `docs/intents/` pillar and its typed context transaction, `/intent <verb + object>`, which writes an increment as a `proposed` intent before the code and passes it `implemented` when delivered. Read it as an OKR tree: intents are objectives, acceptance criteria are key results, anchors are the initiatives, and progress is the share of `implemented` intents, computed from the repo. Decided, not shipped yet: the other transactions (`/refactor`, `/fix`), pointer checks per section, a token budget per file, and `/compact` to rewrite a context that has grown contradictions. The [spec](./docs/spec/coding-agent-harness.md) and the [decisions](./docs/decisions/) say what exists today.
+Shipped: the context view and review sessions (`view`, `/harn-canvas`) and lessons from reviews (`/harn-lessons`); pillars on demand (`add <pillar>`), the `docs/profiles/` pillar that says who the product serves and which intent relieves which pain, the `docs/intents/` pillar and its typed context transaction, `/harn-intent <verb + object>`, which writes an increment as a `proposed` intent before the code and passes it `implemented` when delivered. Read it as an OKR tree: intents are objectives, acceptance criteria are key results, anchors are the initiatives, and progress is the share of `implemented` intents, computed from the repo. Decided, not shipped yet: the other transactions (`/refactor`, `/fix`), pointer checks per section, a token budget per file, and `/compact` to rewrite a context that has grown contradictions. The [spec](./docs/spec/coding-agent-harness.md) and the [decisions](./docs/decisions/) say what exists today.
 
 ## Documentation
 

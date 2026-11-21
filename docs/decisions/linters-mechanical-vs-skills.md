@@ -1,11 +1,11 @@
 ---
-title: Mechanical linters gate, the doc-audit skill judges
+title: Mechanical linters gate, the harn-doc-audit skill judges
 status: accepted
 date: 2026-05-21
 author: Vaubaan core
 ---
 
-# Mechanical linters gate, the `doc-audit` skill judges
+# Mechanical linters gate, the `harn-doc-audit` skill judges
 
 ## Context
 
@@ -20,7 +20,7 @@ block a PR without a per-PR budget.
 
 Any check that can be written as a regex, a parser or a file comparison
 is a deterministic linter, run by `vaubaan-harness lint` in CI and
-pre-commit with an exit code. The `doc-audit` skill keeps only the checks
+pre-commit with an exit code. The `harn-doc-audit` skill keeps only the checks
 that require judgment, and never gates a merge.
 
 ## Consequences

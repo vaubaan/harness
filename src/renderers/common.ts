@@ -164,7 +164,7 @@ export function buildUmbrellaBody(extras: UmbrellaExtras): string {
       inactive.length > 0,
       "",
       `Not in this project yet: ${inactive.join(", ")}. A pillar is added the day the project needs it, with \`npx @vaubaan/harness add <pillar>\`${
-        exposes("harness-guide") ? "; the `harness-guide` skill says when each one is worth it" : ""
+        exposes("harn-guide") ? "; the `harn-guide` skill says when each one is worth it" : ""
       }. Propose it to the human, never create the folder unasked.`,
     ),
     "",
@@ -174,18 +174,21 @@ export function buildUmbrellaBody(extras: UmbrellaExtras): string {
     "",
     ...when(
       has("intents"),
-      "- Visible change of behavior → a `proposed` intent first (`/intent <verb + object>`), never the code first.",
+      "- Visible change of behavior → a `proposed` intent first (`/harn-intent <verb + object>`), never the code first.",
     ),
     "- Missing spec for a subsystem you touch → **do not code**, report the gap.",
     ...when(
       has("decisions"),
-      "- Implicit structural decision in your changes → an ADR (`/decision`).",
+      "- Implicit structural decision in your changes → an ADR (`/harn-decision`).",
     ),
     ...when(
       has("handbook"),
-      "- Changed feature behavior → update the matching handbook (`/handbook`).",
+      "- Changed feature behavior → update the matching handbook (`/harn-handbook`).",
     ),
-    ...when(exposes("drift-detector"), "- Suspected code ↔ doc drift → `/drift` before moving on."),
+    ...when(
+      exposes("harn-drift-detector"),
+      "- Suspected code ↔ doc drift → `/harn-drift` before moving on.",
+    ),
     "",
     "## Checks",
     "",

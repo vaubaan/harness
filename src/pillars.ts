@@ -48,14 +48,14 @@ export const PILLARS: ReadonlyArray<Pillar> = [
     dir: "docs/decisions",
     core: false,
     starters: [{ template: "decisions-index.md.tmpl", path: "docs/decisions/README.md" }],
-    next: "write the first decision with the `decision-record-writer` skill (`/decision`)",
+    next: "write the first decision with the `harn-decision-record-writer` skill (`/harn-decision`)",
   },
   {
     id: "handbook",
     dir: "docs/handbook",
     core: false,
     starters: [{ template: "handbook-index.md.tmpl", path: "docs/handbook/README.md" }],
-    next: "write the first handbook with the `handbook-writer` skill (`/handbook`)",
+    next: "write the first handbook with the `harn-handbook-writer` skill (`/harn-handbook`)",
   },
   {
     id: "tests",
@@ -65,14 +65,14 @@ export const PILLARS: ReadonlyArray<Pillar> = [
       { template: "integration-tests.md.tmpl", path: "docs/tests/integration-tests.md" },
       { template: "e2e-tests.md.tmpl", path: "docs/tests/e2e-tests.md" },
     ],
-    next: "fill both test plans with the `test-plan-writer` skill (`/test-plan`); the lint fails on their placeholders until then",
+    next: "fill both test plans with the `harn-test-plan-writer` skill (`/harn-test-plan`); the lint fails on their placeholders until then",
   },
   {
     id: "workflow",
     dir: "docs/workflow",
     core: false,
     starters: [{ template: "coding-workflow.md.tmpl", path: "docs/workflow/coding-workflow.md" }],
-    next: "fill the workflow with the `workflow-writer` skill (`/workflow`); the lint fails on its placeholders until then",
+    next: "fill the workflow with the `harn-workflow-writer` skill (`/harn-workflow`); the lint fails on its placeholders until then",
   },
   {
     id: "quality",
@@ -88,14 +88,14 @@ export const PILLARS: ReadonlyArray<Pillar> = [
     dir: "docs/intents",
     core: false,
     starters: [],
-    next: "write the first intent with the `intent-writer` skill (`/intent <verb + object>`)",
+    next: "write the first intent with the `harn-intent-writer` skill (`/harn-intent <verb + object>`)",
   },
   {
     id: "profiles",
     dir: "docs/profiles",
     core: false,
     starters: [],
-    next: "describe the first profile with the `intent-writer` skill, from the research you point it to",
+    next: "describe the first profile with the `harn-intent-writer` skill, from the research you point it to",
   },
 ];
 

@@ -10,7 +10,7 @@ export const intentGraph: Linter = {
   id: "lint:intent-graph",
   pillars: ["intents"],
   defaultSeverity: "warning",
-  suggestedSkills: ["/intent"],
+  suggestedSkills: ["/harn-intent"],
   run(repoRoot: string): LintIssue[] {
     const intentFiles = readIntentFiles(repoRoot);
     const terminals = intentFiles.flatMap((intentFile) =>

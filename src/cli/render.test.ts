@@ -37,7 +37,7 @@ describe("renderCommand", () => {
     const result = renderCommand({ engines: [...ENGINES], outDir, packageDir: PACKAGE_DIR });
     expect(result.filesWritten.length).toBeGreaterThan(0);
     expect(result.filesWritten).toContain("AGENTS.md");
-    expect(result.filesWritten).toContain(".agents/skills/doc-audit/SKILL.md");
+    expect(result.filesWritten).toContain(".agents/skills/harn-doc-audit/SKILL.md");
   });
 
   it("with a single engine, writes only that engine's files", () => {
