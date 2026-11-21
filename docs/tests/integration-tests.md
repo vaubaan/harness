@@ -4,7 +4,7 @@ tracks:
   - vitest.config.ts
   - tests/integration/**/*.ts
   - tests/fixtures/legacy-0.9/manifest.json
-last_reviewed: 2026-10-27
+last_reviewed: 2026-11-21
 ---
 
 # Integration test plan
@@ -34,6 +34,11 @@ last_reviewed: 2026-10-27
   `dist/`: the suite does not need a build.
 - Each test works in its own `mkdtempSync` directory, removed in
   `afterEach`; nothing is written in the repository.
+- `tests/setup/isolate-git.ts` clears the variables a git hook exports
+  (`GIT_DIR`, `GIT_INDEX_FILE`…) before any test: inherited from the
+  pre-commit hook, they made the tests' `git init`, `git config` and
+  `git commit` write into the repository being committed, its shared
+  config included.
 - `tests/fixtures/legacy-0.9/manifest.json` is the unmodified output of
   harness 0.9.0 (see its README): never regenerate or hand-edit it, it
   is what makes the migration test honest.

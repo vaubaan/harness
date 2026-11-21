@@ -10,6 +10,7 @@ export default defineConfig({
       include: ["src/**/*.ts"],
       exclude: ["src/**/*.test.ts", "src/**/*.d.ts"],
     },
+    setupFiles: ["tests/setup/isolate-git.ts"],
     globals: false,
     environment: "node",
   },
