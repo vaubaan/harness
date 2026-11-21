@@ -29,6 +29,46 @@ function trackedPaths(dir: string, file: string, text: string, data: Record<stri
   return Array.isArray(data.tracks) ? (data.tracks as unknown[]) : undefined;
 }
 
+export interface Drift {
+  /** Commits on the tracked paths since the doc's last commit. */
+  commits: number;
+  threshold: number;
+  /** The tracked paths: `tracks:`, or the union of an intent file's anchors. */
+  tracked: string[];
+}
+
+/**
+ * The drift of one doc, or `undefined` when it tracks nothing or was never
+ * committed. Shared by the linter and the context graph.
+ */
+export function driftOf(repoRoot: string, file: string): Drift | undefined {
+  const dir =
+    TRACKED_DIRS.find((d) => file.startsWith(`${d}/`)) ??
+    (file.startsWith(`${INTENTS_DIR}/`) ? INTENTS_DIR : undefined);
+  if (!dir) return undefined;
+  const text = readText(repoRoot, file);
+  const { data } = parseFrontmatter(text);
+  const tracks = trackedPaths(dir, file, text, data);
+  if (!tracks) return undefined;
+  const docCommit = gitLastCommitForPath(repoRoot, file);
+  if (!docCommit) return undefined;
+  const threshold =
+    typeof data.driftThreshold === "number" && data.driftThreshold > 0
+      ? data.driftThreshold
+      : DEFAULT_DRIFT_THRESHOLD;
+  let commits = 0;
+  const tracked: string[] = [];
+  for (const entry of tracks) {
+    if (typeof entry !== "string") continue;
+    tracked.push(entry);
+    const targets = expandGlob(repoRoot, entry);
+    for (const t of targets.length > 0 ? targets : [entry]) {
+      commits += gitCommitsSince(repoRoot, t, docCommit.hash);
+    }
+  }
+  return { commits, threshold, tracked };
+}
+
 export const tracksDrift: Linter = {
   id: "lint:tracks-drift",
   pillars: ["handbook", "tests", "workflow", "intents"],
@@ -37,34 +77,15 @@ export const tracksDrift: Linter = {
   run(repoRoot: string): LintIssue[] {
     const issues: LintIssue[] = [];
     for (const dir of [...TRACKED_DIRS, INTENTS_DIR]) {
-      const files = listMarkdown(repoRoot, dir);
-      for (const f of files) {
-        const text = readText(repoRoot, f);
-        const { data } = parseFrontmatter(text);
-        const tracks = trackedPaths(dir, f, text, data);
-        if (!tracks) continue;
-        const docCommit = gitLastCommitForPath(repoRoot, f);
-        if (!docCommit) continue;
-        const threshold =
-          typeof data.driftThreshold === "number" && data.driftThreshold > 0
-            ? data.driftThreshold
-            : DEFAULT_DRIFT_THRESHOLD;
-        let driftCount = 0;
-        for (const tracked of tracks) {
-          if (typeof tracked !== "string") continue;
-          const targets = expandGlob(repoRoot, tracked);
-          for (const t of targets.length > 0 ? targets : [tracked]) {
-            driftCount += gitCommitsSince(repoRoot, t, docCommit.hash);
-          }
-        }
-        if (driftCount > threshold) {
-          issues.push({
-            linter: this.id,
-            severity: "warning",
-            file: f,
-            message: `tracked files changed in ${driftCount} commits since doc last edit (threshold ${threshold})`,
-          });
-        }
+      for (const f of listMarkdown(repoRoot, dir)) {
+        const drift = driftOf(repoRoot, f);
+        if (!drift || drift.commits <= drift.threshold) continue;
+        issues.push({
+          linter: this.id,
+          severity: "warning",
+          file: f,
+          message: `tracked files changed in ${drift.commits} commits since doc last edit (threshold ${drift.threshold})`,
+        });
       }
     }
     return issues;

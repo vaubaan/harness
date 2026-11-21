@@ -7,6 +7,7 @@ export default defineConfig({
     init: "src/cli/init.ts",
     "linters/index": "src/linters/index.ts",
     "parser/index": "src/parser/index.ts",
+    "view/index": "src/view/index.ts",
     "cli/index": "src/cli/index.ts",
   },
   format: ["esm"],

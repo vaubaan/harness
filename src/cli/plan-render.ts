@@ -45,7 +45,7 @@ export function resolveEngineList(requested: ReadonlyArray<string> | undefined):
  * also sits at `src/`. We disambiguate by checking which ancestor contains
  * `skills/`.
  */
-function defaultPackageDir(): string {
+export function defaultPackageDir(): string {
   const here = dirname(fileURLToPath(import.meta.url));
   if (existsSync(join(here, "skills"))) return here;
   return resolve(here, "..");

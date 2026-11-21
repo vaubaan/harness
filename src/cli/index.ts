@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Command } from "commander";
@@ -9,6 +10,7 @@ import { initCommand } from "./init.js";
 import { renderCommand } from "./render.js";
 import { uninstallCommand } from "./uninstall.js";
 import { updateCommand } from "./update.js";
+import { viewCommand } from "./view.js";
 
 function resolvePackageDir(): string {
   // CLI lives at <contentRoot>/cli/index.{ts,js}.
@@ -156,6 +158,31 @@ program
       process.stdout.write(`${formatReportText(report)}\n`);
     }
     process.exit(report.summary.pass ? 0 : 1);
+  });
+
+program
+  .command("view")
+  .description(
+    "Build the context graph (.vaubaan/graph.json) and render the view (.vaubaan/view/index.html)",
+  )
+  .argument("[dir]", "project directory", ".")
+  .option("--out <dir>", "output directory (default <dir>/.vaubaan)")
+  .option("--no-lint", "skip the linters: faster, no issue attached")
+  .option("--json", "print the graph on stdout instead of a summary")
+  .action((dir: string, opts: Record<string, string | boolean | undefined>) => {
+    const result = viewCommand({
+      targetDir: dir,
+      ...(typeof opts.out === "string" ? { outDir: opts.out } : {}),
+      ...(opts.lint === false ? { lint: false } : {}),
+    });
+    if (opts.json) {
+      process.stdout.write(readFileSync(result.graphPath, "utf8"));
+      return;
+    }
+    const { graph } = result;
+    process.stdout.write(
+      `graph: ${graph.nodes.length} nodes, ${graph.edges.length} edges → ${result.graphPath}\nview: ${result.htmlPath}\n`,
+    );
   });
 
 program
