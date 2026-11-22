@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.0.1] — 2026-11-22
+
+### Fixed
+- `lint:intent-graph` ignores `deprecated` intents, as `lint:intent-anchors` does: an entity that only deprecated intents require no longer warns, and an entity that only a deprecated intent creates no longer counts as created.
+
 ## [3.0.0] — 2026-11-22
 
 **Breaking.** Pillars are active by presence and only the README is required. A project that has the six former pillars is unaffected; see Migration.

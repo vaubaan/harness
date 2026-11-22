@@ -1,12 +1,12 @@
 {
   "version": "6",
-  "harnessVersion": "3.0.0",
+  "harnessVersion": "3.0.1",
   "engines": [
     "claude-code",
     "codex-cli",
     "opencode"
   ],
-  "renderedAt": "2026-11-22T13:00:11.281Z",
+  "renderedAt": "2026-11-22T15:01:06.558Z",
   "files": [
     ".agents/skills/harn-canvas-review/SKILL.md",
     ".agents/skills/harn-decision-record-writer/SKILL.md",
@@ -74,7 +74,7 @@
     ".claude/skills/harn-self-improve/SKILL.md": "a9e34b0d9f026e0a669eab9c9d7b9a25ed80be3a6eb2d8035835fc5e4c82e3de",
     ".claude/skills/harn-spec-writer/SKILL.md": "215c7951b8b7d4621a5bf553824baa3709866a248d135a1974e674f035e07765",
     ".claude/skills/harn-test-plan-writer/SKILL.md": "7f9a1ebdd8eb66e4ce9637ee884e0593d2f08d92ba5a47910215547cfe3d1e6b",
-    ".claude/skills/harn-upgrade/SKILL.md": "04947deb6b7bb1c8b5c11d980538b0e139664a07fe3bf2f122b92f153b57e82a",
+    ".claude/skills/harn-upgrade/SKILL.md": "91617f346bc09027c4952b073a8e48fac24856634ba1401053fdb7744b6f9581",
     ".claude/skills/harn-workflow-writer/SKILL.md": "cf4f7d68316e42aca6b5941b60fa5b7d6b1c80e776c2e562461baf64a70ca595",
     ".claude/commands/harn-canvas.md": "c57e39717a6df410cbfdf58a297bf48f71a4a2019fd6394e13662519f170c4b0",
     ".claude/commands/harn-decision.md": "0ea5fbfa5b2db91c00f70264a8f1fd46289339e0777281b1b8191103d35d73cc",
@@ -99,7 +99,7 @@
     ".agents/skills/harn-self-improve/SKILL.md": "a9e34b0d9f026e0a669eab9c9d7b9a25ed80be3a6eb2d8035835fc5e4c82e3de",
     ".agents/skills/harn-spec-writer/SKILL.md": "215c7951b8b7d4621a5bf553824baa3709866a248d135a1974e674f035e07765",
     ".agents/skills/harn-test-plan-writer/SKILL.md": "7f9a1ebdd8eb66e4ce9637ee884e0593d2f08d92ba5a47910215547cfe3d1e6b",
-    ".agents/skills/harn-upgrade/SKILL.md": "04947deb6b7bb1c8b5c11d980538b0e139664a07fe3bf2f122b92f153b57e82a",
+    ".agents/skills/harn-upgrade/SKILL.md": "91617f346bc09027c4952b073a8e48fac24856634ba1401053fdb7744b6f9581",
     ".agents/skills/harn-workflow-writer/SKILL.md": "cf4f7d68316e42aca6b5941b60fa5b7d6b1c80e776c2e562461baf64a70ca595",
     ".opencode/commands/harn-canvas.md": "bb5c12ec9b12453b2f31500193ba1374daeb597dfb00eca16d071f8c9713d635",
     ".opencode/commands/harn-decision.md": "737bab8b52f82603550c3bb613f850017d2df5a57dab1d2524cca6115bbbb443",

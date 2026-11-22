@@ -82,6 +82,13 @@ which is why step 3 comes before step 5.
 One entry per release that asks something of a project, newest first.
 "Nothing to do" means `update .` is the whole migration.
 
+### 3.0.1
+
+Nothing to do. `lint:intent-graph` ignores `deprecated` intents: their
+warnings go away, and an active intent that requires an entity only a
+deprecated intent creates now warns. Then make an active intent create
+it, or drop the requirement.
+
 ### 3.0
 
 Breaking: pillars are active by presence, and only the README is
