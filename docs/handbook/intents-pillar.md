@@ -43,7 +43,7 @@ last_reviewed: 2026-11-21
 - `listMarkdown` skips every `README.md`, so the generated index is never linted as an intent file nor counted by `tracks-drift`.
 - An intent file declares no `tracks:` and its frontmatter is strict: `tracks-drift` uses the union of its anchors with the default threshold, since a `driftThreshold:` key would be a schema error.
 - `relieves:` and `delivers:` are parsed like `requires:` but checked by `intent-profiles` only, against the profiles the file names in `actors:`; without `docs/profiles/` their mere presence is the error.
-- `deprecated` nodes are skipped by `intent-anchors` (their code may be gone) but still count in the index and the graph.
+- `deprecated` nodes are skipped by `intent-anchors` (their code may be gone) and by `intent-graph` (they neither require nor create), but still count in the index and the context graph.
 - `intent-vocabulary` reads only the frontmatter `spec:` files, never a node's `spec:`.
 - The 2.2 index path stays in `MANAGED_FILES`, and `MOVED_PATHS` maps it to the new one: after the project's `git mv` of the folder, `update` carries the manifest entry and its fingerprint to `docs/intents/README.md` and overwrites the moved index instead of reporting a conflict; while the old index is still in place, `update` removes it and warns. Do not drop either entry while a 2.2 manifest may still exist.
 

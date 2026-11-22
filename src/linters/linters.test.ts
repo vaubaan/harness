@@ -1098,6 +1098,22 @@ describe("lint:intent-graph", () => {
       ],
     ]);
   });
+  it("ignores what a deprecated intent requires", () => {
+    writeIntentFile("## Old use\n\nstatus: deprecated\nrequires: artifact\n");
+    expect(intentGraph.run(repo.root)).toEqual([]);
+  });
+  it("does not count what only a deprecated intent creates", () => {
+    writeIntentFile(
+      "## Use\n\nrequires: artifact\n\n## Old make\n\nstatus: deprecated\ncreates: artifact\n",
+    );
+    const issues = intentGraph.run(repo.root);
+    expect(issues.map((i) => [i.line, i.message])).toEqual([
+      [
+        FIRST_NODE_LINE,
+        '"Use": entity `artifact` is required here but no terminal intent creates it',
+      ],
+    ]);
+  });
 });
 
 describe("lint:tracks-drift on intent files", () => {

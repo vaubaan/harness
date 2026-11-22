@@ -4,7 +4,8 @@ import type { LintIssue, Linter } from "./types.js";
 /**
  * Across all intent files, an entity a terminal intent requires that no terminal
  * intent creates: the intent is unreachable in the doc
- * (docs/spec/coding-agent-harness.md §9.1.3).
+ * (docs/spec/coding-agent-harness.md §9.1.3). A `deprecated` node is withdrawn:
+ * it neither requires nor creates, as `lint:intent-anchors` skips it.
  */
 export const intentGraph: Linter = {
   id: "lint:intent-graph",
@@ -14,7 +15,9 @@ export const intentGraph: Linter = {
   run(repoRoot: string): LintIssue[] {
     const intentFiles = readIntentFiles(repoRoot);
     const terminals = intentFiles.flatMap((intentFile) =>
-      intentFile.nodes.filter((node) => node.isTerminal).map((node) => ({ intentFile, node })),
+      intentFile.nodes
+        .filter((node) => node.isTerminal && node.effectiveStatus !== "deprecated")
+        .map((node) => ({ intentFile, node })),
     );
     const created = new Set(terminals.flatMap(({ node }) => node.creates));
     const issues: LintIssue[] = [];
