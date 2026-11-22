@@ -1,17 +1,19 @@
 ---
-id: harn-lesson-miner
+name: harn-self-improve
 description: |
   Finds the small patches that reviews keep asking for, in the repo
   history, pull requests, review threads and, when the project enables
   it, agent conversations; proposes for each the rule that would have
   prevented it, with its evidence, and writes the accepted ones in the
   right project pillar.
-engines: [claude-code, codex-cli, opencode]
-requires: [multi-step, inline-exec]
-tags: [review, quality, workflow, doc]
+tags:
+  - review
+  - quality
+  - workflow
+  - doc
 ---
 
-# Lesson Miner
+# Self-Improve
 
 A review almost always ends in small patches: a changelog line, a test
 that forgot to clean up, a word the spec did not define. Each one that

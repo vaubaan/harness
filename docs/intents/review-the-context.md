@@ -50,5 +50,5 @@ spec: ../spec/coding-agent-harness.md#104-view-and-review
 
 requires: doc
 creates: lesson
-anchors: src/lessons/collect.ts, src/skills/harn-lesson-miner.skill.md, src/commands/harn-lessons.cmd.md, tests/integration/lessons.test.ts
+anchors: src/lessons/collect.ts, src/skills/harn-self-improve.skill.md, src/commands/harn-improve.cmd.md, tests/integration/lessons.test.ts
 spec: ../spec/coding-agent-harness.md#105-lessons-from-reviews

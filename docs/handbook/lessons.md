@@ -2,19 +2,19 @@
 title: Lessons from reviews
 tracks:
   - src/lessons/collect.ts
-  - src/skills/harn-lesson-miner.skill.md
+  - src/skills/harn-self-improve.skill.md
   - tests/integration/lessons.test.ts
 last_reviewed: 2026-11-21
 ---
 
 # Lessons from reviews — handbook
 
-`vaubaan-harness lessons collect` extracts patch events; the `harn-lesson-miner` skill groups them and proposes rules. Spec: [§10.5](../spec/coding-agent-harness.md#105-lessons-from-reviews); decision: [lessons-from-reviews](../decisions/lessons-from-reviews.md).
+`vaubaan-harness lessons collect` extracts patch events; the `harn-self-improve` skill groups them and proposes rules. Spec: [§10.5](../spec/coding-agent-harness.md#105-lessons-from-reviews); decision: [lessons-from-reviews](../decisions/lessons-from-reviews.md).
 
 ## Start here
 
 - [`src/lessons/collect.ts`](../../src/lessons/collect.ts) — one reader per source, `collectLessonEvents` sorts and writes `.vaubaan/lessons/events.json`.
-- [`src/skills/harn-lesson-miner.skill.md`](../../src/skills/harn-lesson-miner.skill.md) — the judgment: fetch pull requests, group, propose, apply.
+- [`src/skills/harn-self-improve.skill.md`](../../src/skills/harn-self-improve.skill.md) — the judgment: fetch pull requests, group, propose, apply.
 
 ## Invariants
 

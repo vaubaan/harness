@@ -20,7 +20,7 @@ outside the repo and partly private.
 `vaubaan-harness lessons collect` extracts patch events from the repo
 history, the archived review threads, the pull request data the skill
 fetched and, only for the sources the project enables, engine conversation
-histories; it calls no network service. The shipped skill `harn-lesson-miner`
+histories; it calls no network service. The shipped skill `harn-self-improve`
 groups them and proposes rules with their evidence. An accepted rule is
 written in a project pillar; a rule for every project becomes an upstream
 issue draft. The harness ships the procedure, never the rules. Contract:

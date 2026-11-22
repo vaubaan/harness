@@ -1,7 +1,7 @@
 /**
  * `vaubaan-harness lessons collect` (docs/spec/coding-agent-harness.md §10.5,
  * decision lessons-from-reviews): extracts patch events, mechanically and
- * deterministically, for the `harn-lesson-miner` skill to judge. No network call:
+ * deterministically, for the `harn-self-improve` skill to judge. No network call:
  * pull request data is what the skill saved under `.vaubaan/lessons/`.
  */
 import { execFileSync } from "node:child_process";

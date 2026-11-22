@@ -20,11 +20,11 @@ npx -y @vaubaan/harness init . --engines=claude-code
 
 A few Markdown files hold what the code cannot say and point to the code and configs for everything else. The harness renders them into the native layout of Claude Code, Codex or OpenCode, and lints them so context and code never drift apart.
 
-- **One context, every engine.** Thirteen skills: one per pillar, an audit, a drift detector, a review canvas, a lesson miner, and two about the harness itself. Written once for Claude Code, Codex and OpenCode.
+- **One context, every engine.** Thirteen skills: one per pillar, an audit, a drift detector, a review canvas, a self-improvement loop, and two about the harness itself. Written once for Claude Code, Codex and OpenCode.
 - **As much context as the project needs, no more.** A project that starts needs a README. Every other pillar is added the day it helps, with one command, and costs nothing until then: no check, no skill, no line of context.
 - **Pointers that stay true.** Handbooks, test plans and intents declare the files they describe. When that code moves and the doc does not, the linter says so.
 - **Checks with zero tokens.** Twenty-one mechanical linters run in CI and in your pre-commit hook. No engine hook, no injected turn, no loop. The agent sees a failed command and fixes it.
-- **A view to review it.** `vaubaan-harness view` draws the whole context on one offline canvas. `/harn-canvas` keeps it live while you talk to the agent or comment a card, and nothing is committed until you say so. `/harn-lessons` turns the patches reviews keep asking for into rules.
+- **A view to review it.** `vaubaan-harness view` draws the whole context on one offline canvas. `/harn-canvas` keeps it live while you talk to the agent or comment a card, and nothing is committed until you say so. `/harn-improve` turns the patches reviews keep asking for into rules.
 
 **Contents**
 
@@ -478,7 +478,7 @@ In database terms:
 
 ## Day to day
 
-Eight things you will do with a harnessed project, again and again. Each one is a conversation with your agent, not a form: the slash command is the moment the conversation lands in the repo. Every section follows the same grid: when, what you say, what happens, what the harness checks, what you see at the end.
+Eleven things you will do with a harnessed project, again and again. Each one is a conversation with your agent, not a form: the slash command is the moment the conversation lands in the repo. Every section follows the same grid: when, what you say, what happens, what the harness checks, what you see at the end.
 
 One word first. In the intents pillar, every heading is an **intent**: what the user wants, verb + object, at every level. The file is the level-1 intent, its headings are sub-intents. An intent with no sub-intent is **terminal**: it carries the fields. Terminal and `proposed`, it is decided and not delivered, the backlog item; terminal and `implemented`, it is delivered and points to its code.
 
@@ -591,6 +591,48 @@ Write the rule in your `docs/workflow/coding-workflow.md`: intents are born in t
 **What the harness checks.** Level 1 entirely. Levels 2 and 3 are judgment: the harness ships the skill and the report format, the agent does the work.
 
 **What you see at the end.** A report, no change. Each item names the skill that fixes it. You choose what to treat, and in which order.
+
+</details>
+
+<a name="review-the-docs-on-a-canvas"></a>
+<details>
+<summary><strong>Review the docs on a canvas</strong></summary>
+
+**When.** You want to read the context as a whole, or change several docs while seeing what each change touches: before a release, after a large pull request, when a new teammate joins.
+
+**What you say.** `/harn-canvas`, then you talk as usual: `the handbook of the CLI is wrong about…`, `add an intent for…`. Or you comment cards in the page and click **Hand over to the agent**.
+
+**What happens.**
+
+1. `vaubaan-harness review start` copies `docs/` and `README.md` aside, serves the view on your machine behind a token, and prints its URL.
+2. The page is a map of the context: one card per document, grouped by pillar, the links between documents drawn. A click on a card gathers its neighbours around it: what it cites, what cites it, the code it tracks, the words it uses, the linters that check it.
+3. Each edit the agent makes appears within a second, with **Before / Now / Differences** and the lint issues the change added or removed.
+4. A comment lands in its thread; the agent applies it with the writer rules of the pillar and answers with the file and line it changed, or with a question. A comment on a linter or a shipped skill becomes an upstream issue draft, never an edit of a generated file.
+5. At the end you choose: `review keep` leaves the changes in place, uncommitted; `review discard` restores `docs/` and `README.md` byte for byte, untracked drafts included.
+
+**What the harness checks.** The same linters, live, on every change. The server listens on your machine only and writes nothing in `docs/`.
+
+**What you see at the end.** A diff of docs you watched being written, and nothing committed. Without a session, `npx @vaubaan/harness view` writes the same map as one offline page, `.vaubaan/view/index.html`.
+
+</details>
+
+<a name="teach-the-harness-from-your-reviews"></a>
+<details>
+<summary><strong>Teach the harness from your reviews</strong></summary>
+
+**When.** Reviews keep asking for the same small patches: a changelog line, a test cleanup, a word the spec does not define. Every few weeks, or after a release.
+
+**What you say.** `/harn-improve`
+
+**What happens.**
+
+1. The agent fetches the recent pull requests with your platform's CLI, then runs `vaubaan-harness lessons collect`: review comments, commits pushed after a review, fix-up commits, the threads of past review sessions and, only if you enabled it, your conversations with the agent. One line per piece of evidence, secrets masked.
+2. It groups the patches that came back at least twice and proposes, for each, the rule that would have prevented it and where it goes: `docs/quality/`, the workflow, a handbook, a test plan, a skill of yours. A rule that already exists but is not followed is reported as such.
+3. You accept, edit or reject each one. Accepted rules are written with the pillar's writer rules; rejected ones are kept so they do not come back. A rule that holds for every project becomes an issue draft for the harness, never an edit of a shipped skill.
+
+**What the harness checks.** Nothing new: the rules land in pillars the linters already watch.
+
+**What you see at the end.** A few lines added to your docs, each with the patches that justified it. The next run tells you whether the patch came back anyway.
 
 </details>
 
@@ -757,6 +799,8 @@ The first question is always the same: does the behavior visible to the user cha
 | "Update the harness"                                        | `/harn-upgrade`: pin the version, preview, `update .`, apply the migration notes of every version crossed, lint, commit the generated files. Report the preserved files that will not be refreshed.   | Overwrite a file the user had modified. Skip a version's migration notes.                                                  |
 | "Who is this for?", "here is our user research"             | `add profiles` if the human agrees, then `harn-intent-writer` writes the profile from the research. Each intent then names the pain it relieves.                                                             | Invent a persona. Copy interview notes into the repo.                                                                      |
 | "Give me the tour"                                          | `AGENTS.md`, the intents index, the ADRs, then `/harn-drift` if `last_reviewed` is old. Summarize: what it does, what is left (`proposed`), what moved.                                                        | Read all the code to retell it. The docs exist to avoid that.                                                              |
+| "Show me the docs", "let's review the context together"     | `/harn-canvas`: a review session. Give the URL, apply what the user says or comments with the pillar's writer rules, answer each thread with the file and line changed. End with keep or discard, as the user chooses. | Commit during the session. Edit a generated file or a shipped skill because a comment points at it. |
+| "Reviews keep asking for the same thing"                    | `/harn-improve`: collect the patch events, propose one rule per recurring patch with its evidence and its pillar; write only what the user accepts. | Write a rule from one occurrence. Enable conversation histories without the user. |
 
 </details>
 
@@ -802,7 +846,7 @@ Warning sign: if finishing requires touching a generated file, disabling a linte
 | `/harn-spec`            | `harn-spec-writer`            | always                             | Writes a tech-agnostic spec, progressively: three questions to start, one section at a time after. |
 | `/harn-readme`          | `harn-readme-writer`          | always                             | Keeps the README in sync with the code.                                                        |
 | `/harn-canvas`          | `harn-canvas-review`          | always                             | Opens the live view of the context; you talk or comment cards, the agent changes the docs and answers in the thread. Ends with keep or discard, never a commit. |
-| `/harn-lessons`         | `harn-lesson-miner`           | always                             | Finds the patches reviews keep asking for and proposes the rule that prevents each, with its evidence, in the right pillar. |
+| `/harn-improve`         | `harn-self-improve`           | always                             | Finds the patches reviews keep asking for and proposes the rule that prevents each, with its evidence, in the right pillar. |
 | `/harn-decision`        | `harn-decision-record-writer` | `decisions`                        | Writes an ADR, spotting implicit decisions in your diff.                                       |
 | `/harn-handbook`        | `harn-handbook-writer`        | `handbook`                         | Documents how a feature is actually implemented.                                               |
 | `/harn-test-plan`       | `harn-test-plan-writer`       | `tests`                            | Keeps integration and e2e test plans up to date.                                               |
@@ -855,7 +899,7 @@ You name your engines; nothing is rendered for a tool you don't use. Add one lat
 | `lint`                                | Run the linters. `--format json`, `--pillar <name>`, `--only <ids>`.                         |
 | `view [dir]`                          | Write the context graph (`.vaubaan/graph.json`) and its offline canvas (`.vaubaan/view/index.html`). |
 | `review start \| next \| reply \| keep \| discard` | A review session: the canvas served locally and live, comments handed to the agent; `discard` restores `docs/` as it was. |
-| `lessons collect [dir]`               | Extract the patch events `/harn-lessons` turns into rules (`.vaubaan/lessons/events.json`).        |
+| `lessons collect [dir]`               | Extract the patch events `/harn-improve` turns into rules (`.vaubaan/lessons/events.json`).        |
 | `check <dir>`                         | Quick layout check: the README and `.gitignore`.                                             |
 | `render --engines=<list> --out <dir>` | Preview the render somewhere harmless.                                                       |
 
@@ -899,7 +943,7 @@ Overrides are personal and disposable. Skills meant for the whole team go in `do
 <details>
 <summary><b>Lessons from your agent conversations</b></summary>
 
-`/harn-lessons` reads the history, your pull requests and the comments of past review sessions. Agent conversations are often where corrections happen, but they are private: they are read only if you list the source, and quoted one line at a time.
+`/harn-improve` reads the history, your pull requests and the comments of past review sessions. Agent conversations are often where corrections happen, but they are private: they are read only if you list the source, and quoted one line at a time.
 
 ```json
 {
@@ -953,7 +997,7 @@ npx @vaubaan/harness update .                    # then commit the result
 
 ## Where this is going
 
-Shipped: the context view and review sessions (`view`, `/harn-canvas`) and lessons from reviews (`/harn-lessons`); pillars on demand (`add <pillar>`), the `docs/profiles/` pillar that says who the product serves and which intent relieves which pain, the `docs/intents/` pillar and its typed context transaction, `/harn-intent <verb + object>`, which writes an increment as a `proposed` intent before the code and passes it `implemented` when delivered. Read it as an OKR tree: intents are objectives, acceptance criteria are key results, anchors are the initiatives, and progress is the share of `implemented` intents, computed from the repo. Decided, not shipped yet: the other transactions (`/refactor`, `/fix`), pointer checks per section, a token budget per file, and `/compact` to rewrite a context that has grown contradictions. The [spec](./docs/spec/coding-agent-harness.md) and the [decisions](./docs/decisions/) say what exists today.
+Shipped: the context view and review sessions (`view`, `/harn-canvas`) and lessons from reviews (`/harn-improve`); pillars on demand (`add <pillar>`), the `docs/profiles/` pillar that says who the product serves and which intent relieves which pain, the `docs/intents/` pillar and its typed context transaction, `/harn-intent <verb + object>`, which writes an increment as a `proposed` intent before the code and passes it `implemented` when delivered. Read it as an OKR tree: intents are objectives, acceptance criteria are key results, anchors are the initiatives, and progress is the share of `implemented` intents, computed from the repo. Decided, not shipped yet: the other transactions (`/refactor`, `/fix`), pointer checks per section, a token budget per file, and `/compact` to rewrite a context that has grown contradictions. The [spec](./docs/spec/coding-agent-harness.md) and the [decisions](./docs/decisions/) say what exists today.
 
 ## Documentation
 

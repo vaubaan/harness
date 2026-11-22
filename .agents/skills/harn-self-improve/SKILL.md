@@ -1,5 +1,5 @@
 ---
-name: harn-lesson-miner
+name: harn-self-improve
 description: |
   Finds the small patches that reviews keep asking for, in the repo
   history, pull requests, review threads and, when the project enables
@@ -13,7 +13,7 @@ tags:
   - doc
 ---
 
-# Lesson Miner
+# Self-Improve
 
 A review almost always ends in small patches: a changelog line, a test
 that forgot to clean up, a word the spec did not define. Each one that

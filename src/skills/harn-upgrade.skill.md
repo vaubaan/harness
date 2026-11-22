@@ -119,7 +119,12 @@ required; every shipped skill and command is prefixed with `harn-`.
 - **Programmatic callers of `render()`**: `hasQualityDoc` is replaced by
   `activePillars`.
 - New, nothing to do unless wanted: the `add <pillar>` command, the
-  `profiles` pillar, the `harn-guide` and `harn-upgrade` skills.
+  `profiles` pillar, the `harn-guide` and `harn-upgrade` skills; the
+  view of the context (`vaubaan-harness view`) and review sessions
+  (`/harn-canvas`); lessons from reviews (`/harn-improve`), which read
+  agent conversations only if the project lists them under
+  `lessons.sources` in `.harnessrc`. All of them write only under
+  `.vaubaan/`, already gitignored.
 
 ### 2.4, 2.3.1
 

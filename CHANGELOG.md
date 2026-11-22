@@ -5,7 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-**Breaking: the next release is 3.0.0.** Pillars are active by presence and only the README is required. A project that has the six former pillars is unaffected; see Migration.
+## [3.0.0] — 2026-11-22
+
+**Breaking.** Pillars are active by presence and only the README is required. A project that has the six former pillars is unaffected; see Migration.
 
 ### Changed
 - **Every shipped skill and command is prefixed with `harn-`**, so none collides with a project's or a user's own: `/harn-spec`, `/harn-intent`, `/harn-upgrade`; `harn-spec-writer`, `harn-guide`. `update` replaces the files and warns on a project skill, an override or a `disable.yaml` entry that still names an old id. Decision: [harn-prefix](docs/decisions/harn-prefix.md).
@@ -27,7 +29,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Templates `profile`, `decisions-index`, `handbook-index`.
 - `vaubaan-harness view`: the context graph (`.vaubaan/graph.json`) and its view (`.vaubaan/view/index.html`), one offline page with a map of the context (one card per document, grouped by pillar, the links between documents drawn at rest; selecting a card gathers its neighbours of every kind around it and fades the rest) and the overview, intents, vocabulary, decisions, linters and skills views. Every node has a stable id, a domain (harness, project, local), its source line and its lint issues. Library entry `@vaubaan/harness/view`.
 - Review sessions: `vaubaan-harness review start | next | reply | comment | note | status | keep | discard`. The view served on the local machine behind a token, rebuilt within a second of a doc change, with before / now / differences and the lint delta; comments handed over to the agent in batches; `discard` restores `docs/` and `README.md` byte for byte. Skill `harn-canvas-review`, command `/harn-canvas`.
-- Lessons from reviews: `vaubaan-harness lessons collect` extracts patch events from the history, pull requests the skill saved, archived review threads and, when enabled in `.harnessrc` (`lessons.sources`), Claude Code conversations. Skill `harn-lesson-miner`, command `/harn-lessons`.
+- Lessons from reviews: `vaubaan-harness lessons collect` extracts patch events from the history, pull requests the skill saved, archived review threads and, when enabled in `.harnessrc` (`lessons.sources`), Claude Code conversations. Skill `harn-self-improve`, command `/harn-improve`.
 - Handbooks [context-view](docs/handbook/context-view.md) and [lessons](docs/handbook/lessons.md).
 - Contract for the context view, review sessions and lessons from reviews, before any code: spec §0 (*context graph*, *view*, *review session*, *comment*, *lesson*), §0.2 (three domains: harness, project, local), §1.1 (one local server during a review session; conversation histories read only on opt-in), §7, §10.4, §10.5; decisions [context-view](docs/decisions/context-view.md), [review-loop](docs/decisions/review-loop.md), [lessons-from-reviews](docs/decisions/lessons-from-reviews.md); the intents of [review-the-context](docs/intents/review-the-context.md).
 

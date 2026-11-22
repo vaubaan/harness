@@ -1,13 +1,13 @@
 ---
-id: harn-lessons
-trigger: /harn-lessons
+id: harn-improve
+trigger: /harn-improve
 description: Turns the patches reviews keep asking for into rules, proposed with their evidence and written in the project's pillars once accepted.
 ---
 
-# /harn-lessons
+# /harn-improve
 
-When the human or the agent invokes `/harn-lessons`, load the skill
-`harn-lesson-miner`.
+When the human or the agent invokes `/harn-improve`, load the skill
+`harn-self-improve`.
 
 The skill fetches the recent pull requests if it can, runs
 `vaubaan-harness lessons collect`, groups the patch events, and proposes

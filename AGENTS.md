@@ -39,8 +39,8 @@ The files the harness generates (`AGENTS.md`, `CLAUDE.md`, the `.claude/`, `.age
 - `harn-guide` — How to work in a project harnessed by @vaubaan/harness: the reading
 - `harn-handbook-writer` (`/harn-handbook`) — Writes or updates `docs/handbook/<slug>.md`: only what an agent cannot
 - `harn-intent-writer` (`/harn-intent`) — Writes or updates `docs/intents/<slug>.md`: the user intents of
-- `harn-lesson-miner` (`/harn-lessons`) — Finds the small patches that reviews keep asking for, in the repo
 - `harn-readme-writer` (`/harn-readme`) — Maintains `README.md` at the repo root. Syncs the links to the other
+- `harn-self-improve` (`/harn-improve`) — Finds the small patches that reviews keep asking for, in the repo
 - `harn-spec-writer` (`/harn-spec`) — Human-guided wizard to write or update a `docs/spec/<name>.md`
 - `harn-test-plan-writer` (`/harn-test-plan`) — Updates `docs/tests/integration-tests.md` and/or
 - `harn-upgrade` (`/harn-upgrade`) — Moves a project to a newer version of @vaubaan/harness: pins the

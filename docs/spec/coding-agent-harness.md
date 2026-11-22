@@ -452,7 +452,7 @@ harness ships no agent persona and no code-quality audit (see
 | `harn-readme-writer`             | always | Maintains `README.md` at the root. Syncs the links to the other pillars; makes sure pitch + quick start stay up to date vs the code. |
 | `harn-drift-detector`            | handbook, tests, workflow, intents | Detects code ↔ doc divergences.                                                                                      |
 | `harn-canvas-review`             | always | Runs a review session (§10.4): opens the view, keeps it live while the human talks or comments, applies each comment to its pillar with that pillar's writer rules, answers in the thread. Writes only to the project domain (§0.2). |
-| `harn-lesson-miner`              | always | Proposes lessons (§10.5): groups the patch events `lessons collect` extracted, proposes one rule per recurring patch with its evidence, domain and pillar; writes an accepted rule with the pillar's writer rules. |
+| `harn-self-improve`              | always | Proposes lessons (§10.5): groups the patch events `lessons collect` extracted, proposes one rule per recurring patch with its evidence, domain and pillar; writes an accepted rule with the pillar's writer rules. |
 | `harn-intent-writer`             | intents, profiles | Writes or updates `docs/intents/<slug>.md` one node at a time (§9.1.3): greenfield (three questions) or mature (reads the code's entry points, proposes anchored terminal intents). `/harn-intent <verb + object>` adds a `proposed` intent with its acceptance criteria before any code. Writes or updates a profile under `docs/profiles/` and names, on an intent, the profile it serves and the pain it relieves (§9.1.4). |
 
 Their evolution is versioned by the package version. The `pillars:`
@@ -1069,7 +1069,7 @@ nowhere. Decision:
   project enables in its lint configuration, from engine conversation
   histories. It calls no network service and its output is
   deterministic.
-- The `harn-lesson-miner` skill groups the events by meaning and proposes a
+- The `harn-self-improve` skill groups the events by meaning and proposes a
   lesson for each group seen at least twice and covered by no rule in
   force; a rule in force that the patches show is not followed is
   reported as such. Each lesson names its evidence, its domain and the

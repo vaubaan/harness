@@ -16,8 +16,8 @@ const ALWAYS = [
   "harn-canvas-review",
   "harn-doc-audit",
   "harn-guide",
-  "harn-lesson-miner",
   "harn-readme-writer",
+  "harn-self-improve",
   "harn-spec-writer",
   "harn-upgrade",
 ];
@@ -70,7 +70,7 @@ describe("a project that just started: a README alone", () => {
     ).toEqual([
       ".claude/commands/harn-canvas.md",
       ".claude/commands/harn-doc-audit.md",
-      ".claude/commands/harn-lessons.md",
+      ".claude/commands/harn-improve.md",
       ".claude/commands/harn-readme.md",
       ".claude/commands/harn-spec.md",
       ".claude/commands/harn-upgrade.md",
